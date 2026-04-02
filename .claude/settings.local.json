@@ -31,7 +31,22 @@
       "Bash(powershell -Command \"Copy-Item ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1'' ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node\\\\idf-build.ps1'' -Force; Write-Host ''Copied''\")",
       "Bash(powershell -ExecutionPolicy Bypass -File D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/idf-build.ps1 -Target monitor -Duration 30)",
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target monitor -Duration 20)",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\git-push.ps1\")"
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\git-push.ps1\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\Stryder\\\\.ssh\\\\config'' -ErrorAction SilentlyContinue; if \\(-not $? { ''No config file found'' }\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\Stryder\\\\.ssh\\\\'' | Select-Object Name\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\Stryder\\\\.ssh\\\\nut-test-lxc*''\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\Stryder\\\\.ssh\\\\nut-test-lxc.pub''\")",
+      "Bash(powershell -Command \"ssh nut-test-lxc ''/usr/libexec/nut-driver-enumerator.sh --get-device-for-service esp-ups''\")",
+      "Bash(powershell -Command \"ssh nut-test-lxc ''upsc esp-ups@localhost 2>&1 | grep -E \"\"battery.charge|battery.runtime|ups.status\"\"''\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target build)",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\docs\\\\build.log'' -Pattern ''nut_client|warning.*nut_client|error'' -CaseSensitive:$false | Select-Object -First 20\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 30)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 35)",
+      "Bash(powershell -Command \"Get-Content ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\docs\\\\flash.log'' | Select-Object -Last 20\")",
+      "Bash(powershell -Command \"Get-Content ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\build\\\\log\\\\idf_py_stderr_output_20124'' -ErrorAction SilentlyContinue | Select-Object -Last 20\")",
+      "Bash(powershell -Command \"Get-Content ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\build\\\\log\\\\idf_py_stdout_output_20124'' -ErrorAction SilentlyContinue | Select-Object -Last 20\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object { $_Name -match ''python|idf_monitor|cmd'' } | Select-Object Id, Name, StartTime | Format-Table\")",
+      "Bash(powershell -Command \"Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force; Get-Process idf* -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host ''Done''\")"
     ]
   }
 }

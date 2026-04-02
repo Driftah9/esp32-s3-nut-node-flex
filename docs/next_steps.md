@@ -2,22 +2,21 @@
 <!-- Updated: 2026-04-02 -->
 
 ## Immediate
-- [x] Push v0.2 to GitHub
+- [x] Push v0.3 to GitHub
 
-## Phase 2 - Mode 2 NUT client push
+## Phase 2 - Mode 2 NUT client push - COMPLETE
 
-- [ ] Research NUT upsmon/upsd client protocol (LOGIN, PASSWORD, SET commands)
-- [ ] Add upstream_push_task to main.c (launched when op_mode == NUT_CLIENT)
-- [ ] Implement TCP connect to upstream_host:upstream_port with retry
-- [ ] Implement upstream reachability check at boot
-- [ ] Push battery.charge, battery.runtime, ups.status on each state change
-- [ ] Implement Mode 1 fallback if upstream unreachable at boot or lost mid-session
-- [ ] Test against OrangePi NUT server (10.0.0.6)
+- [x] nut_client.c - TCP connect with timeout, USERNAME/PASSWORD auth, SET VAR push loop
+- [x] Boot reachability check with Mode 1 fallback if upstream unreachable
+- [x] Push-based reconnect detection (mandatory SET VAR return bool)
+- [x] 5s startup delay for DHCP/ARP settle before first connect
+- [x] Tested against nut-test-lxc (10.0.0.18) - connect, auth, push confirmed
+- [x] idf-build.ps1 flash-monitor target for automated test cycles
 
 ## Phase 3 - Mode 3 bridge stream
 
 - [ ] Define wire protocol: length-prefixed descriptor + raw stream format
-- [ ] Implement bridge_task (TCP server or client to upstream_host)
+- [ ] Implement bridge_task (TCP client to upstream_host)
 - [ ] Send HID Report Descriptor on connect
 - [ ] Forward interrupt-IN packets raw as they arrive
 - [ ] Forward GET_REPORT responses tagged with rid

@@ -76,3 +76,52 @@ Files changed:
 
 Status at end: All docs updated. v0.2 push ready.
 Next session starts at: Phase 2 - Mode 2 NUT client push task. Connect to upstream upsd at 10.0.0.6.
+
+---
+
+## Session 003 - 2026-04-02
+
+Tags: phase2, nut-client, mode2, lxc, set-var, push, flash-monitor, v0.3
+
+Work completed:
+- nut-test-lxc created at 10.0.0.18 (Ubuntu 24.04, SSH key nut-test-lxc)
+- NUT 2.8.1 installed on LXC: upsd + dummy-ups device named "ups"
+- upsd.users: esppush account with SET VAR permission - verified via upsrw
+- nut_client.c + nut_client.h: Mode 2 NUT CLIENT push task
+  - nc_connect: non-blocking connect with select timeout
+  - nc_cmd: send line + read response, returns bool (OK prefix check)
+  - nc_auth: USERNAME + PASSWORD sequence
+  - nc_set_var: SET VAR with bool return (true=alive, false=socket dead)
+  - nc_push_state: push battery.charge, ups.status, input.utility.present, ups.flags + optional fields
+  - 5s startup delay for DHCP settle
+  - Boot reachability check with fallback to nut_server_start
+  - Push-based reconnect: nc_set_var return drives reconnect, no VER keepalive
+- main.c: mode dispatch switch (NUT_CLIENT->nut_client, BRIDGE->nut_server, STANDALONE->nut_server)
+- idf-build.ps1: flash-monitor combined target + WorkingDirectory fix + pre-flash kill python
+- confirmedtools.md: flash, monitor, flash-monitor confirmed CLI + nut-test-lxc added
+- Global CLAUDE.md: build workflow updated (all targets CLI-driven, flash is now CLI)
+
+Problems encountered:
+- SO_ERROR=113 EHOSTUNREACH: DHCP not settled at connect time - fixed with 5s delay
+- UPS name mismatch (NVS="ups", LXC had "esp-ups"): renamed LXC device to "ups"
+- VER keepalive false disconnect: VER returns version string not OK - replaced with push-based detection
+- COM3 busy on second flash: lingering python monitor process - fixed with pre-flash kill
+- ProcessStartInfo WorkingDirectory: Set-Location does not propagate to spawned process - fixed
+
+Files changed:
+- src\current\main\nut_client.c (new)
+- src\current\main\nut_client.h (new)
+- src\current\main\main.c (mode dispatch + op_mode log after NVS)
+- src\current\main\CMakeLists.txt (nut_client.c added)
+- idf-build.ps1 (flash-monitor, WorkingDirectory, pre-flash kill)
+- docs\github_push.md (v0.3)
+- docs\project_state.md
+- docs\next_steps.md (Phase 2 complete)
+- docs\DECISIONS.md (D001 Phase 2 status)
+- docs\session_log.md (this entry)
+- README.md
+- D:\Users\Stryder\Documents\Claude\ClaudeContext\confirmedtools.md
+- D:\Users\Stryder\Documents\Claude\.claude\CLAUDE.md
+
+Status at end: Phase 2 complete. Mode 2 confirmed working end-to-end on nut-test-lxc.
+Next session starts at: Phase 3 - Mode 3 bridge stream. Or any other priority.

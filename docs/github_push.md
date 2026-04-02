@@ -18,14 +18,31 @@ public
 main
 
 ## Version
-v0.2
+v0.3
 
 ## Commit Message
-- cfg_store.h - add OP_MODE constants (STANDALONE/NUT_CLIENT/BRIDGE)
-- cfg_store.h - add op_mode, upstream_host, upstream_port, upstream_fallback to app_cfg_t
-- cfg_store.c - defaults: op_mode=0 (standalone), upstream_fallback=1, upstream_port=3493
-- http_config_page.c - Operating Mode selector + upstream section with JS show/hide
-- http_config_page.c - parse op_mode, upstream_host, upstream_port from POST /save
-- idf-build.ps1 - CLI build wrapper (removes MSYSTEM to bypass MinGW rejection)
-- idf-build.ps1 - monitor: use cmd.exe host + MessageData for output capture fix
-- CLAUDE.md - build workflow updated: CLI now drives builds via idf-build.ps1
+v0.3 - esp32-s3-nut-node-flex - Mode 2 NUT CLIENT push task
+
+- nut_client.c - new: Mode 2 NUT CLIENT task (connect, auth, SET VAR push loop)
+- nut_client.h - new: public API for nut_client_start()
+- main.c - mode dispatch: OP_MODE_NUT_CLIENT calls nut_client_start, STANDALONE/BRIDGE call nut_server_start
+- main.c - op_mode logged after NVS load (was before, showed wrong value)
+- nut_client.c - 5s startup delay for DHCP settle before first connect attempt
+- nut_client.c - push-based reconnect detection (nc_set_var returns bool, no VER keepalive)
+- idf-build.ps1 - flash-monitor combined target (flash then immediate boot capture)
+- idf-build.ps1 - WorkingDirectory fix for ProcessStartInfo monitor (was using project root not src/current)
+- idf-build.ps1 - kill lingering python processes before flash to free COM3
+- CMakeLists.txt - add nut_client.c to build
+
+## Files Staged
+- src/current/main/nut_client.c
+- src/current/main/nut_client.h
+- src/current/main/main.c
+- src/current/main/CMakeLists.txt
+- idf-build.ps1
+- docs/github_push.md
+- docs/project_state.md
+- docs/next_steps.md
+- docs/DECISIONS.md
+- docs/session_log.md
+- README.md

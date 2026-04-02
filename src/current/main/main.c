@@ -37,6 +37,7 @@
 #include "wifi_mgr.h"
 #include "http_portal.h"
 #include "nut_server.h"
+#include "nut_client.h"
 #include "ups_state.h"
 #include "ups_usb_hid.h"
 
@@ -47,7 +48,7 @@ static ups_state_t g_ups;
 
 void app_main(void) {
     ESP_LOGI(TAG, "=======================================");
-    ESP_LOGI(TAG, "ESP32 UPS NUT Node - v15.18");
+    ESP_LOGI(TAG, "ESP32 UPS NUT Node - flex v0.3");
     ESP_LOGI(TAG, "ESP-IDF v5.3.1 target");
     ESP_LOGI(TAG, "=======================================");
 
@@ -56,6 +57,8 @@ void app_main(void) {
     cfg_store_load_or_defaults(&g_cfg);
     cfg_store_ensure_ap_ssid(&g_cfg);
     cfg_store_commit(&g_cfg);
+    ESP_LOGI(TAG, "op_mode=%u upstream=%s:%u", (unsigned)g_cfg.op_mode,
+             g_cfg.upstream_host, (unsigned)g_cfg.upstream_port);
 
     /* UPS state — starts fully zeroed. Populated by HID reports after
      * USB enumeration (~1s). No demo defaults. */
@@ -64,7 +67,26 @@ void app_main(void) {
     wifi_mgr_start_apsta(&g_cfg);
     ups_usb_hid_start(&g_cfg);
     http_portal_start(&g_cfg);
-    nut_server_start(&g_cfg);
+
+    /* Mode dispatch */
+    switch (g_cfg.op_mode) {
+        case OP_MODE_NUT_CLIENT:
+            ESP_LOGI(TAG, "Mode 2: NUT CLIENT - pushing to %s:%u",
+                     g_cfg.upstream_host, (unsigned)g_cfg.upstream_port);
+            nut_client_start(&g_cfg);
+            break;
+
+        case OP_MODE_BRIDGE:
+            ESP_LOGI(TAG, "Mode 3: BRIDGE - not yet implemented, defaulting to STANDALONE");
+            nut_server_start(&g_cfg);
+            break;
+
+        case OP_MODE_STANDALONE:
+        default:
+            ESP_LOGI(TAG, "Mode 1: STANDALONE - serving NUT on tcp/3493");
+            nut_server_start(&g_cfg);
+            break;
+    }
 
     ESP_LOGI(TAG, "Ready. Portal: http://%s/config (SoftAP) or http://<STA-IP>/config",
              WIFI_MGR_SOFTAP_IP_STR);

@@ -7,6 +7,7 @@
     "http_config_page.c"
     "http_compat.c"
     "nut_server.c"
+    "nut_client.c"
     "ups_state.c"
     "ups_usb_hid.c"
     "ups_hid_desc.c"
