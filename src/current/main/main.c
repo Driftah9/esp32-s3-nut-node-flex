@@ -38,6 +38,7 @@
 #include "http_portal.h"
 #include "nut_server.h"
 #include "nut_client.h"
+#include "nut_bridge.h"
 #include "ups_state.h"
 #include "ups_usb_hid.h"
 
@@ -77,8 +78,9 @@ void app_main(void) {
             break;
 
         case OP_MODE_BRIDGE:
-            ESP_LOGI(TAG, "Mode 3: BRIDGE - not yet implemented, defaulting to STANDALONE");
-            nut_server_start(&g_cfg);
+            ESP_LOGI(TAG, "Mode 3: BRIDGE - forwarding raw HID to %s:%u",
+                     g_cfg.upstream_host, (unsigned)g_cfg.upstream_port);
+            nut_bridge_start(&g_cfg);
             break;
 
         case OP_MODE_STANDALONE:

@@ -117,6 +117,11 @@ static char     s_product[64];
 static char     s_serial[64];
 
 static uint8_t  s_last_in[64];
+
+/* Bridge mode: raw descriptor cache and interrupt-IN callback */
+static uint8_t                    s_raw_desc[HID_REPORT_DESC_MAX_BYTES];
+static uint16_t                   s_raw_desc_len = 0;
+static volatile ups_hid_bridge_cb_t s_bridge_cb  = NULL;
 static int      s_last_in_len = -1;
 
 /* -------------------------------------------------------------------------
@@ -569,6 +574,12 @@ static esp_err_t fetch_and_parse_report_descriptor(void)
         return ESP_FAIL;
     }
 
+    /* Cache raw descriptor bytes for bridge mode */
+    if (payload_len <= HID_REPORT_DESC_MAX_BYTES) {
+        memcpy(s_raw_desc, payload, payload_len);
+        s_raw_desc_len = (uint16_t)payload_len;
+    }
+
     /* Parse the descriptor */
     static hid_desc_t s_hid_desc;   /* static to avoid stack use */
     ups_hid_desc_init(&s_hid_desc);
@@ -603,6 +614,12 @@ static void intr_in_cb(usb_transfer_t *t)
     if (t->status == USB_TRANSFER_STATUS_COMPLETED && t->actual_num_bytes > 0U) {
         const int     len = (int)t->actual_num_bytes;
         const uint8_t *d  = (const uint8_t *)t->data_buffer;
+
+        /* Bridge callback fires on ALL packets (raw passthrough — upstream needs all) */
+        ups_hid_bridge_cb_t bcb = s_bridge_cb;
+        if (bcb) {
+            bcb(d, (uint16_t)len);
+        }
 
         bool changed = (len != s_last_in_len) ||
                        (memcmp(d, s_last_in, (size_t)len) != 0);
@@ -808,4 +825,20 @@ void ups_usb_hid_start(const app_cfg_t *cfg)
     (void)cfg;
     xTaskCreatePinnedToCore(usb_client_task, "ups_usb", 6144, NULL, 20, NULL, 0);
     ESP_LOGI(TAG, "ups_usb_hid module started");
+}
+
+/* -------------------------------------------------------------------------
+ Bridge mode API
+------------------------------------------------------------------------- */
+void ups_usb_hid_set_bridge_cb(ups_hid_bridge_cb_t cb)
+{
+    s_bridge_cb = cb;
+}
+
+bool ups_usb_hid_get_report_descriptor(const uint8_t **buf_out, uint16_t *len_out)
+{
+    if (!buf_out || !len_out || s_raw_desc_len == 0) return false;
+    *buf_out = s_raw_desc;
+    *len_out = s_raw_desc_len;
+    return true;
 }

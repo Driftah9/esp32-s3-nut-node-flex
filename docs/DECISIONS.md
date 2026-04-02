@@ -36,7 +36,13 @@ GET_REPORT responses as they arrive. Upstream host is responsible for all
 HID parsing, field mapping, and NUT protocol serving.
 **Reason:** Upstream NUT with libusb needs the descriptor to build its field map.
 Sending it on connect is the minimal viable handshake. Everything else is raw passthrough.
-**Status:** Planned. Protocol wire format TBD when implementation begins.
+**Wire format implemented:**
+  Handshake: [2B BE: desc_len][desc bytes]
+  Stream:    [1B: type][2B BE: data_len][data bytes]
+  type 0x01 = interrupt-IN, type 0xFF = keepalive
+**Status:** Implemented and confirmed. 1049B descriptor + live interrupt-IN stream
+verified on nut-test-lxc (10.0.0.18:5493) bridge_receiver.py. 109+ packets at
+UPS poll rate (~4s). GET_REPORT forwarding (type=0x02) deferred to future work.
 
 ---
 

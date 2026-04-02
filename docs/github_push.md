@@ -18,28 +18,29 @@ public
 main
 
 ## Version
-v0.3
+v0.4
 
 ## Commit Message
-v0.3 - esp32-s3-nut-node-flex - Mode 2 NUT CLIENT push task
+v0.4 - esp32-s3-nut-node-flex - Mode 3 BRIDGE raw HID stream
 
-- nut_client.c - new: Mode 2 NUT CLIENT task (connect, auth, SET VAR push loop)
-- nut_client.h - new: public API for nut_client_start()
-- main.c - mode dispatch: OP_MODE_NUT_CLIENT calls nut_client_start, STANDALONE/BRIDGE call nut_server_start
-- main.c - op_mode logged after NVS load (was before, showed wrong value)
-- nut_client.c - 5s startup delay for DHCP settle before first connect attempt
-- nut_client.c - push-based reconnect detection (nc_set_var returns bool, no VER keepalive)
-- idf-build.ps1 - flash-monitor combined target (flash then immediate boot capture)
-- idf-build.ps1 - WorkingDirectory fix for ProcessStartInfo monitor (was using project root not src/current)
-- idf-build.ps1 - kill lingering python processes before flash to free COM3
-- CMakeLists.txt - add nut_client.c to build
+- nut_bridge.c - new: Mode 3 BRIDGE task (FreeRTOS queue, TCP stream, length-prefixed protocol)
+- nut_bridge.h - new: public API for nut_bridge_start()
+- ups_usb_hid.h - bridge API: ups_hid_bridge_cb_t, set_bridge_cb(), get_report_descriptor()
+- ups_usb_hid.c - bridge hooks: raw descriptor cache (s_raw_desc), bridge callback in intr_in_cb
+- ups_usb_hid.c - bridge API implementations: set_bridge_cb, get_report_descriptor
+- main.c - Mode 3 dispatch: nut_bridge_start() (was placeholder nut_server_start)
+- CMakeLists.txt - add nut_bridge.c
+- Wire protocol: [2B BE: desc_len][desc] handshake then [1B type][2B BE: len][data] stream
+- LXC: /opt/nut-bridge/bridge_receiver.py on nut-test-lxc port 5493 (test receiver)
+- Confirmed: 1049B descriptor received, 109+ interrupt-IN packets streaming at UPS poll rate
 
 ## Files Staged
-- src/current/main/nut_client.c
-- src/current/main/nut_client.h
+- src/current/main/nut_bridge.c
+- src/current/main/nut_bridge.h
+- src/current/main/ups_usb_hid.h
+- src/current/main/ups_usb_hid.c
 - src/current/main/main.c
 - src/current/main/CMakeLists.txt
-- idf-build.ps1
 - docs/github_push.md
 - docs/project_state.md
 - docs/next_steps.md

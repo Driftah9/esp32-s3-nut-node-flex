@@ -125,3 +125,48 @@ Files changed:
 
 Status at end: Phase 2 complete. Mode 2 confirmed working end-to-end on nut-test-lxc.
 Next session starts at: Phase 3 - Mode 3 bridge stream. Or any other priority.
+
+---
+
+## Session 004 - 2026-04-02
+
+Tags: phase3, bridge, mode3, raw-hid, descriptor, stream, v0.4
+
+Work completed:
+- ups_usb_hid.h: bridge API - ups_hid_bridge_cb_t typedef, set_bridge_cb(), get_report_descriptor()
+- ups_usb_hid.c: s_raw_desc static buffer, descriptor cached after fetch, bridge cb in intr_in_cb (all packets)
+- ups_usb_hid.c: set_bridge_cb() and get_report_descriptor() public functions
+- nut_bridge.h + nut_bridge.c: Mode 3 bridge task
+  - FreeRTOS queue (depth 32, BRIDGE_PKT_MAX=64) for USB task -> bridge task delivery
+  - bridge_intr_cb: non-blocking xQueueSend from USB task context
+  - bridge_connect: non-blocking connect with select timeout
+  - bridge_send_handshake: waits up to 20s for descriptor, sends [2B BE len][desc bytes]
+  - bridge_send_packet: [1B type][2B BE len][data]
+  - Keepalive: type=0xFF when no packet arrives in 5s
+  - Boot reachability check with fallback to nut_server
+  - Reconnect: drain queue, reconnect loop
+- main.c: Mode 3 now calls nut_bridge_start() (was placeholder)
+- nut-test-lxc: bridge_receiver.py at /opt/nut-bridge/bridge_receiver.py, port 5493
+- Chrome MCP: set portal to Mode 3, upstream host 10.0.0.18, port 5493, submitted
+- Confirmed: 1049B HID descriptor received on LXC, 109+ interrupt-IN packets streaming
+
+Problems encountered:
+- Python receiver SCP: nested quotes in PowerShell heredoc - fixed by writing file locally then SCP
+- bridge_receiver.log empty (nohup stdout): actual output went to /tmp/bridge.log (script's LOG_FILE)
+
+Files changed:
+- src\current\main\nut_bridge.c (new)
+- src\current\main\nut_bridge.h (new)
+- src\current\main\ups_usb_hid.h (bridge API)
+- src\current\main\ups_usb_hid.c (bridge hooks + API)
+- src\current\main\main.c (Mode 3 dispatch fixed)
+- src\current\main\CMakeLists.txt (nut_bridge.c)
+- docs\github_push.md (v0.4)
+- docs\project_state.md
+- docs\next_steps.md (Phase 3 complete)
+- docs\DECISIONS.md (D003 wire format + status)
+- docs\session_log.md (this entry)
+- README.md
+
+Status at end: Phase 3 complete. All three modes confirmed working.
+Next session starts at: UPS swap validation. Then Phase 4 dynamic scanning or other priorities.

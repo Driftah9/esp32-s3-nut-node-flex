@@ -8,6 +8,7 @@
     "http_compat.c"
     "nut_server.c"
     "nut_client.c"
+    "nut_bridge.c"
     "ups_state.c"
     "ups_usb_hid.c"
     "ups_hid_desc.c"
