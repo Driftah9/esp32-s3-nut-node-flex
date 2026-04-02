@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node/src/current/ log --oneline -5)",
+      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ log --oneline -5)",
+      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ remote -v)",
+      "Bash(powershell -Command \":*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/copy_flex_baseline.ps1)",
+      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ rev-parse --show-toplevel)"
+    ]
+  }
+}
