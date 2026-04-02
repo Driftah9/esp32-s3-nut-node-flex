@@ -8,6 +8,10 @@
 
  REVERT HISTORY
  R0  v15.11  Split from http_portal.c
+ R1  v0.1-flex  Add Operating Mode selector (Standalone/NUT Client/Bridge)
+                Add Upstream Target section (host + port) with JS show/hide
+                Parse op_mode, upstream_host, upstream_port from POST body
+
 ============================================================================*/
 
 #include "http_config_page.h"
@@ -72,6 +76,13 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         ? "<div class='warn'>Default password in use. Change it below under Portal Security.</div>"
         : "";
 
+    /* Mode selector state */
+    const char *sel_sa  = (cfg->op_mode == OP_MODE_STANDALONE) ? "selected" : "";
+    const char *sel_nc  = (cfg->op_mode == OP_MODE_NUT_CLIENT) ? "selected" : "";
+    const char *sel_br  = (cfg->op_mode == OP_MODE_BRIDGE)     ? "selected" : "";
+    const char *up_disp = (cfg->op_mode != OP_MODE_STANDALONE) ? "" : "none";
+    uint16_t    up_port = cfg->upstream_port ? cfg->upstream_port : 3493;
+
     snprintf(out, outsz,
         "<!doctype html><html><head>"
         "<meta charset='utf-8'>"
@@ -80,19 +91,34 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         PORTAL_CSS
         "</head><body>"
         "<h2>ESP32-S3 UPS Node</h2>"
-        "<div class='subtitle'>v15.11 &mdash; Configuration</div>"
+        "<div class='subtitle'>v0.1-flex &mdash; Configuration</div>"
         "%s%s"
         "<form method='POST' action='/save'>"
+
+        /* Operating Mode */
+        "<div class='form-section'>Operating Mode</div>"
+        "<div class='form-row'><span class='form-label'>Mode</span>"
+            "<select name='op_mode' onchange='showUpstream(this.value)'>"
+            "<option value='0' %s>Standalone - NUT server on device</option>"
+            "<option value='1' %s>NUT Client - push to upstream upsd</option>"
+            "<option value='2' %s>Bridge - forward raw HID stream</option>"
+            "</select></div>"
+
+        /* Wi-Fi STA */
         "<div class='form-section'>Wi-Fi (STA)</div>"
         "<div class='form-row'><span class='form-label'>SSID</span>"
             "<input name='sta_ssid' maxlength='32' value='%s'></div>"
         "<div class='form-row'><span class='form-label'>Password</span>"
             "<input name='sta_pass' type='password' maxlength='64' value='%s'></div>"
+
+        /* Soft AP */
         "<div class='form-section'>Soft AP &mdash; %s</div>"
         "<div class='form-row'><span class='form-label'>AP SSID</span>"
             "<input name='ap_ssid' maxlength='32' value='%s'></div>"
         "<div class='form-row'><span class='form-label'>AP Password (8+ chars)</span>"
             "<input name='ap_pass' type='password' maxlength='64' value='%s'></div>"
+
+        /* NUT Identity */
         "<div class='form-section'>NUT Identity</div>"
         "<div class='form-row'><span class='form-label'>UPS Name</span>"
             "<input name='ups_name' maxlength='32' value='%s'></div>"
@@ -100,10 +126,22 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
             "<input name='nut_user' maxlength='32' value='%s'></div>"
         "<div class='form-row'><span class='form-label'>NUT Password</span>"
             "<input name='nut_pass' type='password' maxlength='32' value='%s'></div>"
+
+        /* Upstream Target - shown for NUT Client and Bridge modes */
+        "<div id='upstream_sec' style='display:%s'>"
+        "<div class='form-section'>Upstream Target</div>"
+        "<div class='form-row'><span class='form-label'>Host</span>"
+            "<input name='upstream_host' maxlength='63' value='%s'></div>"
+        "<div class='form-row'><span class='form-label'>Port</span>"
+            "<input name='upstream_port' type='number' min='1' max='65535' value='%u'></div>"
+        "</div>"
+
+        /* Portal Security */
         "<div class='form-section'>Portal Security &mdash; login: admin / &lt;password&gt;</div>"
         "<div class='form-row'><span class='form-label'>New Password</span>"
             "<input name='portal_pass' type='password' maxlength='32' "
             "placeholder='blank = keep current'></div>"
+
         "<input class='btn' type='submit' value='Save and Apply'>"
         "</form>"
         "<div class='nav' style='margin-top:20px'>"
@@ -111,12 +149,19 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "<a href='/reboot' onclick=\"return confirm('Reboot device?')\">Reboot</a>"
         "<span style='color:#555;font-size:0.82em'>STA: %s</span>"
         "</div>"
+        "<script>"
+        "function showUpstream(v){"
+        "document.getElementById('upstream_sec').style.display=(v=='1'||v=='2')?'':'none';"
+        "}"
+        "</script>"
         "</body></html>",
         pw_warn, note_html,
+        sel_sa, sel_nc, sel_br,
         cfg->sta_ssid, cfg->sta_pass,
         ap_up ? "Active" : "Off",
         cfg->ap_ssid, cfg->ap_pass,
         cfg->ups_name, cfg->nut_user, cfg->nut_pass,
+        up_disp, cfg->upstream_host, (unsigned)up_port,
         sta_ip[0] ? sta_ip : "not connected"
     );
 }
@@ -147,6 +192,16 @@ void parse_form_kv(app_cfg_t *cfg_inout, const char *body,
         else if (!strcmp(k, "nut_pass"))   strlcpy0(cfg_inout->nut_pass,   v, sizeof(cfg_inout->nut_pass));
         else if (!strcmp(k, "portal_pass") && v[0])
             strlcpy0(cfg_inout->portal_pass, v, sizeof(cfg_inout->portal_pass));
+        else if (!strcmp(k, "op_mode")) {
+            int m = atoi(v);
+            cfg_inout->op_mode = (m >= 0 && m <= 2) ? (uint8_t)m : OP_MODE_STANDALONE;
+        }
+        else if (!strcmp(k, "upstream_host"))
+            strlcpy0(cfg_inout->upstream_host, v, sizeof(cfg_inout->upstream_host));
+        else if (!strcmp(k, "upstream_port")) {
+            int p = atoi(v);
+            cfg_inout->upstream_port = (p > 0 && p <= 65535) ? (uint16_t)p : 3493;
+        }
         else if (!strcmp(k, "action") && action_out && action_sz)
             strlcpy0(action_out, v, action_sz);
     }

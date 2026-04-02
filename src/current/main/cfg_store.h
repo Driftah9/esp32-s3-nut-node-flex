@@ -1,10 +1,11 @@
-/*============================================================================
+﻿/*============================================================================
  MODULE: cfg_store (public API)
 
  REVERT HISTORY
  R0  v14.7  modular baseline public interface
  R1  v14.25 adds portal_pass field for HTTP portal access protection
  R2  v14.25 portal_pass defaults to "upsmon"; cfg_store_is_default_pass()
+ R3  v0.1-flex  add op_mode, upstream_host, upstream_port, upstream_fallback
 
 ============================================================================*/
 
@@ -17,6 +18,11 @@
 extern "C" {
 #endif
 
+/* Operating mode constants */
+#define OP_MODE_STANDALONE  0   /* decode HID, serve NUT locally (default) */
+#define OP_MODE_NUT_CLIENT  1   /* decode HID, push to upstream upsd */
+#define OP_MODE_BRIDGE      2   /* forward raw HID stream to upstream host */
+
 typedef struct {
     char sta_ssid[33];
     char sta_pass[65];
@@ -28,7 +34,13 @@ typedef struct {
     char nut_user[33];
     char nut_pass[33];
 
-    char portal_pass[33]; /* default: "upsmon" — change via /config */
+    char portal_pass[33]; /* default: "upsmon" - change via /config */
+
+    /* Tri-mode operation (flex fork) */
+    uint8_t  op_mode;             /* OP_MODE_STANDALONE / NUT_CLIENT / BRIDGE */
+    uint8_t  upstream_fallback;   /* 1 = fall back to STANDALONE if upstream unreachable */
+    char     upstream_host[64];   /* upstream NUT server or bridge target host */
+    uint16_t upstream_port;       /* target port (default 3493 for NUT_CLIENT) */
 } app_cfg_t;
 
 void      cfg_store_load_or_defaults(app_cfg_t *cfg);

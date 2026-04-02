@@ -6,7 +6,32 @@
       "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ remote -v)",
       "Bash(powershell -Command \":*)",
       "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/copy_flex_baseline.ps1)",
-      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ rev-parse --show-toplevel)"
+      "Bash(git -C D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/ rev-parse --show-toplevel)",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/patch_cfg_store_h.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/patch_cfg_store_c.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/patch_http_config_page.ps1)",
+      "Bash(idf.py --version)",
+      "Bash(powershell -Command \"Get-Command idf.py -ErrorAction SilentlyContinue; if \\(Get-Command python -ErrorAction SilentlyContinue\\) { python --version }; echo $env:IDF_PATH\")",
+      "Bash(powershell -Command \"Test-Path ''C:\\\\Espressif\\\\frameworks\\\\esp-idf-v5.3.1\\\\export.ps1''\")",
+      "Bash(powershell -Command \"& { . ''C:\\\\Espressif\\\\frameworks\\\\esp-idf-v5.3.1\\\\export.ps1'' *>&1 | Select-Object -Last 3; idf.py --version }\")",
+      "Bash(powershell -ExecutionPolicy Bypass -Command \":*)",
+      "Bash(echo \"MSYSTEM=$MSYSTEM\")",
+      "Bash(echo \"MINGW_PREFIX=$MINGW_PREFIX\")",
+      "Bash(echo \"SHELL=$SHELL\")",
+      "Bash(env -u MSYSTEM powershell -ExecutionPolicy Bypass -Command \":*)",
+      "Bash(env -u MSYSTEM powershell -ExecutionPolicy Bypass -Command \"Write-Host \"\"MSYSTEM=''$env:MSYSTEM''\"\"\")",
+      "Bash(env -u MSYSTEM powershell -ExecutionPolicy Bypass -Command 'Write-Host \"\"MSYSTEM=$env:MSYSTEM\"\"')",
+      "Bash(cmd.exe /c \"echo MSYSTEM=%MSYSTEM%\")",
+      "Bash(cmd.exe /c echo MSYSTEM=%MSYSTEM%)",
+      "Bash(cmd.exe /c \"set | findstr MSYSTEM\")",
+      "Bash(cmd.exe /c \"set > C:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\env_check.txt && findstr /i MSYSTEM C:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\env_check.txt || echo NOT_SET >> C:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\env_check.txt\")",
+      "Bash(cmd.exe /c C:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\test_idf.bat)",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:/Users/Stryder/AppData/Local/Temp/test_idf2.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/idf-build.ps1 -Target build)",
+      "Bash(powershell -Command \"Copy-Item ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1'' ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node\\\\idf-build.ps1'' -Force; Write-Host ''Copied''\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File D:/Users/Stryder/Documents/Claude/Projects/esp32-s3-nut-node-flex/idf-build.ps1 -Target monitor -Duration 30)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target monitor -Duration 20)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\git-push.ps1\")"
     ]
   }
 }

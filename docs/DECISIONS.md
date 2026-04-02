@@ -14,7 +14,9 @@ See parent project DECISIONS.md D019 for the original rationale.
 **Reason:** Allows the device to work standalone out of the box (Mode 1) while
 supporting integration with existing NUT infrastructure (Mode 2) and full
 dynamic device support via upstream libusb (Mode 3). User controls the tradeoff.
-**Status:** Planned. Not implemented.
+**Status:** Phase 1 implemented. cfg_store: op_mode field + OP_MODE_* constants +
+upstream_host/port/fallback fields + NVS defaults. Portal: Operating Mode selector
+with upstream section (JS show/hide). Build confirmed clean. Portal UI verified.
 
 ---
 

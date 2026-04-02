@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-02 -->
 
 ## Status
-BASELINE READY - v15.18 source copied in. Initial commit pending (Stryder runs git-push.ps1).
+Phase 1 COMPLETE. CLI builds enabled via idf-build.ps1. v0.2 push in progress.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -11,28 +11,27 @@ esp32-s3-nut-node v15.18
 Forked from: v15.18
 Last synced: v15.18 (initial copy, 2026-04-02)
 
-## What this fork is
-Tri-mode ESP32-S3 UPS NUT node. User selects behavior via web portal:
-- Mode 1: Standalone NUT server (current main project behavior)
-- Mode 2: NUT client - ESP decodes, pushes to upstream upsd host
-- Mode 3: Bridge - ESP is dumb USB-to-network pipe, upstream does all decode
+## CLI Build Capability
+idf-build.ps1 at project root enables CLI-driven builds.
+Run: powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target build
+Output: docs\build.log
 
 ## Implementation Progress
-- [x] Scaffold - docs, CLAUDE.md, DECISIONS.md
-- [x] v15.18 baseline copied into src\current\
-- [x] README.md written
-- [x] DOC-REGISTRY.md created
-- [x] Upstream sync rules documented in CLAUDE.md
-- [ ] Initial GitHub push (run git-push.ps1)
-- [ ] Phase 1 - cfg_store + portal mode selector
+- [x] Scaffold, v15.18 baseline, README, DOC-REGISTRY, sync rules
+- [x] Initial GitHub push - v0.1
+- [x] cfg_store.h/c - OP_MODE constants + new fields + defaults
+- [x] http_config_page.c - Operating Mode selector + upstream section + JS show/hide
+- [x] Build clean (CLI), flash confirmed, portal UI verified
+- [x] idf-build.ps1 - CLI build wrapper (MSYSTEM fix)
+- [ ] Push v0.2 to GitHub
+- [ ] Phase 2 - Mode 2 NUT client push task
 
 ## Last Action
-2026-04-02 - Copied v15.18 baseline, wrote README.md, DOC-REGISTRY.md, git-push.ps1,
-upstream sync rules in CLAUDE.md. github_push.md updated for v0.1 initial commit.
+2026-04-02 - Phase 1 complete. CLI builds now work via idf-build.ps1 (removes MSYSTEM
+before IDF init). Build confirmed clean. Portal mode selector verified in Chrome.
 
 ## Next Step
-Run git-push.ps1 to create GitHub repo esp32-s3-nut-node-flex and push v0.1 initial commit.
-Then begin Phase 1: cfg_store op_mode field.
+Push v0.2 to GitHub. Then begin Phase 2 (NUT client push task).
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.

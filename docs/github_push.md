@@ -18,14 +18,14 @@ public
 main
 
 ## Version
-v0.1
+v0.2
 
 ## Commit Message
-- Initial commit - fork of esp32-s3-nut-node v15.18 baseline
-- src/current/ - full v15.18 source tree copied from parent project
-- README.md - fork overview, tri-mode descriptions, dynamic scanning goals
-- CLAUDE.md - upstream sync rules, baseline tracking, session startup checklist
-- docs/DECISIONS.md - D001-D004 architectural decisions
-- docs/DOC-REGISTRY.md - doc update rules by change type including SYNC
-- docs/project_state.md, next_steps.md - implementation roadmap
-- git-push.ps1 - unified push script
+- cfg_store.h - add OP_MODE constants (STANDALONE/NUT_CLIENT/BRIDGE)
+- cfg_store.h - add op_mode, upstream_host, upstream_port, upstream_fallback to app_cfg_t
+- cfg_store.c - defaults: op_mode=0 (standalone), upstream_fallback=1, upstream_port=3493
+- http_config_page.c - Operating Mode selector + upstream section with JS show/hide
+- http_config_page.c - parse op_mode, upstream_host, upstream_port from POST /save
+- idf-build.ps1 - CLI build wrapper (removes MSYSTEM to bypass MinGW rejection)
+- idf-build.ps1 - monitor: use cmd.exe host + MessageData for output capture fix
+- CLAUDE.md - build workflow updated: CLI now drives builds via idf-build.ps1

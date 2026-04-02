@@ -32,3 +32,47 @@ Files changed:
 
 Status at end: Ready for initial GitHub push. All docs in place.
 Next session starts at: Run git-push.ps1 to create repo + push v0.1. Then begin Phase 1 - cfg_store op_mode field.
+
+---
+
+## Session 002 - 2026-04-02
+
+Tags: phase1, cfg_store, portal, op_mode, cli-build, idf-build, v0.2
+
+Work completed:
+- GitHub repo created and v0.1 pushed (git-push.ps1 after user ran git init in project root)
+- cfg_store.h: OP_MODE_* constants, op_mode/upstream_host/port/fallback fields added
+- cfg_store.c: NVS defaults for new fields (standalone, fallback=1, port=3493)
+- http_config_page.c: Operating Mode selector + upstream section + JS show/hide + parse handlers
+- Build confirmed clean via CLI idf-build.ps1 wrapper
+- Portal UI verified via Chrome MCP (Operating Mode selector visible at 10.0.0.190)
+- idf-build.ps1: created CLI build/flash/monitor wrapper - removes MSYSTEM before IDF init
+- idf-build.ps1 monitor: fixed cmd.exe host + MessageData scope for output capture
+- confirmedtools.md: created at D:\Users\Stryder\Documents\Claude\ClaudeContext\
+- Global CLAUDE.md: updated ESP32 build rule + startup sequence
+- D001 status updated: Phase 1 implemented
+
+Problems encountered:
+- IDF blocked by MSYSTEM=MINGW64: fixed by Remove-Item Env:MSYSTEM inside PowerShell session
+- Monitor ProcessStartInfo: UseShellExecute=false cannot launch idf.py (wrapper script)
+  Fix: use cmd.exe as FileName with /c idf.py monitor as Arguments
+- Register-ObjectEvent action block scope: $stdout not visible in handler runspace
+  Fix: -MessageData $stdout so action uses $Event.MessageData.Add()
+
+Files changed:
+- src\current\main\cfg_store.h (op_mode fields)
+- src\current\main\cfg_store.c (defaults)
+- src\current\main\http_config_page.c (mode selector + upstream section)
+- idf-build.ps1 (new - CLI build wrapper)
+- docs\github_push.md (v0.2 commit message)
+- docs\project_state.md (phase 1 complete)
+- docs\next_steps.md (push v0.2 checked, phase 2 list)
+- docs\DECISIONS.md (D001 status updated)
+- docs\session_log.md (this entry)
+- README.md (status updated)
+- CLAUDE.md (build workflow updated)
+- D:\Users\Stryder\Documents\Claude\ClaudeContext\confirmedtools.md (new)
+- D:\Users\Stryder\Documents\Claude\.claude\CLAUDE.md (startup sequence + build rule)
+
+Status at end: All docs updated. v0.2 push ready.
+Next session starts at: Phase 2 - Mode 2 NUT client push task. Connect to upstream upsd at 10.0.0.6.

@@ -2,7 +2,7 @@
 
 Fork of [esp32-s3-nut-node](https://github.com/Driftah9/esp32-s3-nut-node) investigating tri-mode operation and dynamic HID scanning.
 
-**Status:** Experimental / Pre-release
+**Status:** Experimental / Pre-release - Phase 1 complete (mode selector + cfg fields)
 **Baseline:** esp32-s3-nut-node v15.18
 **Parent project:** [Driftah9/esp32-s3-nut-node](https://github.com/Driftah9/esp32-s3-nut-node) - stable, production use
 

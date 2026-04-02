@@ -67,21 +67,20 @@ All IDF commands must be run from this directory.
 
 ## Build / Flash / Monitor Workflow
 
-> CRITICAL -- BUILD AND FLASH ARE MANUAL STEPS.
-> Claude CLI must NEVER run idf.py build or idf.py flash.
-> These require Stryder to run manually in the ESP-IDF PowerShell shell.
+> BUILD is now CLI-driven via idf-build.ps1.
+> FLASH remains manual (COM port access).
 
-### 1 -- Build (MANUAL -- Stryder runs this)
+### 1 -- Build (CLI runs this)
+```powershell
+powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target build
 ```
-idf.py build
-```
-Claude CLI: prepare changes, tell Stryder to build, wait for result, fix errors if any.
+Output goes to docs\build.log. Claude reads it, fixes errors, rebuilds until clean.
 
 ### 2 -- Flash (MANUAL -- Stryder runs this)
 ```
 idf.py flash -p COM3
 ```
-Claude CLI: confirm build clean first, then ask Stryder to flash.
+Claude CLI: confirm build clean first, then tell Stryder to flash.
 
 ### 3 -- Monitor (MANUAL -- Stryder runs this, CLI reads log)
 Stryder saves monitor output to docs\monitor.log.

@@ -1,4 +1,4 @@
-/*============================================================================
+﻿/*============================================================================
  MODULE: cfg_store
 
  RESPONSIBILITY
@@ -8,6 +8,7 @@
  REVERT HISTORY
  R0  v14.7  modular baseline (real implementation)
  R1  v14.25 portal_pass defaults to "upsmon" (known default, prompt to change)
+ R2  v0.1-flex  defaults for op_mode=0, upstream_fallback=1, upstream_port=3493
 
 ============================================================================*/
 
@@ -60,10 +61,14 @@ esp_err_t cfg_store_commit(const app_cfg_t *cfg) {
 
 void cfg_store_load_or_defaults(app_cfg_t *cfg) {
     memset(cfg, 0, sizeof(*cfg));
-    strlcpy0(cfg->ups_name,    "ups",                  sizeof(cfg->ups_name));
-    strlcpy0(cfg->nut_user,    "admin",                sizeof(cfg->nut_user));
-    strlcpy0(cfg->nut_pass,    "admin",                sizeof(cfg->nut_pass));
+    strlcpy0(cfg->ups_name,    "ups",                   sizeof(cfg->ups_name));
+    strlcpy0(cfg->nut_user,    "admin",                 sizeof(cfg->nut_user));
+    strlcpy0(cfg->nut_pass,    "admin",                 sizeof(cfg->nut_pass));
     strlcpy0(cfg->portal_pass, CFG_DEFAULT_PORTAL_PASS, sizeof(cfg->portal_pass));
+    cfg->op_mode           = OP_MODE_STANDALONE;
+    cfg->upstream_fallback = 1;
+    cfg->upstream_port     = 3493;
+    cfg->upstream_host[0]  = 0;
 
     esp_err_t err = cfg_load_raw(cfg);
     if (err != ESP_OK) {
