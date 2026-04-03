@@ -66,6 +66,7 @@
 ============================================================================*/
 
 #include "ups_hid_desc.h"
+#include "ups_hid_map.h"
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -720,7 +721,9 @@ void ups_hid_desc_dump(const hid_desc_t *desc)
     ESP_LOGI(TAG, "[DUMP] %u fields, %u reports", desc->field_count, desc->report_count);
     for (uint16_t i = 0; i < desc->field_count; i++) {
         const hid_field_t *f = &desc->fields[i];
-        ESP_LOGI(TAG, "  [%3u] rid=%02X type=%u bit_off=%3u size=%2u page=%02X uid=%04X lmin=%"PRId32" lmax=%"PRId32" exp=%d",
+        const char *nut = ups_hid_map_lookup(f->usage_page, f->usage_id);
+        ESP_LOGI(TAG, "  [%3u] rid=%02X type=%u bit_off=%3u size=%2u page=%02X uid=%04X"
+                 " lmin=%"PRId32" lmax=%"PRId32" exp=%d  -> %s",
                  (unsigned)i,
                  (unsigned)f->report_id,
                  (unsigned)f->report_type,
@@ -730,6 +733,7 @@ void ups_hid_desc_dump(const hid_desc_t *desc)
                  (unsigned)f->usage_id,
                  f->logical_min,
                  f->logical_max,
-                 (int)f->unit_exponent);
+                 (int)f->unit_exponent,
+                 nut ? nut : "unmapped");
     }
 }

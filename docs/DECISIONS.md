@@ -53,7 +53,38 @@ XCHK comparison happens against the descriptor at runtime, not against a hardcod
 Targeted GET_REPORT probing covers descriptor-declared rids only (not 0x01-0xFF sweep).
 **Reason:** Static list requires manual updates per new device. Live accumulation is
 device-agnostic and self-building. Full sweep is impractical at ~2s/rid on Eaton.
-**Status:** Planned. Not implemented.
+**Status:** Implemented and confirmed (v0.6-v0.7).
+- s_seen_rids[32] bitmask accumulated from interrupt-IN, cleared on disconnect
+- 30s settle timer fires run_xchk() comparing seen vs descriptor-declared Input RIDs
+- Part 1: undeclared rids logged as WARN (vendor extension)
+- Part 2: declared-but-silent Input rids queued for GET_REPORT probe via callback
+- Probe fires in usb_client_task via ups_get_report_probe_rid()
+- CyberPower ST Series result: 13 seen, 11 undeclared vendor ext, 0 declared-but-silent
+- Probe callback mechanism confirmed working end-to-end; waiting for device with silent Input RIDs
+
+---
+
+## D005 — NUT mge-hid.c mapping table: portable for standard usages only
+**Decision:** Implement ups_hid_map.c as an annotation layer using NUT mge-hid.c format.
+Standard usages (HID pages 0x84 Power Device, 0x85 Battery System) are mapped to NUT
+variable names in a static table. Vendor extension usages remain in per-device decode_mode
+functions (direct-decode paths). The table is used for annotation only - it does NOT
+replace the working field cache or direct-decode paths.
+**Reason / Evaluation findings:**
+- NUT mge-hid.c format: { hidpath, nutname, scale, flags, lkp_table }
+- ESP equivalent:        { usage_page, usage_id, nut_var } - hidpath/scale/flags dropped
+  because usage_page+usage_id come directly from parsed descriptor, scale lives in
+  unit_exponent from hid_field_t, flags not needed for read-only sensor fields.
+- Portability verdict: CONFIRMED for standard usages. CyberPower test showed ALL 14
+  descriptor fields use vendor-proprietary usage IDs (0x008C-0x00FE range) - none map
+  to standard HID spec. This explains why direct-decode is required for CyberPower:
+  its descriptor is vendor-only throughout.
+- For APC/Eaton devices using standard HID usages, the table would annotate correctly.
+- Full decode migration (replacing field cache with table-driven decode) deferred:
+  risk of regression, current decode paths are tested and stable.
+**Status:** Implemented (v0.7). ups_hid_map.c/h: lookup table + annotate_report().
+Integrated into ups_hid_desc_dump() and ups_get_report probe path.
+ups_hid_parser_get_desc() added as accessor for probe annotation.
 
 ---
 

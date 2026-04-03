@@ -152,6 +152,11 @@ void ups_hid_parser_set_xchk_probe_cb(ups_xchk_probe_fn_t fn)
     s_xchk_probe_cb = fn;
 }
 
+const hid_desc_t *ups_hid_parser_get_desc(void)
+{
+    return s_desc.valid ? &s_desc : NULL;
+}
+
 /* ----------------------------------------------------------------------- */
 
 void ups_hid_parser_set_descriptor(const hid_desc_t *desc)

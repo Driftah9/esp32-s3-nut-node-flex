@@ -35,8 +35,17 @@
       ups_xchk_probe_fn_t callback registered by ups_usb_hid.
       Probe fires in usb_client_task via ups_get_report_service_queue().
       Raw hex logged as [XCHK Probe] - investigation data for next phase.
-- [ ] Evaluate NUT mge-hid.c mapping table format for portability to ESP
-      (Input to this: raw probe responses from declared-but-silent RIDs)
+- [x] Evaluate NUT mge-hid.c mapping table format for portability to ESP
+      ups_hid_map.c/h: static table { usage_page, usage_id, nut_var } covering
+      HID pages 0x84 (Power Device) and 0x85 (Battery System), ~50 entries.
+      ups_hid_map_lookup() for single usage, annotate_report() for full RID decode.
+      ups_hid_desc_dump() now appends -> nut_var_name (or -> unmapped) per field.
+      service_probe_queue() calls annotate_report() on probe responses.
+      ups_hid_parser_get_desc() accessor added for probe-path descriptor access.
+      Portability verdict: confirmed for APC/Eaton (standard HID usages).
+      CyberPower result: all 14 descriptor fields unmapped (all vendor usage IDs
+      0x008C-0x00FE) - confirms why direct-decode is required for CyberPower.
+      Decision: annotation layer only, no decode migration (D005 in DECISIONS.md).
 
 ## Mode 3 - future improvements
 

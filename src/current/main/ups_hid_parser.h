@@ -83,6 +83,14 @@ typedef void (*ups_xchk_probe_fn_t)(uint8_t rid, uint16_t probe_size);
  */
 void ups_hid_parser_set_xchk_probe_cb(ups_xchk_probe_fn_t fn);
 
+/**
+ * Return a pointer to the internally stored parsed HID descriptor.
+ * Valid after ups_hid_parser_set_descriptor() has been called.
+ * Returns NULL if no valid descriptor has been loaded.
+ * Used by the probe path to annotate GET_REPORT responses with NUT var names.
+ */
+const hid_desc_t *ups_hid_parser_get_desc(void);
+
 #ifdef __cplusplus
 }
 #endif

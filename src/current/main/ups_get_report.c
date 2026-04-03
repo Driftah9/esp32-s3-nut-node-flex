@@ -39,6 +39,8 @@
 
 #include "ups_get_report.h"
 #include "ups_state.h"
+#include "ups_hid_map.h"
+#include "ups_hid_parser.h"
 
 #include <string.h>
 #include <inttypes.h>
@@ -569,7 +571,7 @@ static void service_probe_queue(void)
         return;
     }
 
-    /* Log raw response bytes - this is the investigation data */
+    /* Log raw response bytes */
     {
         char   hexbuf[64] = {0};
         int    pos        = 0;
@@ -581,8 +583,18 @@ static void service_probe_queue(void)
         ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X response (%u bytes): %s",
                  (unsigned)req.rid, (unsigned)got, hexbuf);
     }
-    /* Raw hex is the output of this phase. Decode follows once patterns
-     * are understood (maps to NUT mge-hid.c mapping table evaluation). */
+
+    /* Annotate each field in the descriptor for this RID with its NUT var name.
+     * GET_REPORT response: buf[0] = rid echo, buf[1..] = payload.
+     * Pass payload only (skip rid byte) to annotate_report. */
+    if (got >= 2u) {
+        const hid_desc_t *desc = ups_hid_parser_get_desc();
+        if (desc) {
+            ups_hid_map_annotate_report(desc, req.rid,
+                                        buf + 1u, got - 1u,
+                                        TAG);
+        }
+    }
 }
 
 /* ---- Public probe API ------------------------------------------------- */
