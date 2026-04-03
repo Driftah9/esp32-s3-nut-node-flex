@@ -11,6 +11,8 @@
  R1  v15.11  Fix AJAX addOrUpdate ID mismatch; rid=0x21 runtime; Smart-UPS C cache
  R2  v15.14  NUT Variables lightbox (click link)
  R3  v0.6-flex  Full upsc-style NUT variable table directly on dashboard.
+ R4  v0.12-flex Diagnostic log capture section: radio (90s/120s) + Start Capture
+                button. Shows progress banner when armed, View Log link when ready.
                 All groups (battery/input/output/ups/device/driver) visible.
                 Live AJAX updates every 5s. Lightbox removed.
                 Mode shown in subtitle. ups.vendorid/productid added.
@@ -21,6 +23,7 @@
 #include "ups_state.h"
 #include "wifi_mgr.h"
 #include "cfg_store.h"
+#include "diag_capture.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -57,6 +60,42 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         case OP_MODE_NUT_CLIENT: mode_sub = "Mode 2 &mdash; NUT Client push"; break;
         case OP_MODE_BRIDGE:     mode_sub = "Mode 3 &mdash; Raw HID Bridge";  break;
         default:                 mode_sub = "Mode 1 &mdash; Standalone NUT server on tcp/3493"; break;
+    }
+
+    /* Build diagnostic capture section - state-dependent */
+    char diag_sec[768];
+    if (diag_capture_is_armed()) {
+        uint32_t el  = diag_capture_get_elapsed_s();
+        uint32_t dur = diag_capture_get_duration();
+        uint32_t rem = (el < dur) ? (dur - el) : 0;
+        snprintf(diag_sec, sizeof(diag_sec),
+            "<div class='warn' style='margin-top:16px'>"
+            "Log capture in progress: %us elapsed, ~%us remaining."
+            " <a href='/diag-log'>Check status</a></div>",
+            (unsigned)el, (unsigned)rem);
+    } else if (diag_capture_is_ready()) {
+        snprintf(diag_sec, sizeof(diag_sec),
+            "<div style='margin-top:16px;font-family:Arial,sans-serif;"
+            "font-size:0.9em'>"
+            "<span style='color:#4fc3f7'>Log capture complete.</span>"
+            " <a href='/diag-log' target='_blank'>View Log</a>"
+            "</div>");
+    } else {
+        snprintf(diag_sec, sizeof(diag_sec),
+            "<form method='POST' action='/diag-start' style='margin-top:20px'>"
+            "<div class='form-section'>Diagnostic Log Capture</div>"
+            "<div class='form-row'><span class='form-label'>Duration</span>"
+            "<label style='margin-right:16px'>"
+            "<input type='radio' name='dur' value='90' checked> 90s</label>"
+            "<label><input type='radio' name='dur' value='120'> 120s</label>"
+            "</div>"
+            "<div style='margin-top:10px'>"
+            "<input class='btn' type='submit' value='Start Capture'>"
+            "</div>"
+            "<div style='color:#555;font-size:0.78em;margin-top:8px;"
+            "font-family:Arial,sans-serif'>"
+            "Reboots device and captures full boot log. Passwords are redacted."
+            "</div></form>");
     }
 
     snprintf(out, outsz,
@@ -183,6 +222,8 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         "<span style='color:#555;font-size:0.82em;margin-left:8px' id='td_ip'>%s</span>"
         "</div>"
 
+        "%s"  /* diag capture section */
+
         "<script>"
         /* helpers */
         "function sv(id,val,cls){"
@@ -286,6 +327,7 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         pw_warn,            /* password warning */
         st_cls, st,         /* status badge: class + text */
         st,                 /* ups.status initial value in table */
-        sta_ip[0] ? sta_ip : ""
+        sta_ip[0] ? sta_ip : "",
+        diag_sec            /* diagnostic capture section */
     );
 }

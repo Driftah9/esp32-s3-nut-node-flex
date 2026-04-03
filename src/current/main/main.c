@@ -27,6 +27,8 @@
  R10 v15.10 DB-driven identity: mfr/model overrides from ups_device_db.
             derive_status debug log. CPS→CyberPower, garbled product
             string fallback to model_hint.
+ R11 v0.12-flex diag_capture_check_and_arm() called after cfg load, before
+                wifi/USB init. Arms ring buffer + vprintf hook if NVS flag set.
 
 ============================================================================*/
 
@@ -41,6 +43,7 @@
 #include "nut_bridge.h"
 #include "ups_state.h"
 #include "ups_usb_hid.h"
+#include "diag_capture.h"
 
 static const char *TAG = "UPS_USB_M15";
 
@@ -58,6 +61,10 @@ void app_main(void) {
     cfg_store_load_or_defaults(&g_cfg);
     cfg_store_ensure_ap_ssid(&g_cfg);
     cfg_store_commit(&g_cfg);
+
+    /* Arm diagnostic capture if requested - must run before wifi/USB init
+     * so the full boot sequence is captured in the ring buffer */
+    diag_capture_check_and_arm();
     ESP_LOGI(TAG, "op_mode=%u upstream=%s:%u", (unsigned)g_cfg.op_mode,
              g_cfg.upstream_host, (unsigned)g_cfg.upstream_port);
 

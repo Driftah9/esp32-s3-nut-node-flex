@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.11 - op_mode constants renumbered 1/2/3 (was 0/1/2). Config page and status page now consistent.
+v0.12 - Diagnostic log capture implemented. Button + radio (90s/120s) on dashboard. NVS flag + reboot + ring buffer + vprintf hook. Log served at /diag-log with Copy button. Passwords scrubbed before display.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,7 +38,14 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-03 - v0.11: op_mode constants renumbered 1/2/3. cfg_store.h, cfg_store.c, http_config_page.c updated.
+2026-04-03 - v0.12: diag_capture.c/h (new module). Dashboard capture section (radio + button).
+/diag-start POST: sets NVS diag_dur key, sends countdown page, reboots.
+/diag-log GET: serves captured log as HTML with Copy button (passwords scrubbed).
+On next boot with diag_dur set: vprintf hook installs into 128KB PSRAM ring buffer,
+FreeRTOS timer task fires at selected duration, marks log ready, restores hook.
+Build clean. 3 buffer-size compile errors fixed (PORTAL_CSS removed from simple pages).
+
+Previous (2026-04-03) - v0.11: op_mode constants renumbered 1/2/3. cfg_store.h, cfg_store.c, http_config_page.c updated.
 Build clean. Config page now matches status page (Mode 1/2/3 consistent throughout).
 NVS note: old value 0 falls to default case (STANDALONE) in switch - no migration required.
 

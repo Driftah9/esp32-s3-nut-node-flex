@@ -20,6 +20,9 @@
               All fixes applied: AJAX ID mismatch, CP rid=0x21 runtime,
               Smart-UPS C uid cache additions, wall clock
  R19  v15.13  /status JSON expanded: DB static fields added
+ R20  v0.12-flex POST /diag-start: write NVS dur flag, send countdown page, reboot
+                 GET  /diag-log:   serve captured log as HTML with copy button
+                 Auth required for both routes
               (battery_voltage_nominal_v, battery_runtime_low_s,
               battery_charge_low, battery_charge_warning,
               input_voltage_nominal_v, ups_type, ups_firmware,
@@ -45,6 +48,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_system.h"
+#include "nvs.h"
 
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
@@ -54,6 +58,7 @@
 #include "ups_state.h"
 #include "ups_device_db.h"
 #include "http_portal_css.h"
+#include "diag_capture.h"
 
 static const char *TAG = "http_portal";
 
@@ -398,6 +403,156 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         render_config(cfg, page, HTTP_PAGE_BUF, note, (err == ESP_OK) ? "ok" : "err");
         http_send_html(fd, page);
         free(page);
+
+    } else if (strcmp(path, "/diag-start") == 0 && strcasecmp(method, "POST") == 0) {
+        /* Parse duration from form body */
+        uint8_t dur = 90;
+        char *dp = strstr(body, "dur=");
+        if (dp) {
+            int v = atoi(dp + 4);
+            if (v == 120) dur = 120;
+        }
+
+        /* Write NVS flag */
+        nvs_handle_t nh;
+        if (nvs_open("cfg", NVS_READWRITE, &nh) == ESP_OK) {
+            nvs_set_u8(nh, "diag_dur", dur);
+            nvs_commit(nh);
+            nvs_close(nh);
+        }
+
+        /* Send countdown page - JS redirects to /diag-log after capture */
+        char cpage[1024];
+        int wait_s = (int)dur + 35; /* duration + reboot overhead */
+        snprintf(cpage, sizeof(cpage),
+            "<!doctype html><html><head>"
+            "<meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<title>Capturing log...</title>"
+            "<style>body{background:#0a0a0a;color:#d0d0d0;font-family:Arial,sans-serif;"
+            "padding:20px}h2{color:#4fc3f7}b{color:#e8e8e2}</style>"
+            "</head><body>"
+            "<h2>ESP32-S3 UPS Node</h2>"
+            "<p>Capturing <b>%us</b> boot log - device is rebooting.</p>"
+            "<p>Redirecting to log in <b id='r'>%d</b> seconds...</p>"
+            "<script>"
+            "var r=%d;"
+            "var t=setInterval(function(){"
+              "r--;document.getElementById('r').textContent=r;"
+              "if(r<=0){clearInterval(t);window.location.href='/diag-log';}"
+            "},1000);"
+            "</script>"
+            "</body></html>",
+            (unsigned)dur, wait_s, wait_s);
+
+        http_send_html(fd, cpage);
+        free(rx);
+        socket_close_graceful(fd);
+        vTaskDelay(pdMS_TO_TICKS(300));
+        esp_restart();
+        return;
+
+    } else if (strcmp(path, "/diag-log") == 0 && strcasecmp(method, "GET") == 0) {
+        if (diag_capture_is_armed()) {
+            /* Capture still running - show progress page with auto-refresh */
+            uint32_t elapsed = diag_capture_get_elapsed_s();
+            uint32_t dur     = diag_capture_get_duration();
+            uint32_t remain  = (elapsed < dur) ? (dur - elapsed) : 0;
+            char prog[512];
+            snprintf(prog, sizeof(prog),
+                "<!doctype html><html><head>"
+                "<meta charset='utf-8'>"
+                "<meta http-equiv='refresh' content='5'>"
+                "<title>Capturing...</title>"
+                "<style>body{background:#0a0a0a;color:#d0d0d0;font-family:Arial,"
+                "sans-serif;padding:20px}h2{color:#4fc3f7}b{color:#e8e8e2}</style>"
+                "</head><body>"
+                "<h2>ESP32-S3 UPS Node</h2>"
+                "<p>Capture in progress: <b>%us</b> elapsed, <b>~%us</b> remaining.</p>"
+                "<p style='color:#555'>Refreshes every 5 seconds.</p>"
+                "</body></html>",
+                (unsigned)elapsed, (unsigned)remain);
+            http_send_html(fd, prog);
+
+        } else if (diag_capture_is_ready()) {
+            /* Scrub passwords then serve log as HTML with copy button */
+            diag_capture_scrub(cfg);
+            size_t log_len = 0;
+            const char *log_buf = diag_capture_get_log(&log_len);
+
+            static const char hdr[] =
+                "<!doctype html><html><head>"
+                "<meta charset='utf-8'>"
+                "<title>Diagnostic Log</title>"
+                "<style>"
+                "body{background:#0a0a0a;color:#d0d0d0;margin:0;padding:16px;"
+                     "font-family:Arial,sans-serif}"
+                "h2{color:#4fc3f7;font-size:1.05em;margin-bottom:4px}"
+                ".sub{color:#555;font-size:0.8em;margin-bottom:14px}"
+                ".btn{background:#1a2a3a;color:#4fc3f7;border:1px solid #2a4a6a;"
+                     "padding:6px 18px;cursor:pointer;font-size:0.85em;"
+                     "font-family:inherit}"
+                ".back{color:#555;font-size:0.82em;margin-left:14px;"
+                      "text-decoration:none}"
+                "pre{background:#050505;border:1px solid #1a1a1a;padding:14px;"
+                    "overflow:auto;font-family:'Courier New',monospace;"
+                    "font-size:0.78em;line-height:1.5;white-space:pre-wrap;"
+                    "word-break:break-all;max-height:78vh;margin-top:12px}"
+                "</style></head><body>"
+                "<h2>ESP32-S3 UPS Node - Diagnostic Log</h2>"
+                "<div class='sub'>Passwords redacted - copy and share for debugging</div>"
+                "<button class='btn' onclick='copyLog()'>Copy All</button>"
+                "<a class='back' href='/'>Back to Dashboard</a>"
+                "<pre id='lg'>";
+
+            static const char ftr[] =
+                "</pre>"
+                "<script>"
+                "function copyLog(){"
+                  "var t=document.getElementById('lg').textContent;"
+                  "if(navigator.clipboard){"
+                    "navigator.clipboard.writeText(t).then(function(){"
+                      "document.querySelector('.btn').textContent='Copied!';"
+                    "});"
+                  "}else{"
+                    "var el=document.createElement('textarea');"
+                    "el.value=t;"
+                    "document.body.appendChild(el);"
+                    "el.select();"
+                    "document.execCommand('copy');"
+                    "document.body.removeChild(el);"
+                    "document.querySelector('.btn').textContent='Copied!';"
+                  "}"
+                "}"
+                "</script></body></html>";
+
+            int total = (int)(strlen(hdr) + log_len + strlen(ftr));
+            char http_hdr[200];
+            int hlen = snprintf(http_hdr, sizeof(http_hdr),
+                "HTTP/1.1 200 OK\r\nConnection: close\r\n"
+                "Content-Type: text/html; charset=utf-8\r\n"
+                "Content-Length: %d\r\n\r\n", total);
+            send(fd, http_hdr, hlen, 0);
+            send(fd, hdr, strlen(hdr), 0);
+            if (log_buf && log_len) send(fd, log_buf, log_len, 0);
+            send(fd, ftr, strlen(ftr), 0);
+            free(rx);
+            socket_close_graceful(fd);
+            return;
+
+        } else {
+            /* No capture data */
+            http_send_html(fd,
+                "<!doctype html><html><head><meta charset='utf-8'>"
+                "<title>No Log</title>"
+                "<style>body{background:#0a0a0a;color:#d0d0d0;font-family:Arial,"
+                "sans-serif;padding:20px}h2{color:#4fc3f7}a{color:#4fc3f7}</style>"
+                "</head><body>"
+                "<h2>ESP32-S3 UPS Node</h2>"
+                "<p style='color:#777'>No capture data available.</p>"
+                "<p><a href='/'>Return to dashboard</a> to start a capture.</p>"
+                "</body></html>");
+        }
 
     } else if (strcmp(path, "/reboot") == 0 && strcasecmp(method, "GET") == 0) {
         http_send_html(fd,

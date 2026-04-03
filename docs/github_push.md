@@ -18,36 +18,47 @@ public
 main
 
 ## Version
-v0.11
+v0.12
 
 ## Commit Message
-v0.11 - esp32-s3-nut-node-flex - Mode renumber 1/2/3 + diag log capture spec
+v0.12 - esp32-s3-nut-node-flex - Diagnostic log capture
 
-Session 009: Mode numbering fix and standby feature spec
+Session 009: Opt-in boot log capture with portal UI and copy-paste viewer
 
-Mode numbering fix (0/1/2 to 1/2/3):
-- cfg_store.h: OP_MODE_STANDALONE=1, OP_MODE_NUT_CLIENT=2, OP_MODE_BRIDGE=3
-- http_config_page.c: dropdown values, card tags, JS logic, form parse range all updated
-- Status page and log strings already used 1/2/3 - no change needed there
-- NVS migration: old value 0 falls to default case (STANDALONE) - no data loss
+New module - diag_capture.c/h:
+- NVS key diag_dur armed via portal, cleared immediately on arm
+- 128KB PSRAM ring buffer allocated on armed boot, 32KB heap fallback
+- vprintf hook mirrors all log output to ring buffer + UART simultaneously
+- FreeRTOS timer task fires at selected duration (90s or 120s)
+- Timer removes hook, marks log ready, appends completion marker
+- Scrub: sta_pass, ap_pass, nut_pass, portal_pass replaced with asterisks
+- Scrub runs once before log is served
 
-Diagnostic log capture spec (standby - not integrated):
-- docs/diag-log-capture.md (NEW): full design spec for opt-in boot log capture
-  Checkbox gates button, 90s capture from boot, credential scrub before POST,
-  NVS flag + reboot approach, ring buffer 128KB PSRAM, boot loop guard,
-  submission endpoint JSON spec, /diag fallback for browser download
-- docs/next_steps.md: trimmed to single reference line pointing at spec doc
-- docs/DOC-REGISTRY.md: registered diag-log-capture.md, confirmed-ups.md,
-  nut-upstream-setup.md (three docs missing from registry)
+Dashboard UI (http_dashboard.c):
+- State-aware capture section below nav bar
+- Idle: form with radio 90s/120s + Start Capture button
+- Armed: progress banner with elapsed/remaining + link to /diag-log
+- Ready: capture complete notice + View Log link in new tab
+
+New routes in http_portal.c:
+- POST /diag-start: parse duration, write NVS, send countdown page, reboot
+- GET  /diag-log: if armed shows progress with 5s auto-refresh
+                  if ready shows HTML log viewer with Copy All button
+                  if idle shows no-capture-data page
+
+Log viewer: dark-theme pre block, Copy All button with clipboard API fallback
+Simple pages use minimal inline CSS instead of PORTAL_CSS to stay within stack buffers
+
+main.c: diag_capture_check_and_arm() called after cfg load, before wifi/USB init
 
 Build: clean, no warnings.
 
 ## Files Staged
-- main/cfg_store.h
-- main/cfg_store.c
-- main/http_config_page.c
-- docs/diag-log-capture.md
-- docs/DOC-REGISTRY.md
-- docs/next_steps.md
+- main/diag_capture.h
+- main/diag_capture.c
+- main/main.c
+- main/http_portal.c
+- main/http_dashboard.c
+- main/CMakeLists.txt
 - docs/project_state.md
 - docs/github_push.md
