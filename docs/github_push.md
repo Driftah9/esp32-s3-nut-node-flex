@@ -21,21 +21,24 @@ main
 v0.14
 
 ## Commit Message
-v0.14 - Fix XCHK probe buffer crash on large Feature reports
+v0.14 - Fix XCHK probe size cap end-to-end (16->64)
 
-Root cause of PowerWalker VI 3000 RLE battery.charge=0 identified
-from staging submissions: XCHK probe for rid=0x28 (63 bytes declared)
-was sent with wLength=16 due to hardcap. IDF v5.5.4 DWC assert fires
-(hcd_dwc.c:2388 rem_len check), device crash-loops every ~34s,
-battery.charge=0 is a crash-loop symptom not a decode bug.
+Two-location fix for PowerWalker VI 3000 RLE battery.charge=0 crash.
 
-Fix in ups_get_report.c: probe buffer cap raised 16->64 bytes.
-buf[16]->buf[64]. Covers declared Feature report sizes up to 64 bytes.
-Also applies on v5.3.1 where large wLength would read wrong data.
+Root cause: XCHK probe for rid=0x28 (63 bytes declared) was sent with
+wLength=16. IDF v5.5.4 DWC assert fires (hcd_dwc.c:2388) when wLength
+is less than the declared report size. Device crash-loops every ~34s.
+battery.charge=0 is a symptom of the crash loop, not a decode bug.
 
-Docs updated with root cause analysis and fix checklist.
+Caps were in two places - both now raised 16->64:
+1. ups_hid_parser.c run_xchk: probe_sz clamped at 64 (was 16)
+2. ups_get_report.c service_probe_queue: buf[64] cap at 64 (was 16)
+
+Verified on APC XS 1500M: rid=0x07 (50 bytes declared) now probed
+with wlen=50 (was wlen=16). No assert. No crash. Device stays up.
 
 ## Files Staged
+- src/current/main/ups_hid_parser.c
 - src/current/main/ups_get_report.c
 - docs/next_steps.md
 - docs/project_state.md

@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.14 - XCHK probe buffer fix. Cap raised 16->64 bytes in service_probe_queue(). buf[16]->buf[64]. Fixes crash-loop on PowerWalker VI 3000 RLE (and any device with large declared Feature report size). battery.charge=0 confirmed as crash-loop symptom not decode bug.
+v0.14 - XCHK probe size cap fix: 16->64 in both locations. ups_hid_parser.c run_xchk and ups_get_report.c service_probe_queue both raised. Verified on APC XS 1500M: rid=0x07 (50 bytes declared) now probed with wlen=50 (was wlen=16). No assert. No crash.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,13 +38,11 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-03 - v0.14: XCHK probe buffer fix in ups_get_report.c.
-Root cause analysis of PowerWalker VI 3000 RLE battery.charge=0 from two staging submissions.
-First submission (fb2c24, main repo): charge=100%% reads correctly throughout - no issue.
-Second submission (e88c29, flex repo, IDF v5.5.4): XCHK fires probe on rid=0x28 (63 bytes
-declared), wLength=16 hardcap triggers IDF v5.5.4 DWC assert (hcd_dwc.c:2388), device
-crash-loops every ~34s, charge=0 is crash-loop symptom.
-Fix: cap raised 16->64 bytes (`sz > 64u` not `sz > 16u`), buf[16]->buf[64]. Build clean.
+2026-04-03 - v0.14: XCHK probe size cap fix - two locations. ups_hid_parser.c run_xchk
+probe_sz clamped at 64 (was 16). ups_get_report.c service_probe_queue buf[64] + cap at 64
+(was buf[16] + cap at 16). Root cause: PowerWalker rid=0x28 (63 bytes declared) probed
+with wLength=16, IDF v5.5.4 DWC assert fires (hcd_dwc.c:2388), device crash-loops.
+Verified: APC XS 1500M rid=0x07 (50 bytes) now shows wlen=50 in setup packet. No crash.
 
 Previous (2026-04-03) - v0.12: diag_capture.c/h (new module). Dashboard capture section (radio + button).
 /diag-start POST: sets NVS diag_dur key, sends countdown page, reboots.

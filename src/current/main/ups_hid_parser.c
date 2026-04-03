@@ -72,6 +72,12 @@
                 Probe fires in usb_client_task via ups_get_report.
                 Probe size: feature_bytes from descriptor, fallback to
                 input_bytes, clamped to 16. Raw response logged in hex.
+ R7  v0.14      Fix XCHK probe size cap: 16->64 in run_xchk Part 2 and in
+                ups_get_report service_probe_queue(). Previous cap caused
+                wLength=16 for rid=0x28 (63 bytes declared) on
+                CyberPower/PowerWalker devices. IDF v5.5.4 DWC assert fires
+                when wLength < declared size (hcd_dwc.c:2388). Now passes
+                declared size up to 64 bytes end-to-end.
 
 ============================================================================*/
 
@@ -381,12 +387,14 @@ void ups_hid_parser_run_xchk(void)
         bool seen = (s_seen_rids[rid >> 3] & (1u << (rid & 7u))) != 0;
         if (!seen) {
             /* Prefer feature_bytes for the probe wLength; fall back to
-             * input_bytes. Clamp to 16 - enough for any standard field. */
+             * input_bytes. Clamp to 64 - covers large Feature reports
+             * (e.g. CyberPower/PowerWalker rid=0x28 declares 63 bytes).
+             * wLength < declared size triggers IDF v5.5.4 DWC assert. */
             uint16_t probe_sz = s_desc.reports[di].feature_bytes > 0u
                               ? s_desc.reports[di].feature_bytes
                               : s_desc.reports[di].input_bytes;
             if (probe_sz == 0u) probe_sz = 8u;
-            if (probe_sz > 16u) probe_sz = 16u;
+            if (probe_sz > 64u) probe_sz = 64u;
 
             ESP_LOGI(TAG, "[XCHK] rid=0x%02X declared as Input (%u bytes) but never arrived"
                      " - queuing GET_REPORT probe (wlen=%u)",
