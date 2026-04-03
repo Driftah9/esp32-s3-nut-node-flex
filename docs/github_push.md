@@ -21,31 +21,19 @@ main
 v0.13
 
 ## Commit Message
-v0.13 - esp32-s3-nut-node-flex - Expand diag scrub to cover all private fields
+v0.13 - esp32-s3-nut-node-flex - Track PowerWalker charge=0 issue
 
-Audit of ESP_LOG output across all modules revealed additional private data
-that appears in the captured log beyond passwords:
+User report: PowerWalker VI 3000 RLE (VID:0764 PID:0601) battery.charge
+reads 0%% - user confirms device is at 100%%.
 
-Fields added to diag_capture_scrub():
-- sta_ssid: WiFi network name, logged by IDF WiFi driver during STA connect
-- upstream_host: internal IP/hostname, logged 15+ times in main.c,
-  nut_client.c, and nut_bridge.c during mode dispatch and connect attempts
-- nut_user: NUT username, not in current logs but scrubbed for completeness
-- ap_ssid: device AP broadcast name, logged by cfg_store and wifi_mgr
+Docs updated to track the issue pending log submission:
+- next_steps.md: active issue block with known context, likely candidates,
+  and analysis checklist for when logs arrive
+- project_state.md: next step updated to reflect active issue
 
-Previously scrubbed (unchanged): sta_pass, ap_pass, nut_pass, portal_pass
-
-Updated UI text in dashboard and log viewer to accurately describe
-what is redacted: WiFi credentials, network names, upstream host, and passwords.
-
-diag_capture.h comment updated to document the full scrub field list.
-
-Build: clean, no warnings.
+No code changes. Awaiting diagnostic log or serial capture from user.
 
 ## Files Staged
-- main/diag_capture.h
-- main/diag_capture.c
-- main/http_portal.c
-- main/http_dashboard.c
-- docs/github_push.md
+- docs/next_steps.md
 - docs/project_state.md
+- docs/github_push.md

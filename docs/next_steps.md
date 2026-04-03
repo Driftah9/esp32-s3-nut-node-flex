@@ -95,6 +95,27 @@ BlueWalker PowerWalker VI 3000 RLE (VID:0764 PID:0601):
 - Already handled by existing CyberPower path - no new code needed
 - USB disconnect at ~96s is a hardware behavior, reconnect works correctly
 
+## Active Issue - PowerWalker VI 3000 RLE (2026-04-03)
+
+User report: battery.charge reading 0%% confirmed by user to be at 100%%.
+VID:0764 PID:0601 - CyberPower rebranded hardware.
+
+Known context from staging submission:
+- 256 fields, battery.charge located at rid=08 in field cache
+- CyberPower direct-decode path handles this device (vendor usage IDs 0x008C-0x00FE)
+- USB disconnect at ~96s was observed in staging submission - may be related
+
+Likely candidates:
+- rid=08 field extraction offset wrong for this specific model variant
+- Charge value reads correctly on some CyberPower models but not this one
+- USB disconnect before charge data is populated (96s disconnect timing vs field settle)
+
+Status: AWAITING LOGS - user will submit diagnostic capture or serial log
+When logs arrive: check [XCHK] output for rid=08, check field cache build,
+check interrupt-IN packet content for rid=08 at byte offset where charge is expected.
+- [ ] Analyse submitted log and identify root cause
+- [ ] Fix charge field extraction for this model if offset differs from other CyberPower
+
 ---
 
 ## Possible Future Additions

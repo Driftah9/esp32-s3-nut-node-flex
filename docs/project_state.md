@@ -75,8 +75,9 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-Phase 4 closed. No code changes in 2026-04-03 session (staging inspection only).
-Awaiting Eaton 3S 700 submitters switching to flex repo for live testing.
+Active issue: PowerWalker VI 3000 RLE (VID:0764 PID:0601) battery.charge reads 0%% (user confirms 100%%).
+Awaiting user log submission for analysis. Likely rid=08 field extraction offset issue or
+USB disconnect at ~96s preventing charge data from populating before disconnect.
 
 When ready, candidate next tasks:
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
