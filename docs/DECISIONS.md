@@ -95,9 +95,8 @@ APC Back-UPS validation (v0.8, three models - XS 1500M, RS 1000MS, BR1000G):
   Mapped: battery.charging (×3 variants), battery.discharging, battery.runtime (×2),
   battery.replace, ups.status/overload, ups.delay.shutdown, ups.load
   Unmapped: 15 APC proprietary IDs (0x00FE, 0x00FF, 0x0089, 0x008F, 0x00DB,
-  0x002A, 0x0052, 0x007C, 0x007D, and page=0x84 uid=0x0044 - generic Voltage)
-  Note: page=0x84 uid=0x0044 (rid=0x52) is likely ups.output.voltage (lmax=254) -
-  candidate for future mapping table addition
+  0x002A, 0x0052, 0x007C, 0x007D, and page=0x84 uid=0x0044)
+  Note: page=0x84 uid=0x0044 (rid=0x52) - APC non-compliant usage, see D006
 - XCHK result (XS 1500M + RS 1000MS): 6 RIDs seen, 5 undeclared vendor ext,
   2 declared-but-silent (rid=0x07 and rid=0x52 - confirmed Feature-only on APC)
 - Probe result: rid=0x07 returns 3 bytes only (battery.runtime field only).
@@ -107,6 +106,41 @@ APC Back-UPS validation (v0.8, three models - XS 1500M, RS 1000MS, BR1000G):
   This is APC behavior, not a firmware bug.
 - BR1000G disconnected at ~22.8s (before 30s XCHK timer) - no XCHK result captured
 - All 3 models: clean enumerate/decode/disconnect cycle, no crashes, no USB errors
+
+---
+
+## D006 - APC Back-UPS non-compliant HID usage: rid=0x52 page=0x84 uid=0x0044
+**Decision:** Treat APC Back-UPS (VID:051D PID:0002) rid=0x52 as an APC-specific
+transfer voltage threshold field, NOT as ConfigActivePower per HID spec.
+Do NOT add page=0x84 uid=0x0044 to the generic ups_hid_map.c table.
+Document as APC vendor deviation for future APC-specific decode path work.
+**Reason / Research findings:**
+- USB HID Power Devices spec (USB-IF Release 1.0/1.1) defines:
+    page=0x84 uid=0x0044 = ConfigActivePower (nominal rated active power in watts)
+    page=0x84 uid=0x0053 = LowVoltageTransfer
+    page=0x84 uid=0x0054 = HighVoltageTransfer
+- NUT apc-hid.c maps ConfigActivePower -> ups.realpower.nominal
+- APC Smart-UPS uses 0x0053/0x0054 correctly for transfer thresholds
+- APC Back-UPS (PID:0002) does NOT follow the spec. rid=0x52 with uid=0x0044
+  returns input transfer voltage thresholds, not rated watts.
+- GET_REPORT probe results across 3 models:
+    XS 1500M: 132V = medium sensitivity high transfer threshold
+    RS 1000MS: 88V  = low sensitivity low transfer threshold
+    BR1000G:   88V  = low sensitivity low transfer threshold
+- Standard APC 120V sensitivity table:
+    High sensitivity:   low=106V, high=127V
+    Medium sensitivity: low=97V,  high=132V
+    Low sensitivity:    low=88V,  high=136V
+- Same usage ID returns high OR low threshold depending on model sensitivity config.
+  Single register, model-dependent value.
+- NUT works around APC descriptor issues via apc_fix_report_desc() which patches
+  the raw descriptor bytes before parsing. This is why NUT handles it correctly
+  despite the non-compliant usage assignments.
+- Adding uid=0x0044 to the generic map as ups.realpower.nominal would be WRONG
+  for APC Back-UPS - the value is a voltage, not watts.
+**Status:** Research complete. No code change. APC direct-decode path
+(ups_db_apc.c or equivalent) is the correct place to handle this field
+when input.transfer.low/high support is added in future work.
 
 ---
 

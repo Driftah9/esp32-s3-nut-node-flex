@@ -54,6 +54,17 @@
       0x008C-0x00FE) - confirms why direct-decode is required for CyberPower.
       Decision: annotation layer only, no decode migration (D005 in DECISIONS.md).
 
+## All-mode verification - APC XS 1500M - COMPLETE (v0.10)
+- [x] Mode 0 STANDALONE: upsc direct against ESP port 3493 - full variable set confirmed
+      battery.charge, runtime, input/output voltage (120V via rid=0x17), status, model,
+      serial, firmware - all correct. No input.transfer.high/low (not yet decoded, expected)
+- [x] Mode 1 NUT CLIENT: push to NUT LXC dummy-ups confirmed - all vars flowing correctly
+- [x] Mode 2 BRIDGE: 1049B APC descriptor + interrupt-IN stream confirmed on LXC port 5493
+- [x] rid=0x52 page=0x84 uid=0x0044 researched and documented in D006:
+      Spec says ConfigActivePower. APC Back-UPS uses it as input transfer voltage threshold.
+      88V = low sensitivity low transfer, 132V = medium sensitivity high transfer.
+      Not added to generic map table (APC-specific decode path work - future).
+
 ## Mode 3 - future improvements
 
 - [ ] GET_REPORT forwarding (type=0x02) for Feature reports

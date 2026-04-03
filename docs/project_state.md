@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-02 -->
 
 ## Status
-v0.8 hardware validated on 3 APC Back-UPS models (XS 1500M, RS 1000MS, BR1000G) + prior CyberPower testing. Phase 4 complete. Ready for v0.9 doc push.
+v0.10 - all-mode verification complete on APC XS 1500M. D006 documented (APC HID non-compliance). Phase 4 fully closed out.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,7 +38,13 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-02 - APC hardware validation (v0.8): 3-minute monitor, 3 APC models + CyberPower baseline.
+2026-04-02 - All-mode verification on APC XS 1500M (v0.10). D006 documented.
+Mode 0 STANDALONE: upsc direct against ESP port 3493 - all vars confirmed.
+Mode 1 NUT CLIENT: push to LXC dummy-ups confirmed, all vars flowing.
+Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493.
+rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
+uid=0x0044 per spec = ConfigActivePower, but APC Back-UPS uses it for
+input transfer voltage threshold (88V/132V). Not added to generic map table.
 ups_hid_map.h/c (NEW): hid_nut_entry_t { usage_page, usage_id, nut_var } static table,
 ~50 entries covering HID pages 0x84 (Power Device) and 0x85 (Battery System).
 ups_hid_map_lookup(): linear scan, vendor page normalization.
@@ -52,9 +58,11 @@ Flashed + confirmed: CyberPower all 14 fields unmapped (all vendor usage IDs 0x0
 XCHK: 0 declared-but-silent Input RIDs (both Input RIDs seen in traffic). Phase 4 complete.
 
 ## Next Step
-Push v0.9 doc update (APC validation results, 3 confirmed devices added).
-Phase 4 fully complete. Consider next: D002 fallback, bridge GET_REPORT forwarding,
-or wider device testing.
+Phase 4 closed. Consider next work:
+- D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
+- Bridge GET_REPORT forwarding (type=0x02) for Feature reports
+- APC direct-decode: add input.transfer.low/high from rid=0x52 (D006)
+- Wider device testing with additional UPS hardware
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.
