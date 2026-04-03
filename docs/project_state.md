@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.12 - Diagnostic log capture implemented. Button + radio (90s/120s) on dashboard. NVS flag + reboot + ring buffer + vprintf hook. Log served at /diag-log with Copy button. Passwords scrubbed before display.
+v0.13 - Diag scrub expanded: sta_ssid, upstream_host, nut_user, ap_ssid added alongside passwords. Button + radio (90s/120s) on dashboard. NVS flag + reboot + ring buffer + vprintf hook. Log served at /diag-log with Copy button. Passwords scrubbed before display.
 
 ## Parent
 esp32-s3-nut-node v15.18

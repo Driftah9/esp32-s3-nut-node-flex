@@ -206,10 +206,27 @@ void diag_capture_scrub(const app_cfg_t *cfg)
     if (!s_buf || !s_ready || s_scrubbed) return;
     if (!cfg) return;
 
+    /* Passwords - must not appear in any shared log */
     scrub_field(cfg->sta_pass);
     scrub_field(cfg->ap_pass);
     scrub_field(cfg->nut_pass);
     scrub_field(cfg->portal_pass);
+
+    /* Network identity - SSID identifies the user's home/office network.
+     * Appears in IDF WiFi driver logs during STA connect sequence. */
+    scrub_field(cfg->sta_ssid);
+
+    /* Upstream host - internal network IP or hostname.
+     * Logged many times in main.c, nut_client.c, nut_bridge.c. */
+    scrub_field(cfg->upstream_host);
+
+    /* NUT username - not currently in our logs but scrub for completeness */
+    scrub_field(cfg->nut_user);
+
+    /* AP SSID - the device's own broadcast name.
+     * Logged in cfg_store and wifi_mgr. Less sensitive than STA SSID but
+     * still identifies this specific device on the network. */
+    scrub_field(cfg->ap_ssid);
 
     s_scrubbed = true;
     ESP_LOGI(TAG, "scrub complete");

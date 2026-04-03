@@ -500,7 +500,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
                     "word-break:break-all;max-height:78vh;margin-top:12px}"
                 "</style></head><body>"
                 "<h2>ESP32-S3 UPS Node - Diagnostic Log</h2>"
-                "<div class='sub'>Passwords redacted - copy and share for debugging</div>"
+                "<div class='sub'>WiFi credentials, network names, upstream host, and passwords redacted</div>"
                 "<button class='btn' onclick='copyLog()'>Copy All</button>"
                 "<a class='back' href='/'>Back to Dashboard</a>"
                 "<pre id='lg'>";

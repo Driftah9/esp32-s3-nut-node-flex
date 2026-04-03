@@ -94,7 +94,7 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
             "</div>"
             "<div style='color:#555;font-size:0.78em;margin-top:8px;"
             "font-family:Arial,sans-serif'>"
-            "Reboots device and captures full boot log. Passwords are redacted."
+            "Reboots device and captures full boot log. WiFi credentials, network names, upstream host, and passwords are redacted before display."
             "</div></form>");
     }
 

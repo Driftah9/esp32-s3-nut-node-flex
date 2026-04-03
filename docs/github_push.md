@@ -18,47 +18,34 @@ public
 main
 
 ## Version
-v0.12
+v0.13
 
 ## Commit Message
-v0.12 - esp32-s3-nut-node-flex - Diagnostic log capture
+v0.13 - esp32-s3-nut-node-flex - Expand diag scrub to cover all private fields
 
-Session 009: Opt-in boot log capture with portal UI and copy-paste viewer
+Audit of ESP_LOG output across all modules revealed additional private data
+that appears in the captured log beyond passwords:
 
-New module - diag_capture.c/h:
-- NVS key diag_dur armed via portal, cleared immediately on arm
-- 128KB PSRAM ring buffer allocated on armed boot, 32KB heap fallback
-- vprintf hook mirrors all log output to ring buffer + UART simultaneously
-- FreeRTOS timer task fires at selected duration (90s or 120s)
-- Timer removes hook, marks log ready, appends completion marker
-- Scrub: sta_pass, ap_pass, nut_pass, portal_pass replaced with asterisks
-- Scrub runs once before log is served
+Fields added to diag_capture_scrub():
+- sta_ssid: WiFi network name, logged by IDF WiFi driver during STA connect
+- upstream_host: internal IP/hostname, logged 15+ times in main.c,
+  nut_client.c, and nut_bridge.c during mode dispatch and connect attempts
+- nut_user: NUT username, not in current logs but scrubbed for completeness
+- ap_ssid: device AP broadcast name, logged by cfg_store and wifi_mgr
 
-Dashboard UI (http_dashboard.c):
-- State-aware capture section below nav bar
-- Idle: form with radio 90s/120s + Start Capture button
-- Armed: progress banner with elapsed/remaining + link to /diag-log
-- Ready: capture complete notice + View Log link in new tab
+Previously scrubbed (unchanged): sta_pass, ap_pass, nut_pass, portal_pass
 
-New routes in http_portal.c:
-- POST /diag-start: parse duration, write NVS, send countdown page, reboot
-- GET  /diag-log: if armed shows progress with 5s auto-refresh
-                  if ready shows HTML log viewer with Copy All button
-                  if idle shows no-capture-data page
+Updated UI text in dashboard and log viewer to accurately describe
+what is redacted: WiFi credentials, network names, upstream host, and passwords.
 
-Log viewer: dark-theme pre block, Copy All button with clipboard API fallback
-Simple pages use minimal inline CSS instead of PORTAL_CSS to stay within stack buffers
-
-main.c: diag_capture_check_and_arm() called after cfg load, before wifi/USB init
+diag_capture.h comment updated to document the full scrub field list.
 
 Build: clean, no warnings.
 
 ## Files Staged
 - main/diag_capture.h
 - main/diag_capture.c
-- main/main.c
 - main/http_portal.c
 - main/http_dashboard.c
-- main/CMakeLists.txt
-- docs/project_state.md
 - docs/github_push.md
+- docs/project_state.md

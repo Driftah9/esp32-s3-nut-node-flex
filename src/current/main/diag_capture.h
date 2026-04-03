@@ -36,7 +36,10 @@ uint32_t diag_capture_get_elapsed_s(void);  /* seconds since capture started */
  * Returns NULL if capture not ready. Buffer is valid until next reboot. */
 const char *diag_capture_get_log(size_t *len_out);
 
-/* Scrub password fields from the ring buffer in-place (replace with asterisks).
+/* Scrub private fields from the ring buffer in-place (replace with asterisks).
+ * Covers: sta_pass, ap_pass, nut_pass, portal_pass (passwords),
+ *         sta_ssid (network name), upstream_host (internal IP/hostname),
+ *         nut_user (username), ap_ssid (device AP name).
  * Call once before serving /diag-log. Idempotent - safe to call multiple times. */
 void diag_capture_scrub(const app_cfg_t *cfg);
 
