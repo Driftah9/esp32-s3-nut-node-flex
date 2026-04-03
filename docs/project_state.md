@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-02 -->
 
 ## Status
-v0.8 built clean, flashed, confirmed. Phase 4 complete. All XCHK + probe + mapping table work done.
+v0.8 hardware validated on 3 APC Back-UPS models (XS 1500M, RS 1000MS, BR1000G) + prior CyberPower testing. Phase 4 complete. Ready for v0.9 doc push.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,7 +38,7 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-02 - Phase 4 mapping table (v0.8): NUT mge-hid.c mapping table evaluation complete.
+2026-04-02 - APC hardware validation (v0.8): 3-minute monitor, 3 APC models + CyberPower baseline.
 ups_hid_map.h/c (NEW): hid_nut_entry_t { usage_page, usage_id, nut_var } static table,
 ~50 entries covering HID pages 0x84 (Power Device) and 0x85 (Battery System).
 ups_hid_map_lookup(): linear scan, vendor page normalization.
@@ -52,9 +52,9 @@ Flashed + confirmed: CyberPower all 14 fields unmapped (all vendor usage IDs 0x0
 XCHK: 0 declared-but-silent Input RIDs (both Input RIDs seen in traffic). Phase 4 complete.
 
 ## Next Step
-Push v0.8 to GitHub. Phase 4 is fully complete.
-Consider Phase 5 options: Mode 2/3 fallback (D002), GET_REPORT forwarding in bridge,
-or APC/Eaton hardware test to validate mapping table with real standard-usage device.
+Push v0.9 doc update (APC validation results, 3 confirmed devices added).
+Phase 4 fully complete. Consider next: D002 fallback, bridge GET_REPORT forwarding,
+or wider device testing.
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.

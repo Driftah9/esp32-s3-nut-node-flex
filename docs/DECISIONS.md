@@ -82,9 +82,31 @@ replace the working field cache or direct-decode paths.
 - For APC/Eaton devices using standard HID usages, the table would annotate correctly.
 - Full decode migration (replacing field cache with table-driven decode) deferred:
   risk of regression, current decode paths are tested and stable.
-**Status:** Implemented (v0.7). ups_hid_map.c/h: lookup table + annotate_report().
+**Status:** Implemented and confirmed (v0.8).
+ups_hid_map.c/h: lookup table + annotate_report().
 Integrated into ups_hid_desc_dump() and ups_get_report probe path.
 ups_hid_parser_get_desc() added as accessor for probe annotation.
+APC Back-UPS validation (v0.8, three models - XS 1500M, RS 1000MS, BR1000G):
+- All three use VID:051D PID:0002 and share the same APC Back-UPS HID profile
+- XS 1500M + RS 1000MS: identical 1049B descriptor, 24 fields, 16 RIDs
+- BR1000G: 1133B descriptor, 29 fields, 20 RIDs (5 extra Feature-only fields
+  in rids 0x80/0x8D-0x90 using page=0x84 uid=0x0092-0x0096, all unmapped)
+- Mapping table result: 9/24 fields annotated with NUT names (vs 0/14 CyberPower)
+  Mapped: battery.charging (×3 variants), battery.discharging, battery.runtime (×2),
+  battery.replace, ups.status/overload, ups.delay.shutdown, ups.load
+  Unmapped: 15 APC proprietary IDs (0x00FE, 0x00FF, 0x0089, 0x008F, 0x00DB,
+  0x002A, 0x0052, 0x007C, 0x007D, and page=0x84 uid=0x0044 - generic Voltage)
+  Note: page=0x84 uid=0x0044 (rid=0x52) is likely ups.output.voltage (lmax=254) -
+  candidate for future mapping table addition
+- XCHK result (XS 1500M + RS 1000MS): 6 RIDs seen, 5 undeclared vendor ext,
+  2 declared-but-silent (rid=0x07 and rid=0x52 - confirmed Feature-only on APC)
+- Probe result: rid=0x07 returns 3 bytes only (battery.runtime field only).
+  APC truncates GET_REPORT Feature response to just the first field.
+  annotate_report() correctly extracts battery.runtime (val=20881 / 19663),
+  emits extract FAILED WARN for fields at bit_off >= 16 (expected, payload short).
+  This is APC behavior, not a firmware bug.
+- BR1000G disconnected at ~22.8s (before 30s XCHK timer) - no XCHK result captured
+- All 3 models: clean enumerate/decode/disconnect cycle, no crashes, no USB errors
 
 ---
 

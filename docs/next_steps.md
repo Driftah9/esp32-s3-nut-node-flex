@@ -35,6 +35,13 @@
       ups_xchk_probe_fn_t callback registered by ups_usb_hid.
       Probe fires in usb_client_task via ups_get_report_service_queue().
       Raw hex logged as [XCHK Probe] - investigation data for next phase.
+- [x] APC Back-UPS hardware validation (v0.8): XS 1500M, RS 1000MS, BR1000G confirmed.
+      Mapping table: 9/24 fields annotated (battery.charging x3, battery.discharging,
+      battery.runtime x2, battery.replace, ups.status/overload, ups.delay.shutdown, ups.load).
+      APC GET_REPORT Feature truncation documented (returns first field only - expected).
+      XCHK consistent: 6 RIDs, 5 undeclared vendor ext, 2 declared-but-silent on both
+      XS 1500M and RS 1000MS. BR1000G has larger descriptor (1133B, 29 fields, 20 RIDs).
+      All clean connect/decode/disconnect. No crashes. 5 confirmed UPS total.
 - [x] Evaluate NUT mge-hid.c mapping table format for portability to ESP
       ups_hid_map.c/h: static table { usage_page, usage_id, nut_var } covering
       HID pages 0x84 (Power Device) and 0x85 (Battery System), ~50 entries.

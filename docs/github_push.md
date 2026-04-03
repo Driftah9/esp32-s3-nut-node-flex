@@ -18,68 +18,53 @@ public
 main
 
 ## Version
-v0.8
+v0.9
 
 ## Commit Message
-v0.8 - esp32-s3-nut-node-flex - Phase 4 complete: NUT mapping table evaluation
+v0.9 - esp32-s3-nut-node-flex - APC Back-UPS hardware validation complete
 
-Session 008: NUT mge-hid.c mapping table format ported to ESP annotation layer
+Session 008: APC Back-UPS validation on 3 models, mapping table confirmed working
 
-ups_hid_map.h (NEW):
-- ups_hid_map_lookup(usage_page, usage_id) - returns nut_var string or NULL
-- ups_hid_map_annotate_report(desc, rid, payload, plen, tag) - logs NUT names per field
+Hardware tested (3-minute monitor, 4 connect/disconnect cycles):
+- APC Back-UPS XS 1500M (VID:051D PID:0002, FW:947.d10) - confirmed
+- APC Back-UPS RS 1000MS (VID:051D PID:0002, FW:950.e3) - confirmed
+- APC Back-UPS BR1000G (VID:051D PID:0002, FW:868.L2) - confirmed
+- CyberPower ST Series (VID:0764 PID:0501) - previously confirmed
 
-ups_hid_map.c (NEW):
-- hid_nut_entry_t struct: usage_page, usage_id, nut_var
-- Static table ~50 entries covering HID pages 0x84 Power Device and 0x85 Battery System
-- Page 0x84: ups.input.voltage, ups.output.voltage, ups.output.current,
-  ups.input.frequency, ups.load, ups.temperature, ups.input.voltage.nominal,
-  input.transfer.low/high, ups.delay.shutdown/start, AVR boost/buck, overload, utility present
-- Page 0x85: battery.charge (multiple usages incl APC variants), battery.runtime,
-  battery.voltage, charging/discharging/fully-charged/fully-discharged flags,
-  battery.charge.low, battery.replace, battery.cycle.count, input.utility.present
-- Vendor pages (>=0xFD00) normalized for lookup
-- Design: annotation layer only, does not replace working direct-decode paths
+Mapping table results (APC XS 1500M + RS 1000MS, identical 1049B descriptor):
+- 9/24 fields annotated vs 0/14 on CyberPower - confirms table works on standard usages
+- Mapped: battery.charging x3 variants, battery.discharging, battery.runtime x2,
+  battery.replace, ups.status/overload, ups.delay.shutdown, ups.load
+- Unmapped: 15 APC proprietary IDs (expected)
+- Note: page=0x84 uid=0x0044 (rid=0x52) is likely ups.output.voltage - future addition
 
-ups_hid_desc.c:
-- ups_hid_desc_dump() updated: appends -> nut_var_name or -> unmapped per field
-- Added include ups_hid_map.h
+XCHK results (consistent across both APC models):
+- 6 RIDs seen, 5 undeclared vendor extensions, 2 declared-but-silent
+- Declared-but-silent: rid=0x07 and rid=0x52 (Feature-only on APC)
+- Probe fired for both - rid=0x07 returns battery.runtime (3 bytes, APC truncates)
+- extract FAILED WARNs for bit_off >= 16 are expected (APC Feature response truncation)
 
-ups_get_report.c:
-- service_probe_queue(): calls ups_hid_map_annotate_report() after probe response
-- Added includes ups_hid_map.h and ups_hid_parser.h
+BR1000G notes:
+- Larger descriptor: 1133B, 29 fields, 20 RIDs (5 extra Feature fields in high RIDs)
+- Extra rids 0x80/0x8D-0x90 on page=0x84 uid=0x0092-0x0096 - all unmapped
+- Disconnected at ~22.8s - XCHK 30s timer did not fire (expected edge case)
 
-ups_hid_parser.h R7:
-- ups_hid_parser_get_desc() accessor declaration added
-- Returns const hid_desc_t ptr for probe-path annotation use
+All 3 models: clean enumerate/decode/disconnect, no crashes, no USB errors
 
-ups_hid_parser.c R7:
-- ups_hid_parser_get_desc() implemented: returns &s_desc if valid, else NULL
-
-CMakeLists.txt:
-- ups_hid_map.c added to SRCS list
+docs/confirmed-ups.md:
+- Added APC Back-UPS XS 1500M, RS 1000MS, BR1000G (all v0.8, 2026-04-02)
+- APC moved from Expected to Confirmed (additional models note kept in Expected)
+- Total confirmed: 5 devices
 
 docs/DECISIONS.md:
-- D004 updated: Implemented and confirmed (v0.6-v0.7) with full XCHK + probe results
-- D005 added: NUT mge-hid.c mapping table evaluation - portability verdict, CyberPower result,
-  annotation-only approach rationale
+- D005 updated with full APC validation results, probe truncation behavior,
+  BR1000G descriptor differences, candidate future mapping (uid=0x0044)
 
-Hardware verification (CyberPower ST Series VID:0764 PID:0501):
-- All 14 descriptor fields show unmapped (all vendor usage IDs 0x008C-0x00FE)
-- Confirms direct-decode requirement for CyberPower
-- XCHK: 0 declared-but-silent Input RIDs, 11 undeclared vendor extensions
-- System stable, no USB errors, no watchdog triggers
-
-Build: clean, zero warnings, zero errors (ESP-IDF v5.3.1)
+docs/next_steps.md: APC validation results added under Phase 4 completed items
+docs/project_state.md: status and last action updated
 
 ## Files Staged
-- src/current/main/ups_hid_map.h
-- src/current/main/ups_hid_map.c
-- src/current/main/ups_hid_desc.c
-- src/current/main/ups_get_report.c
-- src/current/main/ups_hid_parser.h
-- src/current/main/ups_hid_parser.c
-- src/current/main/CMakeLists.txt
+- docs/confirmed-ups.md
 - docs/DECISIONS.md
 - docs/github_push.md
 - docs/project_state.md
