@@ -42,11 +42,24 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc);
  *
  * @param data   Raw report bytes (including report ID byte if device uses them)
  * @param len    Number of bytes
- * @param upd    Output update structure — filled on success
+ * @param upd    Output update structure - filled on success
  * @return       true if any field was decoded
  */
 bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
                                    ups_state_update_t *upd);
+
+/**
+ * Run the dynamic RID cross-check immediately.
+ *
+ * Normally called automatically 30s after ups_hid_parser_set_descriptor()
+ * via internal one-shot timer.  Can also be called manually for testing.
+ *
+ * Compares the set of report IDs seen in actual interrupt-IN traffic
+ * against the Input reports declared in the HID descriptor:
+ *   - Seen but not declared -> WARN (undocumented vendor extension)
+ *   - Declared but never seen -> INFO (descriptor claims Input, never arrived)
+ */
+void ups_hid_parser_run_xchk(void);
 
 #ifdef __cplusplus
 }

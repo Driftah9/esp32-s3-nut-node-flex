@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-02 -->
 
 ## Status
-Phase 3 COMPLETE. v0.4 ready to push.
+v0.6 ready to push. All session work complete - dashboard redesign, OB fix, issue templates, community links.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -23,7 +23,7 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - [x] cfg_store op_mode fields + portal mode selector - v0.2
 - [x] Mode 2 NUT CLIENT push task (nut_client.c) - v0.3
 - [x] Mode 3 BRIDGE raw HID stream (nut_bridge.c) - v0.4
-- [ ] Phase 4 - Dynamic scanning investigation
+- [x] Phase 4 - Dynamic RID scanning (seen_rids bitmask + settle XCHK) - v0.6
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working
@@ -36,17 +36,18 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-02 - Mode 2 full variable push implemented and confirmed (v0.5).
-nut_client.c v0.2-flex: nc_push_identity() pushes all static/identity/nominal variables
-on connect. nc_push_state() expanded with input.voltage and output.voltage.
-upsc on LXC now returns complete real data: no UNKNOWN identity, all battery/ups fields live.
-LXC ups.dev updated to comprehensive template. nut-upstream-setup.md created.
-
-Also added: http_config_page.c two-column layout with live-switching mode description
-cards. Each mode shows what it does, requirements, and notes in the right panel.
+2026-04-02 - Dashboard redesign, CyberPower OB fix, community infrastructure (v0.6).
+http_dashboard.c R3: full upsc-style NUT variable table, device group first, AJAX 5s, title renamed.
+ups_hid_parser.c: rid=0x80 OB fix - p[0] != 0x00u replaces bit-0 check.
+http_portal.c: ups_vendorid/ups_productid added to /status JSON.
+.github: issue templates + workflows ported from main project (adapted for flex).
+docs/confirmed-ups.md: created with seed entries.
+README.md: community section added (Discord, Ko-fi, projects.strydertech.com).
+docs/next_steps.md: diagnostic logging added as possible future addition.
+docs/github_push.md: updated with all accumulated changes.
 
 ## Next Step
-Push v0.5. Then Phase 4 dynamic scanning or other priorities.
+Run git-push.ps1 to push v0.6 to GitHub.
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.

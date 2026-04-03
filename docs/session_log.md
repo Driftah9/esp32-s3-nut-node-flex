@@ -267,3 +267,53 @@ complete real data: identity, live values, nominals, housekeeping. Zero dummy le
 Config page updated with mode description panel (right column, live-switching cards).
 v0.5 ready to push.
 Next session starts at: Push v0.5. Then Phase 4 dynamic scanning or other priorities.
+
+---
+
+## Session 007 - 2026-04-02
+
+Tags: phase4, dynamic-scanning, seen-rids, xchk, bitmask, settle-timer, v0.6
+
+Work completed:
+- Phase 4 dynamic RID cross-check implemented
+- ups_hid_parser.c: added s_seen_rids[32] bitmask (256-bit, one bit per RID 0x00-0xFF)
+  - Cleared in ups_hid_parser_reset() on disconnect
+  - Bit set in decode_report() immediately after RID byte is extracted from data[0]
+  - s_xchk_timer (esp_timer_handle_t) one-shot, created and started in set_descriptor()
+  - Timer fires after 30s -> xchk_timer_cb -> ups_hid_parser_run_xchk()
+- ups_hid_parser_run_xchk() public function:
+  - Part 1: iterates seen RIDs, checks each against s_desc.reports[] for Input declaration
+    - Not declared: ESP_LOGW "[XCHK] rid=0xXX seen in traffic but NOT declared as Input"
+    - Declared: ESP_LOGI "[XCHK] rid=0xXX seen, declared - OK"
+  - Part 2: iterates descriptor Input reports, checks if each RID was seen in traffic
+    - Never seen: ESP_LOGI "[XCHK] rid=0xXX declared as Input but never arrived"
+  - Summary: counts seen / undeclared / declared-but-silent
+- ups_hid_parser.h: ups_hid_parser_run_xchk() added to public API with full doc comment
+- ups_hid_desc.c: static expected_rids[] block removed (lines 619-635)
+  Old static list: 0x20,0x21,0x22,0x23,0x25,0x28,0x29,0x80,0x82,0x85,0x86,0x87,0x88
+  Replaced with comment explaining Phase 4 supersedes it
+- Build confirmed clean (idf-build.ps1 -Target build)
+
+Problems encountered:
+- None
+
+Files changed:
+- src/current/main/ups_hid_parser.c (R5 - seen_rids bitmask, xchk timer, run_xchk)
+- src/current/main/ups_hid_parser.h (run_xchk public API)
+- src/current/main/ups_hid_desc.c (static expected_rids[] removed)
+- docs/github_push.md (v0.6)
+- docs/project_state.md (Phase 4 complete)
+- docs/next_steps.md (Phase 4 checked)
+- docs/session_log.md (this entry)
+
+Reboot page improvement:
+- http_portal.c: /reboot now serves styled HTML with 20s JS countdown
+  Ticks down live, at 0 redirects browser to /
+  Device restarts immediately after page is sent (200ms delay then esp_restart)
+  Added http_portal_css.h include to http_portal.c for PORTAL_CSS
+
+Files changed (additional):
+- src/current/main/http_portal.c (reboot countdown page)
+
+Status at end: Phase 4 + reboot UX complete. Build clean. v0.6 ready to push.
+Next session starts at: Push v0.6. Flash + monitor to verify reboot countdown and XCHK at 30s.

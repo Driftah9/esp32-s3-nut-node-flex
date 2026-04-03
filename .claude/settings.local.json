@@ -71,7 +71,22 @@
       "Bash(Select-String -Path \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.h\" -Pattern \"HTTP_PAGE_BUF|PAGE_BUF|page_buf\")",
       "Bash(Select-Object -First 10)",
       "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.h'' -Pattern ''HTTP_PAGE_BUF|PAGE_BUF'' | Select-Object -First 10\")",
-      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")"
+      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\ups_hid*'' | Select-Object Name\")",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.c'' -Pattern ''XCHK|expected_rid|seen_rid|xchk'' | Select-Object Filename,LineNumber,Line | Format-Table -AutoSize\")",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.c'' -Pattern ''decode_report|intr_in_cb|HID IN'' | Select-Object Filename,LineNumber | Format-Table -AutoSize\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File .idf-build.ps1 -Target build)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target build)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 40)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target monitor -Duration 60)",
+      "Bash(powershell.exe -Command \"Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 2; Write-Host ''done''\")",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 80)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 30)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 20)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 15)",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex'' | Select-Object Name\")",
+      "Bash(powershell -Command \"New-Item -ItemType Directory -Force -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\ISSUE_TEMPLATE'' | Out-Null; New-Item -ItemType Directory -Force -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\workflows'' | Out-Null; Write-Host ''Directories created''\")",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\ISSUE_TEMPLATE'' | Select-Object Name; Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\workflows'' | Select-Object Name\")"
     ]
   }
 }

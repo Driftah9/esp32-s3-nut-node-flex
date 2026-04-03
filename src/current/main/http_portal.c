@@ -8,7 +8,7 @@
  - POST /save     -> parse_form_kv()    [http_config_page.c]
  - GET  /status   -> JSON snapshot (inline — small, no helper needed)
  - GET  /compat   -> render_compat()    [http_compat.c]
- - GET  /reboot   -> esp_restart()
+ - GET  /reboot   -> countdown page (20s) then esp_restart() + redirect to /
 
  REVERT HISTORY
  R0   v14.7   modular baseline
@@ -53,6 +53,7 @@
 #include "wifi_mgr.h"
 #include "ups_state.h"
 #include "ups_device_db.h"
+#include "http_portal_css.h"
 
 static const char *TAG = "http_portal";
 
@@ -280,9 +281,12 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         /* Look up DB entry for static NUT fields */
         const ups_device_entry_t *db = ups_device_db_lookup(ups.vid, ups.pid);
 
-        char json[1024];
+        char json[1100];
         char bvolt_s[20], load_s[12], runtime_s[12], ivolt_s[20], ovolt_s[20];
         char bvolt_nom_s[20], runtime_low_s[12], ivolt_nom_s[12];
+        char vid_s[6], pid_s[6];
+        snprintf(vid_s, sizeof(vid_s), "%04x", (unsigned)ups.vid);
+        snprintf(pid_s, sizeof(pid_s), "%04x", (unsigned)ups.pid);
 
         if (ups.battery_voltage_valid)
             snprintf(bvolt_s, sizeof(bvolt_s), "%.3f", ups.battery_voltage_mv / 1000.0f);
@@ -342,6 +346,8 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             "\"device_model\":\"%s\","
             "\"device_serial\":\"%s\","
             "\"driver_version\":\"15.13\","
+            "\"ups_vendorid\":\"%s\","
+            "\"ups_productid\":\"%s\","
             "\"ups_valid\":%s,"
             "\"ap_active\":%s"
             "}",
@@ -360,6 +366,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             ups.manufacturer[0] ? ups.manufacturer : "unknown",
             ups.product[0]      ? ups.product      : "unknown",
             ups.serial[0]       ? ups.serial        : "unknown",
+            vid_s, pid_s,
             ups.valid               ? "true" : "false",
             wifi_mgr_ap_is_active() ? "true" : "false");
 
@@ -393,7 +400,35 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         free(page);
 
     } else if (strcmp(path, "/reboot") == 0 && strcasecmp(method, "GET") == 0) {
-        http_send(fd, "200 OK", "text/plain", "Rebooting...\n");
+        http_send_html(fd,
+            "<!doctype html><html><head>"
+            "<meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<title>Rebooting...</title>"
+            PORTAL_CSS
+            "</head><body>"
+            "<h2>ESP32-S3 UPS Node</h2>"
+            "<div class='subtitle'>Rebooting device...</div>"
+            "<div style='margin-top:32px;text-align:center'>"
+            "<div id='msg' style='color:#4fc3f7;font-family:Arial,sans-serif;"
+                 "font-size:1.1em;margin-bottom:18px'>Device is restarting.</div>"
+            "<div id='ctr' style='color:#777;font-family:Arial,sans-serif;"
+                 "font-size:0.9em'>Returning to dashboard in <b id='sec'>20</b>s...</div>"
+            "</div>"
+            "<script>"
+            "var s=20;"
+            "var t=setInterval(function(){"
+              "s--;"
+              "document.getElementById('sec').textContent=s;"
+              "if(s<=0){"
+                "clearInterval(t);"
+                "document.getElementById('msg').textContent='Redirecting...';"
+                "window.location.href='/';"
+              "}"
+            "},1000);"
+            "</script>"
+            "</body></html>"
+        );
         free(rx); socket_close_graceful(fd);
         vTaskDelay(pdMS_TO_TICKS(200));
         esp_restart();

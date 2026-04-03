@@ -607,32 +607,9 @@ done:
                  (unsigned)((rpt_bits[i].feature_bits + 7) / 8));
     }
 
-    /* Cross-check: warn about report IDs seen in interrupt data but not in descriptor.
-     * We log this at WARN so it appears even without debug enabled.
-     * These rids were first seen on CyberPower devices but also appear identically
-     * on Eaton 3S (PID FFFF) and potentially other vendors. The list is device-agnostic
-     * — it flags any undeclared rid we know carries live UPS state on at least one device.
-     * NOTE: This is a STATIC pre-seeded list built from prior submissions. The warning
-     * fires at enumeration time based on what the descriptor does NOT declare; it does NOT
-     * reflect what the currently connected device is actually sending at runtime.
-     */
-    static const uint8_t expected_rids[] = {
-        0x20, 0x21, 0x22, 0x23, 0x25, 0x28, 0x29,
-        0x80, 0x82, 0x85, 0x86, 0x87, 0x88
-    };
-    for (uint8_t ei = 0; ei < sizeof(expected_rids); ei++) {
-        uint8_t rid = expected_rids[ei];
-        bool found_in_desc = false;
-        for (uint8_t di = 0; di < rpt_count; di++) {
-            if (rpt_bits[di].report_id == rid) {
-                found_in_desc = true;
-                break;
-            }
-        }
-        if (!found_in_desc) {
-            ESP_LOGW(TAG, "[XCHK] rid=0x%02X seen in interrupt data but NOT in parsed descriptor!", rid);
-        }
-    }
+    /* Static XCHK removed (Phase 4): replaced by ups_hid_parser_run_xchk()
+     * which fires 30s after enumeration using the live seen_rids bitmask
+     * accumulated from actual interrupt-IN traffic. */
 
     return out->valid;
 }

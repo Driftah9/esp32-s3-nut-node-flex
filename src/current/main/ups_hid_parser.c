@@ -61,6 +61,11 @@
  R2  v15.4  DB-driven device detection; derive_status bug fix
  R3  v15.6  APC runtime from rid=0C; uid=0x73 cache scan
  R4  v15.7  Remove input/output voltage decode and cache entries
+ R5  v0.6-flex  Phase 4 dynamic XCHK: s_seen_rids bitmask accumulated
+                from interrupt-IN traffic; 30s settle timer fires
+                ups_hid_parser_run_xchk() comparing live seen vs
+                descriptor-declared Input RIDs. Replaces static
+                expected_rids[] list in ups_hid_desc.c.
 
 ============================================================================*/
 
@@ -75,11 +80,21 @@
 #include <stdbool.h>
 
 #include "esp_log.h"
+#include "esp_timer.h"
 
 static const char *TAG = "ups_hid_parser";
 
 /* ---- Active device entry from DB ------------------------------------- */
 static const ups_device_entry_t *s_device = NULL;
+
+/* ---- Dynamic RID tracking (Phase 4) ---------------------------------- */
+/* 256-bit bitmask: bit (rid) set when RID rid arrives in interrupt-IN.   */
+/* Cleared on reset. XCHK runs 30s after enumeration via one-shot timer.  */
+static uint8_t            s_seen_rids[32];
+static esp_timer_handle_t s_xchk_timer = NULL;
+
+/* Forward declaration - defined after ups_hid_parser_set_descriptor */
+static void xchk_timer_cb(void *arg);
 
 /* ---- Field cache ----------------------------------------------------- */
 typedef struct {
@@ -110,6 +125,12 @@ void ups_hid_parser_reset(void)
     memset(&s_cache, 0, sizeof(s_cache));
     memset(&s_desc,  0, sizeof(s_desc));
     s_device = NULL;
+    memset(s_seen_rids, 0, sizeof(s_seen_rids));
+    if (s_xchk_timer) {
+        esp_timer_stop(s_xchk_timer);
+        esp_timer_delete(s_xchk_timer);
+        s_xchk_timer = NULL;
+    }
 }
 
 /* ----------------------------------------------------------------------- */
@@ -273,6 +294,82 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
     ESP_LOGI(TAG, "  discharging_flag: %s", s_cache.discharging_flag ? "found" : "MISSING");
     ESP_LOGI(TAG, "  low_battery_flag: %s", s_cache.low_battery_flag ? "found" : "MISSING");
     if (use_direct) ESP_LOGI(TAG, "  [direct-decode ACTIVE]");
+
+    /* ---- Schedule dynamic XCHK after 30s settle window ---- */
+    esp_timer_create_args_t xchk_ta = {
+        .callback        = xchk_timer_cb,
+        .arg             = NULL,
+        .dispatch_method = ESP_TIMER_TASK,
+        .name            = "hid_xchk"
+    };
+    if (esp_timer_create(&xchk_ta, &s_xchk_timer) == ESP_OK) {
+        esp_timer_start_once(s_xchk_timer, 30ULL * 1000000ULL); /* 30 seconds */
+        ESP_LOGI(TAG, "[XCHK] dynamic RID cross-check scheduled in 30s");
+    } else {
+        ESP_LOGW(TAG, "[XCHK] failed to create settle timer");
+    }
+}
+
+/* ----------------------------------------------------------------------- */
+
+void ups_hid_parser_run_xchk(void)
+{
+    if (!s_desc.valid) {
+        ESP_LOGW(TAG, "[XCHK] no valid descriptor - skipping");
+        return;
+    }
+
+    uint16_t seen_count        = 0;
+    uint16_t undeclared_count  = 0;
+    uint16_t unseen_input_count = 0;
+
+    ESP_LOGI(TAG, "[XCHK] ---- Dynamic RID cross-check (30s settle) ----");
+
+    /* Part 1: every RID seen in interrupt-IN traffic */
+    for (uint16_t rid = 0; rid <= 255; rid++) {
+        if (!(s_seen_rids[rid >> 3] & (1u << (rid & 7u)))) continue;
+        seen_count++;
+
+        /* Is this RID declared as an Input report in the descriptor? */
+        bool declared_input = false;
+        for (uint8_t di = 0; di < s_desc.report_count; di++) {
+            if (s_desc.reports[di].report_id == (uint8_t)rid &&
+                s_desc.reports[di].input_bytes > 0) {
+                declared_input = true;
+                break;
+            }
+        }
+        if (!declared_input) {
+            ESP_LOGW(TAG, "[XCHK] rid=0x%02X seen in traffic but NOT declared as Input in descriptor"
+                     " (vendor extension or undocumented)", (unsigned)rid);
+            undeclared_count++;
+        } else {
+            ESP_LOGI(TAG, "[XCHK] rid=0x%02X seen in traffic, declared in descriptor - OK", (unsigned)rid);
+        }
+    }
+
+    /* Part 2: Input RIDs declared in descriptor that never arrived */
+    for (uint8_t di = 0; di < s_desc.report_count; di++) {
+        if (s_desc.reports[di].input_bytes == 0) continue;
+        uint8_t rid = s_desc.reports[di].report_id;
+        bool seen = (s_seen_rids[rid >> 3] & (1u << (rid & 7u))) != 0;
+        if (!seen) {
+            ESP_LOGI(TAG, "[XCHK] rid=0x%02X declared as Input (%u bytes) but never arrived in traffic",
+                     (unsigned)rid, (unsigned)s_desc.reports[di].input_bytes);
+            unseen_input_count++;
+        }
+    }
+
+    ESP_LOGI(TAG, "[XCHK] Summary: %u RIDs seen, %u undeclared (vendor ext), %u declared-but-silent",
+             seen_count, undeclared_count, unseen_input_count);
+    ESP_LOGI(TAG, "[XCHK] -----------------------------------------------");
+}
+
+static void xchk_timer_cb(void *arg)
+{
+    (void)arg;
+    ups_hid_parser_run_xchk();
+    /* One-shot - will not re-fire. Handle kept for cleanup in reset(). */
 }
 
 /* ---- Helpers --------------------------------------------------------- */
@@ -310,20 +407,25 @@ static bool decode_cyberpower_direct(uint8_t rid,
         break;
     case 0x80:
         /*
-         * rid=0x80 ac_present — on CP550HG this stays 0x01 even on battery.
-         * Only trust it when it says AC is ABSENT (0x00) — that's definitive.
-         * When ac_present=1 we ignore it: rid=0x29 is the authoritative
+         * rid=0x80 ac_present — value meaning varies by CyberPower model:
+         *   CP550HG:   0x01 = AC present (stays 0x01 even on battery - ignore)
+         *              0x00 = AC absent  (trust this)
+         *   ST Series: 0x02 = AC present (bit 1, not bit 0)
+         *              0x00 = AC absent  (trust this)
+         * Bug was: checking (p[0] & 0x01u) treated 0x02 as "absent" (bit 0 clear).
+         * Fix: only trust AC ABSENT when value is exactly 0x00.
+         * Any non-zero value: do not set - rid=0x29 is the authoritative
          * source for on-battery state and must not be overwritten.
          */
         if (plen >= 1) {
-            bool ac = (p[0] & 0x01u) != 0u;
+            bool ac = (p[0] != 0x00u);
             if (!ac) {
-                /* AC definitely lost — trust this */
+                /* AC definitely lost - value is exactly 0x00 */
                 upd->input_utility_present_valid = true;
                 upd->input_utility_present       = false;
                 changed = true;
             }
-            /* ac=1: do not set — rid=0x29 owns this decision */
+            /* non-zero: do not set - rid=0x29 owns this decision */
             ESP_LOGI(TAG, "[CP] ac_present=%u%s", (unsigned)ac,
                      ac ? " (ignored, rid=0x29 authoritative)" : " -> AC LOST");
         }
@@ -655,6 +757,9 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
         payload     = data;
         payload_len = len;
     }
+
+    /* Track which RIDs we see in actual traffic (Phase 4 dynamic XCHK) */
+    s_seen_rids[rid >> 3] |= (1u << (rid & 7u));
 
     bool    changed = false;
     int32_t raw     = 0;

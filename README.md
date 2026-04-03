@@ -1,14 +1,24 @@
-# ESP32-S3 UPS NUT Node - Flex
+# ESP32 UPS NUT Node - Flex
 
 Fork of [esp32-s3-nut-node](https://github.com/Driftah9/esp32-s3-nut-node) investigating tri-mode operation and dynamic HID scanning.
 
-**Status:** Experimental / Pre-release - Phase 3 complete (all three modes confirmed working)
+**Status:** Experimental / Pre-release - All three modes confirmed working (v0.6)
 **Baseline:** esp32-s3-nut-node v15.18
 **Parent project:** [Driftah9/esp32-s3-nut-node](https://github.com/Driftah9/esp32-s3-nut-node) - stable, production use
 
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B2DKG8N)
+
 ---
 
-## What This Does (Planned)
+## Community
+
+- **Discord:** [discord.gg/KeaP4K2wRq](https://discord.gg/KeaP4K2wRq) - questions, setup help, UPS compatibility discussion
+- **Projects site:** [projects.strydertech.com](https://projects.strydertech.com) - guides, updates, setup documentation
+- **Ko-fi:** [ko-fi.com/B0B2DKG8N](https://ko-fi.com/B0B2DKG8N) - support development
+
+---
+
+## What This Does
 
 This fork adds three selectable operating modes. The mode is chosen via the web portal config page and stored in NVS.
 
@@ -33,7 +43,7 @@ Fallback: reverts to Mode 1 if upstream is unreachable at boot.
 
 The main project uses a static pre-seeded list of Report IDs (RIDs) to target with GET_REPORT probes. This fork investigates replacing that with:
 
-- Live RID accumulation from interrupt-IN traffic
+- Live RID accumulation from interrupt-IN traffic (Phase 4 - complete)
 - Targeted GET_REPORT probing against only descriptor-declared RIDs
 - Evaluation of the NUT mge-hid.c mapping table format for ESP portability
 
@@ -43,7 +53,7 @@ Goal: a device-agnostic decode path that self-builds from any UPS without a stat
 
 ## Hardware
 
-Same hardware as the main project.
+Same hardware as the main project. Any ESP32-S3 board with sufficient flash should work.
 
 | Component | Details |
 |-----------|---------|
@@ -71,7 +81,16 @@ src/current/          - Active firmware source (ESP-IDF project)
 src/current/main/     - All C source modules
 docs/                 - Project state, decisions, session log
 docs/DECISIONS.md     - Architectural decisions D001-D004
+docs/confirmed-ups.md - Confirmed compatible UPS devices
 ```
+
+---
+
+## Reporting Issues
+
+- [Report a bug](https://github.com/Driftah9/esp32-s3-nut-node-flex/issues/new?template=bug_report.yml)
+- [Submit a UPS compatibility report](https://github.com/Driftah9/esp32-s3-nut-node-flex/issues/new?template=ups-compatibility-report.yml)
+- [View confirmed compatible UPS devices](docs/confirmed-ups.md)
 
 ---
 
