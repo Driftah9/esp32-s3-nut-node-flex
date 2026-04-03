@@ -86,7 +86,10 @@
       "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 15)",
       "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex'' | Select-Object Name\")",
       "Bash(powershell -Command \"New-Item -ItemType Directory -Force -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\ISSUE_TEMPLATE'' | Out-Null; New-Item -ItemType Directory -Force -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\workflows'' | Out-Null; Write-Host ''Directories created''\")",
-      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\ISSUE_TEMPLATE'' | Select-Object Name; Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\workflows'' | Select-Object Name\")"
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\ISSUE_TEMPLATE'' | Select-Object Name; Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\.github\\\\workflows'' | Select-Object Name\")",
+      "Bash(Select-Object -Last 40)",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\docs\\\\build.log'' -Pattern ''warning:|error:|ups_get_report|ups_hid_parser'' | Select-Object -Last 30 | ForEach-Object { $_Line }\")",
+      "Bash(powershell -Command \"Get-Content ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\docs\\\\build.log'' | Where-Object { $_-match ''warning|error|ups_get_report|ups_hid_parser'' }\")"
     ]
   }
 }

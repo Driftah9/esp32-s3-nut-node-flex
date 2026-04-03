@@ -18,64 +18,46 @@ public
 main
 
 ## Version
-v0.6
+v0.7
 
 ## Commit Message
-v0.6 - esp32-s3-nut-node-flex - dashboard redesign, OB fix, issue templates, community links
+v0.7 - esp32-s3-nut-node-flex - Phase 4 complete: XCHK GET_REPORT probe
 
-Session 007/008: Full NUT variable dashboard + CyberPower fix + community infrastructure
+Session 008: Targeted GET_REPORT probe for declared-but-silent Input RIDs
 
-Dashboard redesign:
-- http_dashboard.c R3: full upsc-style NUT variable table, all groups visible
-- Groups in order: device, driver, battery, input, output, ups
-- device group moved to first position - identifies what is plugged in
-- AJAX polls /status every 5s, all cells update live
-- fmtRt formats runtime as Xh Xm Xs - human readable with seconds fallback
-- stCls color-codes status badge ob/ol/unknown
-- Lightbox removed - full table direct on page
-- Title changed from ESP32-S3 UPS Node to ESP32 UPS Node - board-agnostic
-- Subtitle reads cfg->op_mode and shows active mode string
+Phase 4 probe (v0.7):
+- ups_hid_parser.h R6: ups_xchk_probe_fn_t callback typedef
+  ups_hid_parser_set_xchk_probe_cb() - register/deregister probe callback
+  run_xchk updated doc comment to reflect probe behaviour
+- ups_hid_parser.c R6: s_xchk_probe_cb static, set_xchk_probe_cb() implemented
+  reset() note: callback NOT cleared on reset (stays valid until disconnect)
+  run_xchk Part 2: computes probe_sz per RID (feature_bytes fallback input_bytes,
+  clamp to 16), logs queuing intent, calls s_xchk_probe_cb(rid, probe_sz)
+  if no callback registered: WARN logged, probe skipped gracefully
+- ups_get_report.h: probe_init(), probe_rid(), probe_clear() public API added
+  service_queue() doc updated to reflect dual queue behaviour
+- ups_get_report.c: probe_req_t struct (rid + size), s_probe_queue/client/dev/intf
+  service_probe_queue() static: drains probe queue one entry per service call,
+  calls do_get_feature_report() with probe handles, logs [XCHK Probe] hex response
+  STALL/error logged as INFO - not a crash, just means no Feature report for that RID
+  do_get_feature_report() refactored: takes explicit client/dev/intf_num params
+  instead of module-level statics - allows both polling and probe to share the fn
+  ups_get_report_service_queue() restructured: recurring polling wrapped in if-block,
+  service_probe_queue() always called at end regardless of s_active state
+  ups_get_report_stop() calls probe_clear() on recurring stop
+  probe_init/rid/clear() implementations added before public API section
+- ups_usb_hid.c: xchk_probe_cb() static function routes to ups_get_report_probe_rid()
+  Step 7: probe_init() + set_xchk_probe_cb(xchk_probe_cb) always called post-enum
+  cleanup_device(): probe_clear() + set_xchk_probe_cb(NULL) on disconnect
 
-CyberPower OB DISCHRG fix:
-- ups_hid_parser.c: rid=0x80 AC-present decode fixed
-- Old p[0] & 0x01u broke on ST Series which sends 0x02 for AC present
-- New p[0] != 0x00u - only exact zero means AC absent
-- CP550HG uses 0x01, ST Series uses 0x02, both now read correctly
-
-Status JSON additions:
-- http_portal.c: ups_vendorid and ups_productid added to /status JSON
-- Formatted as 4-digit lowercase hex, JSON buffer bumped to 1100
-
-Phase 4 dynamic RID scanning - complete:
-- ups_hid_parser.c R5: s_seen_rids[32] bitmask + 30s settle timer + run_xchk API
-- ups_hid_parser.h: ups_hid_parser_run_xchk declaration added
-- ups_hid_desc.c: static expected_rids block removed
-
-Reboot countdown page:
-- http_portal.c: /reboot returns full HTML with 20s JS countdown then redirects to /
-
-Community and issue infrastructure:
-- .github/ISSUE_TEMPLATE/bug_report.yml - adapted from main project
-- .github/ISSUE_TEMPLATE/ups-compatibility-report.yml - adapted from main project
-- .github/workflows/label-new-issue.yml - auto-label and checklist comment
-- .github/workflows/update-compat-list.yml - auto-update confirmed-ups.md on confirmed label
-- docs/confirmed-ups.md - stub with two seed entries (CP550HG, ST Series)
-- README.md: Ko-fi button, Discord link, projects.strydertech.com, issue report links
-- docs/next_steps.md: diagnostic logging added as possible future addition
+Build: clean, zero warnings, zero errors (ESP-IDF v5.3.1)
 
 ## Files Staged
-- src/current/main/ups_hid_parser.c
 - src/current/main/ups_hid_parser.h
-- src/current/main/ups_hid_desc.c
-- src/current/main/http_portal.c
-- src/current/main/http_dashboard.c
-- .github/ISSUE_TEMPLATE/bug_report.yml
-- .github/ISSUE_TEMPLATE/ups-compatibility-report.yml
-- .github/workflows/label-new-issue.yml
-- .github/workflows/update-compat-list.yml
-- docs/confirmed-ups.md
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_get_report.h
+- src/current/main/ups_get_report.c
+- src/current/main/ups_usb_hid.c
 - docs/github_push.md
 - docs/project_state.md
 - docs/next_steps.md
-- docs/session_log.md
-- README.md

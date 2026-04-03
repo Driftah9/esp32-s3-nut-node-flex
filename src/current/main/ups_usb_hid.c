@@ -72,6 +72,14 @@
 
 static const char *TAG = "ups_usb_hid";
 
+/* XCHK probe callback - routes probe requests from ups_hid_parser to
+ * ups_get_report. Registered after enumeration, cleared on disconnect.
+ * Runs in esp_timer task; probe fires later in usb_client_task. */
+static void xchk_probe_cb(uint8_t rid, uint16_t probe_size)
+{
+    ups_get_report_probe_rid(rid, probe_size);
+}
+
 /* USB descriptor types */
 #define USB_DESC_TYPE_HID         0x21
 #define USB_DESC_TYPE_HID_REPORT  0x22
@@ -210,8 +218,10 @@ static void cleanup_device(void)
     s_cleanup_pending = false;
     s_new_dev_addr    = 0;
 
-    /* Stop GET_REPORT polling before clearing device state */
+    /* Stop GET_REPORT polling and clear XCHK probe state before resetting */
     ups_get_report_stop();
+    ups_get_report_probe_clear();
+    ups_hid_parser_set_xchk_probe_cb(NULL);
 
     reset_session();
     ups_state_on_usb_disconnect();
@@ -802,11 +812,15 @@ static void usb_client_task(void *arg)
                 uint16_t vid = s_vid, pid = s_pid;
                 const ups_device_entry_t *entry = ups_device_db_lookup(vid, pid);
                 if (entry && (entry->quirks & QUIRK_NEEDS_GET_REPORT)) {
-                    ESP_LOGI(TAG, "Device has QUIRK_NEEDS_GET_REPORT — starting Feature report polling");
+                    ESP_LOGI(TAG, "Device has QUIRK_NEEDS_GET_REPORT - starting Feature report polling");
                     ups_get_report_start(s_client, s_dev, s_hid_intf_num, entry);
                 } else {
-                    ESP_LOGI(TAG, "No QUIRK_NEEDS_GET_REPORT — Feature report polling disabled");
+                    ESP_LOGI(TAG, "No QUIRK_NEEDS_GET_REPORT - Feature report polling disabled");
                 }
+                /* Always init probe queue for XCHK one-shot GET_REPORT after 30s settle */
+                ups_get_report_probe_init(s_client, s_dev, s_hid_intf_num);
+                ups_hid_parser_set_xchk_probe_cb(xchk_probe_cb);
+                ESP_LOGI(TAG, "XCHK probe queue initialised - will fire after settle timer");
             }
         }
 

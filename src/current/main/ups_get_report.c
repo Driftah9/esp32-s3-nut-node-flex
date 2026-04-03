@@ -70,6 +70,19 @@ static const ups_device_entry_t *s_entry         = NULL;
 static TaskHandle_t              s_timer_task    = NULL;
 static volatile bool             s_active        = false;
 
+/* ---- XCHK one-shot probe state --------------------------------------- */
+/* Queued by ups_hid_parser_run_xchk() via callback; serviced here in     */
+/* usb_client_task. Independent of recurring QUIRK_NEEDS_GET_REPORT path. */
+typedef struct {
+    uint8_t  rid;
+    uint16_t size;
+} probe_req_t;
+
+static QueueHandle_t            s_probe_queue  = NULL;
+static usb_host_client_handle_t s_probe_client = NULL;
+static usb_device_handle_t      s_probe_dev    = NULL;
+static int                      s_probe_intf   = -1;
+
 /* ---- Forward declarations -------------------------------------------- */
 static void decode_apc_smartups_feature(uint8_t rid, const uint8_t *data, size_t len);
 
@@ -139,19 +152,25 @@ static void ctrl_cb(usb_transfer_t *t)
 /* ---- Issue one GET_REPORT — called from usb_client_task only --------- */
 /*
  * USB HID GET_REPORT control transfer:
- *   bmRequestType = 0xA1   D→H, Class, Interface
+ *   bmRequestType = 0xA1   D-to-H, Class, Interface
  *   bRequest      = 0x01   GET_REPORT
  *   wValue        = (3 << 8) | rid   type=Feature(3), report_id=rid
  *   wIndex        = interface number
  *   wLength       = report size
  *
- * MUST be called from the same task that owns s_client (usb_client_task).
+ * Takes explicit client/dev/intf so both recurring polling (s_client/s_dev)
+ * and one-shot XCHK probes (s_probe_client/s_probe_dev) can share the logic.
+ *
+ * MUST be called from the same task that owns client (usb_client_task).
  * Pumps usb_host_client_handle_events() in-place while waiting.
  */
-static esp_err_t do_get_feature_report(uint8_t rid, uint8_t *buf, size_t buf_sz,
+static esp_err_t do_get_feature_report(usb_host_client_handle_t client,
+                                        usb_device_handle_t      dev,
+                                        int                      intf_num,
+                                        uint8_t rid, uint8_t *buf, size_t buf_sz,
                                         size_t *out_len)
 {
-    if (!s_dev || !s_client || s_intf_num < 0) return ESP_ERR_INVALID_STATE;
+    if (!dev || !client || intf_num < 0) return ESP_ERR_INVALID_STATE;
 
     size_t alloc = 8u + buf_sz;
     usb_transfer_t *t = NULL;
@@ -166,12 +185,12 @@ static esp_err_t do_get_feature_report(uint8_t rid, uint8_t *buf, size_t buf_sz,
     s[1] = 0x01u;
     s[2] = rid;
     s[3] = 0x03u;   /* Feature report type */
-    s[4] = (uint8_t)(s_intf_num);
+    s[4] = (uint8_t)(intf_num);
     s[5] = 0x00u;
     s[6] = (uint8_t)(buf_sz & 0xFFu);
     s[7] = (uint8_t)(buf_sz >> 8u);
 
-    t->device_handle    = s_dev;
+    t->device_handle    = dev;
     t->bEndpointAddress = 0x00u;
     t->callback         = ctrl_cb;
     t->context          = NULL;
@@ -180,14 +199,14 @@ static esp_err_t do_get_feature_report(uint8_t rid, uint8_t *buf, size_t buf_sz,
     /* Log exact setup packet bytes so we can verify bmRequestType, wValue, wIndex, wLength */
     ESP_LOGI(TAG, "[SETUP] rid=0x%02X setup: %02X %02X %02X %02X %02X %02X %02X %02X intf=%d wlen=%u",
              rid, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7],
-             s_intf_num, (unsigned)buf_sz);
+             intf_num, (unsigned)buf_sz);
 
     s_ctrl_done    = false;
     s_ctrl_status  = ESP_FAIL;
     s_ctrl_pay_len = 0;
     s_inflight     = t;   /* track for stop() to detect pending transfer */
 
-    err = usb_host_transfer_submit_control(s_client, t);
+    err = usb_host_transfer_submit_control(client, t);
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "[SETUP] submit_control rid=0x%02X FAILED: %s (0x%x)",
                  rid, esp_err_to_name(err), (unsigned)err);
@@ -198,13 +217,13 @@ static esp_err_t do_get_feature_report(uint8_t rid, uint8_t *buf, size_t buf_sz,
     ESP_LOGI(TAG, "[SETUP] submit_control rid=0x%02X OK - polling for callback", rid);
 
     /* Pump USB event loop until callback fires.
-     * ctrl_cb always frees the transfer — caller must NOT free t after this point.
+     * ctrl_cb always frees the transfer - caller must NOT free t after this point.
      * On DEV_GONE the host cancels all transfers and fires ctrl_cb with error status.
      * Max wait: 3000ms (600 x 5ms) - increased from 1500ms to handle slow APC responses. */
     const TickType_t slice = pdMS_TO_TICKS(5);
     const int        max   = 600;
     for (int i = 0; i < max && !s_ctrl_done; i++) {
-        usb_host_client_handle_events(s_client, 0);
+        usb_host_client_handle_events(client, 0);
         vTaskDelay(slice);
         /* Log progress at 500ms intervals so we can see if callback ever fires */
         if ((i > 0) && (i % 100 == 0)) {
@@ -521,6 +540,98 @@ static void get_report_timer_task(void *arg)
     vTaskDelete(NULL);
 }
 
+/* ---- XCHK probe queue service ---------------------------------------- */
+/*
+ * Drains one probe request, issues GET_REPORT (Feature type), logs raw bytes.
+ * Called from ups_get_report_service_queue() on every usb_client_task loop.
+ * Safe when probe was never initialised — guard checks handle validity.
+ */
+static void service_probe_queue(void)
+{
+    if (!s_probe_queue || !s_probe_dev || !s_probe_client || s_probe_intf < 0) return;
+
+    probe_req_t req;
+    if (xQueueReceive(s_probe_queue, &req, 0) != pdTRUE) return;
+
+    uint16_t sz = req.size;
+    if (sz == 0u || sz > 16u) sz = 8u;
+
+    ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X wlen=%u - issuing GET_REPORT (Feature type=3)",
+             (unsigned)req.rid, (unsigned)sz);
+
+    uint8_t   buf[16];
+    size_t    got = 0;
+    esp_err_t err = do_get_feature_report(s_probe_client, s_probe_dev, s_probe_intf,
+                                           req.rid, buf, (size_t)sz, &got);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "[XCHK Probe] rid=0x%02X: STALL or error - RID does not support Feature type",
+                 (unsigned)req.rid);
+        return;
+    }
+
+    /* Log raw response bytes - this is the investigation data */
+    {
+        char   hexbuf[64] = {0};
+        int    pos        = 0;
+        size_t n          = (got > 16u) ? 16u : got;
+        for (size_t i = 0; i < n; i++) {
+            pos += snprintf(hexbuf + pos, sizeof(hexbuf) - (size_t)pos,
+                            "%02X%s", buf[i], (i == n - 1u) ? "" : " ");
+        }
+        ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X response (%u bytes): %s",
+                 (unsigned)req.rid, (unsigned)got, hexbuf);
+    }
+    /* Raw hex is the output of this phase. Decode follows once patterns
+     * are understood (maps to NUT mge-hid.c mapping table evaluation). */
+}
+
+/* ---- Public probe API ------------------------------------------------- */
+
+void ups_get_report_probe_init(usb_host_client_handle_t client,
+                               usb_device_handle_t      dev,
+                               int                      intf_num)
+{
+    s_probe_client = client;
+    s_probe_dev    = dev;
+    s_probe_intf   = intf_num;
+
+    if (!s_probe_queue) {
+        s_probe_queue = xQueueCreate(8, sizeof(probe_req_t));
+        if (!s_probe_queue) {
+            ESP_LOGE(TAG, "probe_init: failed to create probe queue");
+            return;
+        }
+    } else {
+        xQueueReset(s_probe_queue);
+    }
+    ESP_LOGI(TAG, "[XCHK Probe] probe queue ready - will fire after XCHK settle");
+}
+
+void ups_get_report_probe_rid(uint8_t rid, uint16_t probe_size)
+{
+    if (!s_probe_queue) {
+        ESP_LOGW(TAG, "[XCHK Probe] probe_rid called before probe_init - ignoring rid=0x%02X",
+                 (unsigned)rid);
+        return;
+    }
+    probe_req_t req = { .rid = rid, .size = probe_size };
+    if (xQueueSend(s_probe_queue, &req, 0) != pdTRUE) {
+        ESP_LOGW(TAG, "[XCHK Probe] probe queue full - dropping rid=0x%02X", (unsigned)rid);
+    } else {
+        ESP_LOGI(TAG, "[XCHK Probe] queued rid=0x%02X size=%u", (unsigned)rid, (unsigned)probe_size);
+    }
+}
+
+void ups_get_report_probe_clear(void)
+{
+    s_probe_client = NULL;
+    s_probe_dev    = NULL;
+    s_probe_intf   = -1;
+    if (s_probe_queue) {
+        xQueueReset(s_probe_queue);
+    }
+}
+
 /* ---- Public API ------------------------------------------------------- */
 
 /*
@@ -533,45 +644,44 @@ static void get_report_timer_task(void *arg)
  */
 void ups_get_report_service_queue(void)
 {
-    if (!s_active || !s_request_queue || !s_dev) return;
-
-    get_report_req_t req;
-    /* Non-blocking peek — if nothing pending, return immediately */
-    if (xQueueReceive(s_request_queue, &req, 0) != pdTRUE) return;
-
-    /* Request size must match what the device expects in wLength.
-     * Requesting too many bytes causes some devices to STALL the control
-     * transfer rather than returning a short response.
-     *
-     * Eaton/MGE: rid=0x20 is declared as 1 byte in the descriptor (plus
-     * 1 rid echo byte = 2 bytes total). Requesting 16 causes a STALL/timeout.
-     * Use 2 bytes for Eaton to exactly match the declared report size.
-     *
-     * APC / others: 16 bytes is safe — their Feature reports are larger
-     * and the devices tolerate over-sized wLength requests. */
-    uint8_t buf[16];
-    size_t  buf_sz = sizeof(buf);
-    if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
-        buf_sz = 2u;  /* rid=0x20: 1 rid echo + 1 charge byte; rid=0xFD: same */
-    }
-    /* Confirm effective parameters before issuing transfer */
-    ESP_LOGI(TAG, "[GR] rid=0x%02X mode=%d intf=%d wlen=%u",
-             req.rid,
-             s_entry ? (int)s_entry->decode_mode : -1,
-             s_intf_num,
-             (unsigned)buf_sz);
-    size_t  got = 0;
-    esp_err_t err = do_get_feature_report(req.rid, buf, buf_sz, &got);
-    if (err == ESP_OK && got > 0) {
-        if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
-            decode_apc_feature(req.rid, buf, got);
-        } else if (s_entry && s_entry->decode_mode == DECODE_APC_SMARTUPS) {
-            decode_apc_smartups_feature(req.rid, buf, got);
-        } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
-            decode_eaton_feature(req.rid, buf, got);
+    /* Recurring Feature report polling (QUIRK_NEEDS_GET_REPORT devices only) */
+    if (s_active && s_request_queue && s_dev) {
+        get_report_req_t req;
+        if (xQueueReceive(s_request_queue, &req, 0) == pdTRUE) {
+            /* Request size must match what the device expects in wLength.
+             * Requesting too many bytes causes some devices to STALL.
+             *
+             * Eaton/MGE: rid=0x20 is 1 byte payload + 1 rid echo = 2 total.
+             * Requesting 16 causes STALL/timeout on Eaton devices.
+             * APC/others: 16 bytes is safe. */
+            uint8_t buf[16];
+            size_t  buf_sz = sizeof(buf);
+            if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
+                buf_sz = 2u;
+            }
+            ESP_LOGI(TAG, "[GR] rid=0x%02X mode=%d intf=%d wlen=%u",
+                     req.rid,
+                     s_entry ? (int)s_entry->decode_mode : -1,
+                     s_intf_num,
+                     (unsigned)buf_sz);
+            size_t    got = 0;
+            esp_err_t err = do_get_feature_report(s_client, s_dev, s_intf_num,
+                                                   req.rid, buf, buf_sz, &got);
+            if (err == ESP_OK && got > 0) {
+                if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
+                    decode_apc_feature(req.rid, buf, got);
+                } else if (s_entry && s_entry->decode_mode == DECODE_APC_SMARTUPS) {
+                    decode_apc_smartups_feature(req.rid, buf, got);
+                } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
+                    decode_eaton_feature(req.rid, buf, got);
+                }
+                /* Future: add Tripp Lite decode branch here */
+            }
         }
-        /* Future: add Tripp Lite decode branch here */
     }
+
+    /* XCHK one-shot probes - independent of recurring polling state */
+    service_probe_queue();
 }
 
 void ups_get_report_start(usb_host_client_handle_t client,
@@ -628,6 +738,7 @@ void ups_get_report_stop(void)
     s_client   = NULL;
     s_intf_num = -1;
     s_entry    = NULL;
+    ups_get_report_probe_clear();
     /* Timer task will see s_active=false and self-delete.
      * If a control transfer is in-flight (s_inflight != NULL), ctrl_cb will
      * free it when the USB host cancels it during its own DEV_GONE teardown.

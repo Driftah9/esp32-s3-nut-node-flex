@@ -63,14 +63,47 @@ bool ups_get_report_running(void);
 /**
  * Service the GET_REPORT request queue — MUST be called from usb_client_task.
  *
- * Drains up to one pending request, issues the control transfer, and decodes
- * the result. This runs inside usb_client_task (the USB client handle owner),
+ * Drains up to one pending request from the recurring polling queue AND
+ * one from the XCHK probe queue (if any). Both run inside usb_client_task
  * so control transfers are single-threaded — no concurrency hazard.
  *
  * Called on every iteration of the usb_client_task event loop, after
  * usb_host_client_handle_events() returns (with a short timeout).
  */
 void ups_get_report_service_queue(void);
+
+/**
+ * Initialize probe state for XCHK-triggered one-shot GET_REPORT probes.
+ *
+ * Called by ups_usb_hid after USB enumeration, regardless of whether
+ * QUIRK_NEEDS_GET_REPORT is set. Safe to call when ups_get_report_start()
+ * was also called (independent state).
+ *
+ * @param client   USB host client handle (owned by ups_usb_hid)
+ * @param dev      USB device handle
+ * @param intf_num HID interface number
+ */
+void ups_get_report_probe_init(usb_host_client_handle_t client,
+                               usb_device_handle_t      dev,
+                               int                      intf_num);
+
+/**
+ * Queue a one-shot diagnostic GET_REPORT probe for a specific RID.
+ *
+ * Called from the XCHK probe callback (fires in esp_timer task context).
+ * The actual USB control transfer runs later in usb_client_task via
+ * ups_get_report_service_queue().
+ *
+ * @param rid        Report ID to probe
+ * @param probe_size wLength for the GET_REPORT request (from descriptor)
+ */
+void ups_get_report_probe_rid(uint8_t rid, uint16_t probe_size);
+
+/**
+ * Clear probe handles on USB disconnect.
+ * Called by ups_usb_hid in cleanup_device().
+ */
+void ups_get_report_probe_clear(void);
 
 #ifdef __cplusplus
 }

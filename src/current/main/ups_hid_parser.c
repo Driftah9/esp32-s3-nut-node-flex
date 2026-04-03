@@ -66,6 +66,12 @@
                 ups_hid_parser_run_xchk() comparing live seen vs
                 descriptor-declared Input RIDs. Replaces static
                 expected_rids[] list in ups_hid_desc.c.
+ R6  v0.7-flex  Phase 4 probe: ups_xchk_probe_fn_t callback registered
+                by ups_usb_hid. run_xchk Part 2 queues GET_REPORT probes
+                for declared-but-silent Input RIDs via the callback.
+                Probe fires in usb_client_task via ups_get_report.
+                Probe size: feature_bytes from descriptor, fallback to
+                input_bytes, clamped to 16. Raw response logged in hex.
 
 ============================================================================*/
 
@@ -92,6 +98,9 @@ static const ups_device_entry_t *s_device = NULL;
 /* Cleared on reset. XCHK runs 30s after enumeration via one-shot timer.  */
 static uint8_t            s_seen_rids[32];
 static esp_timer_handle_t s_xchk_timer = NULL;
+
+/* XCHK probe callback - set by ups_usb_hid, routes to ups_get_report.    */
+static ups_xchk_probe_fn_t s_xchk_probe_cb = NULL;
 
 /* Forward declaration - defined after ups_hid_parser_set_descriptor */
 static void xchk_timer_cb(void *arg);
@@ -131,6 +140,16 @@ void ups_hid_parser_reset(void)
         esp_timer_delete(s_xchk_timer);
         s_xchk_timer = NULL;
     }
+    /* Note: s_xchk_probe_cb is NOT cleared on reset.
+     * The callback is registered once at enumeration and stays valid
+     * until ups_hid_parser_set_xchk_probe_cb(NULL) is called on disconnect. */
+}
+
+/* ----------------------------------------------------------------------- */
+
+void ups_hid_parser_set_xchk_probe_cb(ups_xchk_probe_fn_t fn)
+{
+    s_xchk_probe_cb = fn;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -348,14 +367,33 @@ void ups_hid_parser_run_xchk(void)
         }
     }
 
-    /* Part 2: Input RIDs declared in descriptor that never arrived */
+    /* Part 2: Input RIDs declared in descriptor that never arrived.
+     * Queue a one-shot GET_REPORT probe for each via the callback so
+     * usb_client_task can issue the control transfer. */
     for (uint8_t di = 0; di < s_desc.report_count; di++) {
         if (s_desc.reports[di].input_bytes == 0) continue;
         uint8_t rid = s_desc.reports[di].report_id;
         bool seen = (s_seen_rids[rid >> 3] & (1u << (rid & 7u))) != 0;
         if (!seen) {
-            ESP_LOGI(TAG, "[XCHK] rid=0x%02X declared as Input (%u bytes) but never arrived in traffic",
-                     (unsigned)rid, (unsigned)s_desc.reports[di].input_bytes);
+            /* Prefer feature_bytes for the probe wLength; fall back to
+             * input_bytes. Clamp to 16 - enough for any standard field. */
+            uint16_t probe_sz = s_desc.reports[di].feature_bytes > 0u
+                              ? s_desc.reports[di].feature_bytes
+                              : s_desc.reports[di].input_bytes;
+            if (probe_sz == 0u) probe_sz = 8u;
+            if (probe_sz > 16u) probe_sz = 16u;
+
+            ESP_LOGI(TAG, "[XCHK] rid=0x%02X declared as Input (%u bytes) but never arrived"
+                     " - queuing GET_REPORT probe (wlen=%u)",
+                     (unsigned)rid, (unsigned)s_desc.reports[di].input_bytes,
+                     (unsigned)probe_sz);
+
+            if (s_xchk_probe_cb) {
+                s_xchk_probe_cb(rid, probe_sz);
+            } else {
+                ESP_LOGW(TAG, "[XCHK] no probe callback registered - skipping rid=0x%02X",
+                         (unsigned)rid);
+            }
             unseen_input_count++;
         }
     }

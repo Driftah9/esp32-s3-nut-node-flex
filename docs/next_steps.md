@@ -30,8 +30,13 @@
 - [x] XCHK Part 2: declared as Input but never seen -> INFO (silent report)
 - [x] ups_hid_parser_run_xchk() public API added (callable manually)
 - [x] Static expected_rids[] block removed from ups_hid_desc.c
-- [ ] Targeted GET_REPORT probe on descriptor-declared rids (not full sweep)
+- [x] Targeted GET_REPORT probe on descriptor-declared rids (not full sweep)
+      Callback-driven: run_xchk queues probe per unseen Input RID via
+      ups_xchk_probe_fn_t callback registered by ups_usb_hid.
+      Probe fires in usb_client_task via ups_get_report_service_queue().
+      Raw hex logged as [XCHK Probe] - investigation data for next phase.
 - [ ] Evaluate NUT mge-hid.c mapping table format for portability to ESP
+      (Input to this: raw probe responses from declared-but-silent RIDs)
 
 ## Mode 3 - future improvements
 

@@ -57,9 +57,31 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
  * Compares the set of report IDs seen in actual interrupt-IN traffic
  * against the Input reports declared in the HID descriptor:
  *   - Seen but not declared -> WARN (undocumented vendor extension)
- *   - Declared but never seen -> INFO (descriptor claims Input, never arrived)
+ *   - Declared but never seen -> INFO + queued for GET_REPORT probe
  */
 void ups_hid_parser_run_xchk(void);
+
+/**
+ * Callback type for XCHK one-shot GET_REPORT probes.
+ *
+ * Called from ups_hid_parser_run_xchk() for each Input RID that is
+ * declared in the HID descriptor but never arrived in interrupt-IN
+ * traffic during the 30s settle window.
+ *
+ * Implementation in ups_usb_hid.c routes to ups_get_report_probe_rid()
+ * so the actual USB control transfer runs in usb_client_task.
+ *
+ * @param rid        Report ID to probe via GET_REPORT (Feature type)
+ * @param probe_size wLength to use - feature_bytes from descriptor,
+ *                   or input_bytes as fallback, clamped to 16
+ */
+typedef void (*ups_xchk_probe_fn_t)(uint8_t rid, uint16_t probe_size);
+
+/**
+ * Register (or deregister) the XCHK probe callback.
+ * Called by ups_usb_hid after enumeration. Pass NULL to deregister.
+ */
+void ups_hid_parser_set_xchk_probe_cb(ups_xchk_probe_fn_t fn);
 
 #ifdef __cplusplus
 }
