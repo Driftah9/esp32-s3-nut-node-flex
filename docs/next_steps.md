@@ -1,5 +1,5 @@
 # Next Steps - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-02 -->
+<!-- Updated: 2026-04-03 -->
 
 ## Immediate
 - [x] Push v0.4 to GitHub
@@ -80,9 +80,26 @@
 
 ---
 
+## Staging Submission Findings (2026-04-03, read-only inspection)
+
+Eaton 3S 700 (VID:0463 PID:FFFF) - 3 user submissions from main repo:
+- Field cache misses battery.charge/runtime/voltage - all show rid=FF
+- Root cause: data is in undocumented RID 0x06 interrupt-IN packets, not in declared HID descriptor fields
+- Decode: byte1=charge%, bytes2-3=runtime uint16 LE, bytes4-5=status flags
+- XCHK would surface 0x06 as undeclared vendor extension (seen but not declared as Input)
+- Battery charge 2% bug (v15.17) - likely bad field extraction in current Eaton path
+- [ ] Add Eaton 3S 700 RID 0x06 decode handler (when users switch to flex repo)
+
+BlueWalker PowerWalker VI 3000 RLE (VID:0764 PID:0601):
+- Rebranded CyberPower (USB strings confirm "CyberPower CP1500AVRLCD")
+- Already handled by existing CyberPower path - no new code needed
+- USB disconnect at ~96s is a hardware behavior, reconnect works correctly
+
+---
+
 ## Possible Future Additions
 
-- [ ] **In-device diagnostic log capture** - esp_log_set_vprintf() hook to a ring buffer,
-      exposed via /log HTTP endpoint. Optional POST to projects.strydertech.com for issue
-      submission. Would allow users to gather a full boot log from within the device without
-      needing a serial terminal. Marked as future - evaluate after core modes are stable.
+- [ ] **In-device diagnostic log capture** - STANDBY. Full design spec in docs/diag-log-capture.md.
+      90s boot capture, credential scrub before POST, opt-in checkbox gates button.
+      Requires server connector at projects.strydertech.com before submission path can be wired up.
+      Fallback: /diag HTTP endpoint on device for browser download (no server needed).

@@ -13,6 +13,7 @@
                 Parse op_mode, upstream_host, upstream_port from POST body
  R2  v0.2-flex  Two-column layout: mode description panel on the right
                 Mode cards update live when selector changes
+ R3  v0.11-flex Renumber modes 1/2/3 (was 0/1/2) to match status page and log output
 
 ============================================================================*/
 
@@ -129,9 +130,9 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "<div class='form-section'>Operating Mode</div>"
         "<div class='form-row'><span class='form-label'>Mode</span>"
             "<select name='op_mode' onchange='onModeChange(this.value)'>"
-            "<option value='0' %s>Standalone - NUT server on device</option>"
-            "<option value='1' %s>NUT Client - push to upstream upsd</option>"
-            "<option value='2' %s>Bridge - forward raw HID stream</option>"
+            "<option value='1' %s>Mode 1 - Standalone - NUT server on device</option>"
+            "<option value='2' %s>Mode 2 - NUT Client - push to upstream upsd</option>"
+            "<option value='3' %s>Mode 3 - Bridge - forward raw HID stream</option>"
             "</select></div>"
 
         /* ---- Wi-Fi STA ---- */
@@ -186,9 +187,9 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         /* ---- Right column: mode description cards ---- */
         "<div class='mode-info'>"
 
-        /* Card 0 - Standalone */
+        /* Card 1 - Standalone */
         "<div id='mc0' class='mode-card'>"
-        "<div class='mc-tag'>Mode 0</div>"
+        "<div class='mc-tag'>Mode 1</div>"
         "<div class='mc-name'>Standalone NUT Server</div>"
         "<div class='mc-row'><b>Decodes</b> USB HID on the device</div>"
         "<div class='mc-row'><b>Serves</b> NUT protocol on tcp/3493</div>"
@@ -197,14 +198,14 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "<div class='mc-foot'>"
           "Default mode. Works out of the box with any NUT client "
           "(upsmon, upsc, Home Assistant).<br><br>"
-          "Modes 1 and 2 fall back here automatically if the upstream "
+          "Modes 2 and 3 fall back here automatically if the upstream "
           "host is unreachable at boot."
         "</div>"
         "</div>"
 
-        /* Card 1 - NUT Client */
+        /* Card 2 - NUT Client */
         "<div id='mc1' class='mode-card' style='display:none'>"
-        "<div class='mc-tag'>Mode 1</div>"
+        "<div class='mc-tag'>Mode 2</div>"
         "<div class='mc-name'>NUT Client Push</div>"
         "<div class='mc-row'><b>Decodes</b> USB HID on the device</div>"
         "<div class='mc-row'><b>Pushes</b> live data to upstream NUT server</div>"
@@ -220,9 +221,9 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "</div>"
         "</div>"
 
-        /* Card 2 - Bridge */
+        /* Card 3 - Bridge */
         "<div id='mc2' class='mode-card' style='display:none'>"
-        "<div class='mc-tag'>Mode 2</div>"
+        "<div class='mc-tag'>Mode 3</div>"
         "<div class='mc-name'>Raw HID Bridge</div>"
         "<div class='mc-row'><b>Forwards</b> raw USB HID bytes over TCP</div>"
         "<div class='mc-row'><b>No decoding</b> performed on device</div>"
@@ -242,9 +243,9 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
 
         "<script>"
         "function onModeChange(v){"
-          "document.getElementById('upstream_sec').style.display=(v=='1'||v=='2')?'':'none';"
+          "document.getElementById('upstream_sec').style.display=(v=='2'||v=='3')?'':'none';"
           "['mc0','mc1','mc2'].forEach(function(id,i){"
-            "document.getElementById(id).style.display=(v==String(i))?'':'none';"
+            "document.getElementById(id).style.display=(v==String(i+1))?'':'none';"
           "});"
         "}"
         "onModeChange(document.querySelector('[name=op_mode]').value);"
@@ -290,7 +291,7 @@ void parse_form_kv(app_cfg_t *cfg_inout, const char *body,
             strlcpy0(cfg_inout->portal_pass, v, sizeof(cfg_inout->portal_pass));
         else if (!strcmp(k, "op_mode")) {
             int m = atoi(v);
-            cfg_inout->op_mode = (m >= 0 && m <= 2) ? (uint8_t)m : OP_MODE_STANDALONE;
+            cfg_inout->op_mode = (m >= 1 && m <= 3) ? (uint8_t)m : OP_MODE_STANDALONE;
         }
         else if (!strcmp(k, "upstream_host"))
             strlcpy0(cfg_inout->upstream_host, v, sizeof(cfg_inout->upstream_host));

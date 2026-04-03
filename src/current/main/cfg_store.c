@@ -8,7 +8,7 @@
  REVERT HISTORY
  R0  v14.7  modular baseline (real implementation)
  R1  v14.25 portal_pass defaults to "upsmon" (known default, prompt to change)
- R2  v0.1-flex  defaults for op_mode=0, upstream_fallback=1, upstream_port=3493
+ R2  v0.1-flex  defaults for op_mode=1 (STANDALONE), upstream_fallback=1, upstream_port=3493
 
 ============================================================================*/
 

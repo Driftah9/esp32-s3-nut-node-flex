@@ -1,8 +1,8 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-02 -->
+<!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.10 - all-mode verification complete on APC XS 1500M. D006 documented (APC HID non-compliance). Phase 4 fully closed out.
+v0.11 - op_mode constants renumbered 1/2/3 (was 0/1/2). Config page and status page now consistent.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,30 +38,44 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
+2026-04-03 - v0.11: op_mode constants renumbered 1/2/3. cfg_store.h, cfg_store.c, http_config_page.c updated.
+Build clean. Config page now matches status page (Mode 1/2/3 consistent throughout).
+NVS note: old value 0 falls to default case (STANDALONE) in switch - no migration required.
+
+Previous (2026-04-03) - Staging submission inspection (main repo user data, read-only).
+4 submissions in D:\Users\Stryder\Documents\Claude\Submissions\staging\
+
+Eaton 3S 700 (VID:0463 PID:FFFF) - 3 submissions:
+- 926B descriptor, 111 fields, 10 declared RIDs, quirks=0x0040 (EATON/MGE path)
+- Field cache: battery.charge/runtime/voltage all MISSING (rid=FF)
+- Data lives in undocumented interrupt-IN RID 0x06:
+  byte1=charge%, bytes2-3=runtime uint16 LE, bytes4-5=flags
+  Example: 06 63 B4 10 00 00 = 99% charge, 4276s runtime
+- XCHK submission (sub 3): 12 undeclared vendor extension RIDs (0x21-0x29, 0x80-0x88 range)
+- Battery charge 2% bug in v15.17 submission - likely misread field in Eaton decode path
+- Stryder will contact submitters about switching to flex repo for testing
+
+BlueWalker PowerWalker VI 3000 RLE (VID:0764 PID:0601) - 1 submission:
+- USB strings identify as CyberPower CP1500AVRLCD - rebranded CyberPower hardware
+- Already handled by CyberPower OR/PR/RT/UT Series path in device database
+- 256 fields, battery.charge found (rid=08), USB disconnect at ~96s then re-enumerated
+
+Previous last action:
 2026-04-02 - All-mode verification on APC XS 1500M (v0.10). D006 documented.
 Mode 0 STANDALONE: upsc direct against ESP port 3493 - all vars confirmed.
 Mode 1 NUT CLIENT: push to LXC dummy-ups confirmed, all vars flowing.
 Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493.
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
-uid=0x0044 per spec = ConfigActivePower, but APC Back-UPS uses it for
-input transfer voltage threshold (88V/132V). Not added to generic map table.
-ups_hid_map.h/c (NEW): hid_nut_entry_t { usage_page, usage_id, nut_var } static table,
-~50 entries covering HID pages 0x84 (Power Device) and 0x85 (Battery System).
-ups_hid_map_lookup(): linear scan, vendor page normalization.
-ups_hid_map_annotate_report(): per-field decode + NUT name for a given RID.
-ups_hid_desc.c: ups_hid_desc_dump() appends -> nut_var or -> unmapped per field.
-ups_get_report.c: service_probe_queue() calls annotate_report() on probe responses.
-ups_hid_parser.h/c: ups_hid_parser_get_desc() accessor returns stored hid_desc_t ptr.
-CMakeLists.txt: ups_hid_map.c added to SRCS.
-DECISIONS.md: D004 updated (implemented+confirmed), D005 added (mapping table decision).
-Flashed + confirmed: CyberPower all 14 fields unmapped (all vendor usage IDs 0x008C-0x00FE).
-XCHK: 0 declared-but-silent Input RIDs (both Input RIDs seen in traffic). Phase 4 complete.
 
 ## Next Step
-Phase 4 closed. Consider next work:
+Phase 4 closed. No code changes in 2026-04-03 session (staging inspection only).
+Awaiting Eaton 3S 700 submitters switching to flex repo for live testing.
+
+When ready, candidate next tasks:
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
 - Bridge GET_REPORT forwarding (type=0x02) for Feature reports
 - APC direct-decode: add input.transfer.low/high from rid=0x52 (D006)
+- Eaton 3S 700 decode path: add RID 0x06 handler for battery.charge/runtime/status
 - Wider device testing with additional UPS hardware
 
 ## Key Constraint

@@ -6,6 +6,8 @@
  R1  v14.25 adds portal_pass field for HTTP portal access protection
  R2  v14.25 portal_pass defaults to "upsmon"; cfg_store_is_default_pass()
  R3  v0.1-flex  add op_mode, upstream_host, upstream_port, upstream_fallback
+ R4  v0.11-flex OP_MODE constants renumbered 1/2/3 (was 0/1/2). NVS with old value 0
+                falls to default case in switch = STANDALONE. No migration needed.
 
 ============================================================================*/
 
@@ -18,10 +20,10 @@
 extern "C" {
 #endif
 
-/* Operating mode constants */
-#define OP_MODE_STANDALONE  0   /* decode HID, serve NUT locally (default) */
-#define OP_MODE_NUT_CLIENT  1   /* decode HID, push to upstream upsd */
-#define OP_MODE_BRIDGE      2   /* forward raw HID stream to upstream host */
+/* Operating mode constants (1-based: matches portal labels Mode 1/2/3) */
+#define OP_MODE_STANDALONE  1   /* decode HID, serve NUT locally (default) */
+#define OP_MODE_NUT_CLIENT  2   /* decode HID, push to upstream upsd */
+#define OP_MODE_BRIDGE      3   /* forward raw HID stream to upstream host */
 
 typedef struct {
     char sta_ssid[33];

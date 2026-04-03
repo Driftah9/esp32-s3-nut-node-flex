@@ -1,5 +1,5 @@
 # DOC-REGISTRY.md - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-02 -->
+<!-- Updated: 2026-04-03 -->
 
 This file defines which documents must be updated before every GitHub push,
 based on the type of change being made.
@@ -45,6 +45,9 @@ based on the type of change being made.
 | docs/DECISIONS.md | Required | Architectural decisions log | No |
 | docs/DOC-REGISTRY.md | Reference | This file | No |
 | docs/session_log.md | Required | Chronological session history | No |
+| docs/diag-log-capture.md | Reference | Standby feature spec - diagnostic log capture | No |
+| docs/confirmed-ups.md | Reference | Confirmed compatible UPS devices | No |
+| docs/nut-upstream-setup.md | Reference | NUT server setup guide for Mode 2 users | No |
 
 ---
 
