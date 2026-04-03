@@ -52,7 +52,26 @@
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash)",
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target monitor -Duration 40)",
       "Bash(powershell -Command \"ssh nut-test-lxc ''cat /tmp/bridge_receiver.log''\")",
-      "Bash(powershell -Command \"ssh nut-test-lxc ''cat /tmp/bridge.log''\")"
+      "Bash(powershell -Command \"ssh nut-test-lxc ''cat /tmp/bridge.log''\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target monitor -Duration 30)",
+      "Bash(powershell -Command \"Get-Process python* -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 1000; Write-Host ''cleared''\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File .idf-build.ps1 -Target flash-monitor -Duration 45)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 45)",
+      "Bash(ssh nut-test-lxc:*)",
+      "Bash(ssh -o BatchMode=yes nut-test-lxc \"echo ok\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 50)",
+      "Bash(powershell -Command \"$body = ''op_mode=1&sta_ssid=Dreadnought&sta_pass=I%40dont%21thinkso&ap_ssid=ESP32-UPS-SETUP-4AE49D&ap_pass=admin&ups_name=ups&nut_user=admin&nut_pass=admin&upstream_host=10.0.0.18&upstream_port=3493&portal_pass=''; $resp = Invoke-WebRequest -Uri ''http://10.0.0.190/save'' -Method POST -Body $body -ContentType ''application/x-www-form-urlencoded'' -UseBasicParsing; Write-Host $resp.StatusCode\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\post_config.ps1\")",
+      "WebFetch(domain:networkupstools.org)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(scp \"C:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\ups.dev\" nut-test-lxc:/etc/nut/ups.dev)",
+      "Bash(scp \"D:\\\\Users\\\\Stryder\\\\AppData\\\\Local\\\\Temp\\\\ups.dev\" nut-test-lxc:/etc/nut/ups.dev)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\idf-build.ps1\" -Target flash-monitor -Duration 25)",
+      "Bash(Select-String -Path \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.h\" -Pattern \"HTTP_PAGE_BUF|PAGE_BUF|page_buf\")",
+      "Bash(Select-Object -First 10)",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\src\\\\current\\\\main\\\\*.h'' -Pattern ''HTTP_PAGE_BUF|PAGE_BUF'' | Select-Object -First 10\")",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")"
     ]
   }
 }

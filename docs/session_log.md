@@ -170,3 +170,100 @@ Files changed:
 
 Status at end: Phase 3 complete. All three modes confirmed working.
 Next session starts at: UPS swap validation. Then Phase 4 dynamic scanning or other priorities.
+
+---
+
+## Session 005 - 2026-04-02
+
+Tags: validation, ups-swap, cyberpower, cross-mode, post-config
+
+Work completed:
+- UPS swapped by user to CyberPower VID:0764 PID:0501 (ST/CP/SX Series)
+- Diagnosed bridge_receiver.py stuck on zombie connection from previous session
+  Fix: pkill + restart on LXC, receiver re-listening on port 5493
+- Diagnosed portal chrome-computer tool blocked by extension URL restriction
+  Fix: created post_config.ps1 at project root - uses GET /save with Basic auth
+  Allows CLI-driven portal config without Chrome interaction
+- Mode 3 BRIDGE confirmed on new UPS:
+  607B HID descriptor sent on connect, interrupt-IN packets streaming
+  LXC bridge.log confirmed 231+ packets with CyberPower RID pattern
+- Mode 2 NUT CLIENT confirmed on new UPS:
+  Authenticated as esppush on 10.0.0.18:3493
+  battery.charge=100, battery.runtime=48127, battery.voltage=12.000 pushed to upsd
+  upsc confirms values live
+- Mode 1 STANDALONE confirmed on new UPS:
+  NUT server on tcp/3493, CyberPower enumerated (14 fields, 13 RIDs)
+  upsc returns full variable list, real client (10.0.0.10) connected and polled
+
+Problems encountered:
+- bridge_receiver.py single-connection - zombie connection blocked new ESP connects
+  Fix: restart receiver on LXC before each Mode 3 test
+- Chrome computer tool "Cannot access chrome-extension:// URL of different extension"
+  Fix: post_config.ps1 script for direct portal config via PowerShell HTTP
+- Mode 2 connected to wrong port (5493 bridge receiver) on first attempt
+  Fix: set upstream_port to 3493 via post_config.ps1 before Mode 2 test
+
+Files changed:
+- post_config.ps1 (new - portal config utility)
+- docs/project_state.md
+- docs/next_steps.md
+- docs/session_log.md (this entry)
+
+Status at end: Cross-mode validation complete. All three modes confirmed on CyberPower device.
+v0.4 push pending (includes all Phase 1-3 work + validation results).
+Next session starts at: Push v0.4. Then Phase 4 dynamic scanning investigation.
+
+---
+
+## Session 006 - 2026-04-02
+
+Tags: mode2, nut-client, identity-push, full-variable, ups-dev, dummy-ups, v0.5
+
+Work completed:
+- Researched NUT documentation: usbhid-ups, dummy-ups, clone, variable namespace
+  Key finding: dummy-ups cannot create new variables via SET VAR - must pre-declare in .dev file
+  Key finding: no standard NUT driver receives pushed data from a remote device
+  dummy-ups + pre-declared .dev file is the correct upstream for Mode 2
+- nut_client.c v0.2-flex: added nc_push_identity() function
+  Pushes all static/identity variables once per connection after auth:
+  device.mfr, device.model, device.serial, device.type
+  ups.mfr, ups.model, ups.firmware, ups.vendorid, ups.productid
+  battery.type, battery.charge.low
+  DB-sourced: battery.charge.warning, battery.runtime.low, battery.voltage.nominal,
+              input.voltage.nominal, ups.type
+  Static: ups.delay.shutdown, ups.delay.start, ups.timer.reboot, ups.timer.shutdown,
+          ups.test.result
+- nut_client.c v0.2-flex: expanded nc_push_state()
+  Added input.voltage and output.voltage (when valid, for GET_REPORT devices)
+- ups.dev template: comprehensive pre-declaration of all ESP-pushable variables
+  Deployed to /etc/nut/ups.dev on nut-test-lxc
+- nut-upstream-setup.md: full upstream NUT server setup guide (new doc)
+- Fixed ups.test.result "No test initiated" - ERR TOO-LONG from dummy-ups
+  Changed to "None" (standard NUT value)
+- Confirmed: full upsc output from Mode 2 shows all variables correctly
+  device.mfr=CyberPower, device.model=ST/CP/SX Series (PID 0501), vid=0764, pid=0501
+  battery.charge=100, battery.runtime=50794, battery.voltage=12.000
+  ups.status=OB DISCHRG, ups.type=line-interactive, all nominals present
+
+Problems encountered:
+- op_mode=0 in NVS from previous Mode 1 test - post_config.ps1 still had op_mode=0
+  Fix: corrected post_config.ps1 to op_mode=1 before flash
+- ups.test.result "No test initiated" rejected by dummy-ups: ERR TOO-LONG
+  Fix: changed to "None"
+
+Files changed:
+- src/current/main/nut_client.c (v0.2-flex - nc_push_identity, expanded nc_push_state)
+- src/current/main/http_config_page.c (v0.2-flex - two-column layout, mode description cards)
+- docs/nut-upstream-setup.md (new)
+- docs/project_state.md
+- docs/next_steps.md
+- docs/github_push.md
+- docs/session_log.md (this entry)
+- LXC: /etc/nut/ups.dev (comprehensive variable template)
+
+Status at end: Mode 2 now pushes full variable set. Any NUT client polling upsd gets
+complete real data: identity, live values, nominals, housekeeping. Zero dummy leftovers.
+
+Config page updated with mode description panel (right column, live-switching cards).
+v0.5 ready to push.
+Next session starts at: Push v0.5. Then Phase 4 dynamic scanning or other priorities.

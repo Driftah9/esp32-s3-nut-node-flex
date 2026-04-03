@@ -1,4 +1,4 @@
-﻿/*============================================================================
+/*============================================================================
  MODULE: http_config_page
 
  RESPONSIBILITY
@@ -11,6 +11,8 @@
  R1  v0.1-flex  Add Operating Mode selector (Standalone/NUT Client/Bridge)
                 Add Upstream Target section (host + port) with JS show/hide
                 Parse op_mode, upstream_host, upstream_port from POST body
+ R2  v0.2-flex  Two-column layout: mode description panel on the right
+                Mode cards update live when selector changes
 
 ============================================================================*/
 
@@ -89,36 +91,64 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
         "<title>UPS Node Config</title>"
         PORTAL_CSS
+
+        /* Per-page CSS overrides and two-column layout styles */
+        "<style>"
+        "body{max-width:none}"
+        ".page-wrap{display:flex;gap:28px;align-items:flex-start;max-width:880px}"
+        ".mode-info{width:260px;flex-shrink:0;padding-top:2px}"
+        ".mode-card{border:1px solid #2a2a2a;border-left:3px solid #4fc3f7;"
+                   "padding:16px;background:#0d0d0d}"
+        ".mc-tag{color:#4fc3f7;font-family:Arial,sans-serif;font-size:0.72em;"
+                "text-transform:uppercase;letter-spacing:0.10em;margin-bottom:8px}"
+        ".mc-name{color:#e8e8e2;font-family:Arial,sans-serif;font-size:0.9em;"
+                 "font-weight:600;margin-bottom:14px}"
+        ".mc-row{color:#777;font-family:Arial,sans-serif;font-size:0.79em;"
+                "line-height:1.65;padding:3px 0 3px 10px;"
+                "border-left:1px solid #1c1c1c;margin-bottom:3px}"
+        ".mc-row b{color:#aaa}"
+        ".mc-foot{color:#555;font-family:Arial,sans-serif;font-size:0.73em;"
+                 "margin-top:14px;padding-top:10px;"
+                 "border-top:1px solid #1c1c1c;line-height:1.65}"
+        "@media(max-width:700px){"
+          ".page-wrap{flex-direction:column}"
+          ".mode-info{width:100%%}"
+        "}"
+        "</style>"
         "</head><body>"
+
         "<h2>ESP32-S3 UPS Node</h2>"
         "<div class='subtitle'>v0.1-flex &mdash; Configuration</div>"
-        "%s%s"
-        "<form method='POST' action='/save'>"
+        "%s%s"  /* pw_warn, note_html */
 
-        /* Operating Mode */
+        "<div class='page-wrap'>"
+        "<div>"  /* left column: form */
+
+        /* ---- Operating Mode ---- */
+        "<form method='POST' action='/save'>"
         "<div class='form-section'>Operating Mode</div>"
         "<div class='form-row'><span class='form-label'>Mode</span>"
-            "<select name='op_mode' onchange='showUpstream(this.value)'>"
+            "<select name='op_mode' onchange='onModeChange(this.value)'>"
             "<option value='0' %s>Standalone - NUT server on device</option>"
             "<option value='1' %s>NUT Client - push to upstream upsd</option>"
             "<option value='2' %s>Bridge - forward raw HID stream</option>"
             "</select></div>"
 
-        /* Wi-Fi STA */
+        /* ---- Wi-Fi STA ---- */
         "<div class='form-section'>Wi-Fi (STA)</div>"
         "<div class='form-row'><span class='form-label'>SSID</span>"
             "<input name='sta_ssid' maxlength='32' value='%s'></div>"
         "<div class='form-row'><span class='form-label'>Password</span>"
             "<input name='sta_pass' type='password' maxlength='64' value='%s'></div>"
 
-        /* Soft AP */
+        /* ---- Soft AP ---- */
         "<div class='form-section'>Soft AP &mdash; %s</div>"
         "<div class='form-row'><span class='form-label'>AP SSID</span>"
             "<input name='ap_ssid' maxlength='32' value='%s'></div>"
         "<div class='form-row'><span class='form-label'>AP Password (8+ chars)</span>"
             "<input name='ap_pass' type='password' maxlength='64' value='%s'></div>"
 
-        /* NUT Identity */
+        /* ---- NUT Identity ---- */
         "<div class='form-section'>NUT Identity</div>"
         "<div class='form-row'><span class='form-label'>UPS Name</span>"
             "<input name='ups_name' maxlength='32' value='%s'></div>"
@@ -127,7 +157,7 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
         "<div class='form-row'><span class='form-label'>NUT Password</span>"
             "<input name='nut_pass' type='password' maxlength='32' value='%s'></div>"
 
-        /* Upstream Target - shown for NUT Client and Bridge modes */
+        /* ---- Upstream Target (shown for NUT Client and Bridge) ---- */
         "<div id='upstream_sec' style='display:%s'>"
         "<div class='form-section'>Upstream Target</div>"
         "<div class='form-row'><span class='form-label'>Host</span>"
@@ -136,7 +166,7 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
             "<input name='upstream_port' type='number' min='1' max='65535' value='%u'></div>"
         "</div>"
 
-        /* Portal Security */
+        /* ---- Portal Security ---- */
         "<div class='form-section'>Portal Security &mdash; login: admin / &lt;password&gt;</div>"
         "<div class='form-row'><span class='form-label'>New Password</span>"
             "<input name='portal_pass' type='password' maxlength='32' "
@@ -144,17 +174,83 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
 
         "<input class='btn' type='submit' value='Save and Apply'>"
         "</form>"
+
         "<div class='nav' style='margin-top:20px'>"
         "<a href='/'>Back to Status</a>"
         "<a href='/reboot' onclick=\"return confirm('Reboot device?')\">Reboot</a>"
         "<span style='color:#555;font-size:0.82em'>STA: %s</span>"
         "</div>"
+
+        "</div>"  /* end left column */
+
+        /* ---- Right column: mode description cards ---- */
+        "<div class='mode-info'>"
+
+        /* Card 0 - Standalone */
+        "<div id='mc0' class='mode-card'>"
+        "<div class='mc-tag'>Mode 0</div>"
+        "<div class='mc-name'>Standalone NUT Server</div>"
+        "<div class='mc-row'><b>Decodes</b> USB HID on the device</div>"
+        "<div class='mc-row'><b>Serves</b> NUT protocol on tcp/3493</div>"
+        "<div class='mc-row'><b>Clients</b> connect to device IP directly</div>"
+        "<div class='mc-row'><b>No upstream</b> infrastructure required</div>"
+        "<div class='mc-foot'>"
+          "Default mode. Works out of the box with any NUT client "
+          "(upsmon, upsc, Home Assistant).<br><br>"
+          "Modes 1 and 2 fall back here automatically if the upstream "
+          "host is unreachable at boot."
+        "</div>"
+        "</div>"
+
+        /* Card 1 - NUT Client */
+        "<div id='mc1' class='mode-card' style='display:none'>"
+        "<div class='mc-tag'>Mode 1</div>"
+        "<div class='mc-name'>NUT Client Push</div>"
+        "<div class='mc-row'><b>Decodes</b> USB HID on the device</div>"
+        "<div class='mc-row'><b>Pushes</b> live data to upstream NUT server</div>"
+        "<div class='mc-row'><b>Identity</b> pushed once on connect</div>"
+        "<div class='mc-row'><b>State</b> pushed every 10 seconds</div>"
+        "<div class='mc-row'><b>Upstream</b> upsd with dummy-ups driver</div>"
+        "<div class='mc-row'><b>Requires</b> esppush user (actions=SET)</div>"
+        "<div class='mc-foot'>"
+          "NUT clients query the upstream upsd - not this device.<br><br>"
+          "Upstream needs a pre-declared ups.dev file so dummy-ups "
+          "can accept all pushed variables.<br><br>"
+          "See docs/nut-upstream-setup.md"
+        "</div>"
+        "</div>"
+
+        /* Card 2 - Bridge */
+        "<div id='mc2' class='mode-card' style='display:none'>"
+        "<div class='mc-tag'>Mode 2</div>"
+        "<div class='mc-name'>Raw HID Bridge</div>"
+        "<div class='mc-row'><b>Forwards</b> raw USB HID bytes over TCP</div>"
+        "<div class='mc-row'><b>No decoding</b> performed on device</div>"
+        "<div class='mc-row'><b>Sends</b> full HID descriptor on connect</div>"
+        "<div class='mc-row'><b>Streams</b> all interrupt-IN packets live</div>"
+        "<div class='mc-row'><b>Upstream</b> handles all decode and NUT serving</div>"
+        "<div class='mc-foot'>"
+          "Wire format: [2B desc length][descriptor bytes] handshake, "
+          "then [1B type][2B length][data] per packet.<br><br>"
+          "type 0x01 = interrupt-IN data<br>"
+          "type 0xFF = keepalive (no data, 5s idle)"
+        "</div>"
+        "</div>"
+
+        "</div>"  /* end mode-info */
+        "</div>"  /* end page-wrap */
+
         "<script>"
-        "function showUpstream(v){"
-        "document.getElementById('upstream_sec').style.display=(v=='1'||v=='2')?'':'none';"
+        "function onModeChange(v){"
+          "document.getElementById('upstream_sec').style.display=(v=='1'||v=='2')?'':'none';"
+          "['mc0','mc1','mc2'].forEach(function(id,i){"
+            "document.getElementById(id).style.display=(v==String(i))?'':'none';"
+          "});"
         "}"
+        "onModeChange(document.querySelector('[name=op_mode]').value);"
         "</script>"
         "</body></html>",
+
         pw_warn, note_html,
         sel_sa, sel_nc, sel_br,
         cfg->sta_ssid, cfg->sta_pass,

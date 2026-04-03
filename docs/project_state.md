@@ -36,12 +36,17 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-02 - Phase 3 complete. Mode 3 bridge confirmed end-to-end.
-ESP sends 1049B HID descriptor on connect, then streams raw interrupt-IN packets.
-LXC receiver logged 109+ packets at ~4s UPS poll rate.
+2026-04-02 - Mode 2 full variable push implemented and confirmed (v0.5).
+nut_client.c v0.2-flex: nc_push_identity() pushes all static/identity/nominal variables
+on connect. nc_push_state() expanded with input.voltage and output.voltage.
+upsc on LXC now returns complete real data: no UNKNOWN identity, all battery/ups fields live.
+LXC ups.dev updated to comprehensive template. nut-upstream-setup.md created.
+
+Also added: http_config_page.c two-column layout with live-switching mode description
+cards. Each mode shows what it does, requirements, and notes in the right panel.
 
 ## Next Step
-Push v0.4. Then UPS swap to validate all modes on a different device.
+Push v0.5. Then Phase 4 dynamic scanning or other priorities.
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.

@@ -15,6 +15,12 @@
 - [x] bridge_receiver.py on nut-test-lxc port 5493
 - [x] Confirmed: 1049B descriptor + 109+ packets streaming, raw data verified
 
+## Mode 2 - Full variable push - COMPLETE (v0.5)
+- [x] nc_push_identity() - device identity, nominals, static vars pushed on connect
+- [x] nc_push_state() - added input.voltage, output.voltage to dynamic push
+- [x] ups.dev comprehensive template - all pushable vars pre-declared on LXC
+- [x] nut-upstream-setup.md - full server setup guide for Mode 2 users
+
 ## Phase 4 - Dynamic scanning (investigation)
 
 - [ ] Replace static expected_rids[] with live seen_rids bitmask
@@ -30,4 +36,8 @@
 - [ ] Upstream host decodes descriptor + serves NUT on its own tcp/3493
 
 ## Cross-mode validation
-- [ ] Switch connected UPS and verify all three modes still work
+- [x] Switch connected UPS and verify all three modes still work
+  - New UPS: CyberPower VID:0764 PID:0501 (ST/CP/SX Series)
+  - Mode 3 BRIDGE: 607B descriptor sent, packets streaming - confirmed
+  - Mode 2 NUT CLIENT: authenticated as esppush, battery.charge=100 pushed - confirmed
+  - Mode 1 STANDALONE: NUT server on 3493, upsc returns live data - confirmed
