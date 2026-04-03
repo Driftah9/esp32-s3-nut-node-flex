@@ -18,22 +18,25 @@ public
 main
 
 ## Version
-v0.13
+v0.14
 
 ## Commit Message
-v0.13 - esp32-s3-nut-node-flex - Track PowerWalker charge=0 issue
+v0.14 - Fix XCHK probe buffer crash on large Feature reports
 
-User report: PowerWalker VI 3000 RLE (VID:0764 PID:0601) battery.charge
-reads 0%% - user confirms device is at 100%%.
+Root cause of PowerWalker VI 3000 RLE battery.charge=0 identified
+from staging submissions: XCHK probe for rid=0x28 (63 bytes declared)
+was sent with wLength=16 due to hardcap. IDF v5.5.4 DWC assert fires
+(hcd_dwc.c:2388 rem_len check), device crash-loops every ~34s,
+battery.charge=0 is a crash-loop symptom not a decode bug.
 
-Docs updated to track the issue pending log submission:
-- next_steps.md: active issue block with known context, likely candidates,
-  and analysis checklist for when logs arrive
-- project_state.md: next step updated to reflect active issue
+Fix in ups_get_report.c: probe buffer cap raised 16->64 bytes.
+buf[16]->buf[64]. Covers declared Feature report sizes up to 64 bytes.
+Also applies on v5.3.1 where large wLength would read wrong data.
 
-No code changes. Awaiting diagnostic log or serial capture from user.
+Docs updated with root cause analysis and fix checklist.
 
 ## Files Staged
+- src/current/main/ups_get_report.c
 - docs/next_steps.md
 - docs/project_state.md
 - docs/github_push.md

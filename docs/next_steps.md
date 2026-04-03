@@ -95,26 +95,34 @@ BlueWalker PowerWalker VI 3000 RLE (VID:0764 PID:0601):
 - Already handled by existing CyberPower path - no new code needed
 - USB disconnect at ~96s is a hardware behavior, reconnect works correctly
 
-## Active Issue - PowerWalker VI 3000 RLE (2026-04-03)
+## PowerWalker VI 3000 RLE battery.charge=0 - ROOT CAUSE FOUND (2026-04-03)
 
 User report: battery.charge reading 0%% confirmed by user to be at 100%%.
 VID:0764 PID:0601 - CyberPower rebranded hardware.
 
-Known context from staging submission:
-- 256 fields, battery.charge located at rid=08 in field cache
-- CyberPower direct-decode path handles this device (vendor usage IDs 0x008C-0x00FE)
-- USB disconnect at ~96s was observed in staging submission - may be related
+Root cause (from staging submission e88c29, flex repo, IDF v5.5.4):
+- Device has rid=0x28 declared as Input (63 bytes) but never seen in interrupt-IN traffic
+- XCHK 30s settle timer fires, queues GET_REPORT probe for rid=0x28
+- service_probe_queue() hardcapped wLength at 16 (buf[16] allocation, sz > 16 -> sz=8)
+- Device (or USB DWC controller) expects buffer matching declared size (63 bytes)
+- IDF v5.5.4 added stricter DWC assert: hcd_dwc.c:2388 rem_len check fires
+- Device crash-loops every ~34s (XCHK fires -> probe -> assert -> reboot -> repeat)
+- battery.charge=0 is a symptom of the crash-loop, not a decode bug
+- User was running IDF v5.5.4 but project targets v5.3.1 - assert is v5.5.4 addition
 
-Likely candidates:
-- rid=08 field extraction offset wrong for this specific model variant
-- Charge value reads correctly on some CyberPower models but not this one
-- USB disconnect before charge data is populated (96s disconnect timing vs field settle)
+Fix applied in v0.14 (ups_get_report.c R2):
+- Cap raised from 16 to 64 bytes: `if (sz == 0u || sz > 64u) sz = 8u;`
+- buf[16] -> buf[64]: accommodates declared sizes up to 64 bytes
+- rid=0x28 (63 bytes declared) now probed with wLength=63, no assert
 
-Status: AWAITING LOGS - user will submit diagnostic capture or serial log
-When logs arrive: check [XCHK] output for rid=08, check field cache build,
-check interrupt-IN packet content for rid=08 at byte offset where charge is expected.
-- [ ] Analyse submitted log and identify root cause
-- [ ] Fix charge field extraction for this model if offset differs from other CyberPower
+Additional note: first submission (fb2c24, main repo v15.x, no XCHK) showed
+battery.charge=100%% reading correctly throughout. Charge decode is not broken.
+The crash-loop was flex-only, caused by XCHK probe firing on rid=0x28.
+
+- [x] Root cause identified from staging submissions
+- [x] Fix applied - v0.14 ups_get_report.c
+- [ ] User should rebuild with IDF v5.3.1 (project target) or v0.14 flex repo
+- [ ] Confirm with user after they update that charge reads correctly
 
 ---
 

@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.13 - Diag scrub expanded: sta_ssid, upstream_host, nut_user, ap_ssid added alongside passwords. Button + radio (90s/120s) on dashboard. NVS flag + reboot + ring buffer + vprintf hook. Log served at /diag-log with Copy button. Passwords scrubbed before display.
+v0.14 - XCHK probe buffer fix. Cap raised 16->64 bytes in service_probe_queue(). buf[16]->buf[64]. Fixes crash-loop on PowerWalker VI 3000 RLE (and any device with large declared Feature report size). battery.charge=0 confirmed as crash-loop symptom not decode bug.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,7 +38,15 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-03 - v0.12: diag_capture.c/h (new module). Dashboard capture section (radio + button).
+2026-04-03 - v0.14: XCHK probe buffer fix in ups_get_report.c.
+Root cause analysis of PowerWalker VI 3000 RLE battery.charge=0 from two staging submissions.
+First submission (fb2c24, main repo): charge=100%% reads correctly throughout - no issue.
+Second submission (e88c29, flex repo, IDF v5.5.4): XCHK fires probe on rid=0x28 (63 bytes
+declared), wLength=16 hardcap triggers IDF v5.5.4 DWC assert (hcd_dwc.c:2388), device
+crash-loops every ~34s, charge=0 is crash-loop symptom.
+Fix: cap raised 16->64 bytes (`sz > 64u` not `sz > 16u`), buf[16]->buf[64]. Build clean.
+
+Previous (2026-04-03) - v0.12: diag_capture.c/h (new module). Dashboard capture section (radio + button).
 /diag-start POST: sets NVS diag_dur key, sends countdown page, reboots.
 /diag-log GET: serves captured log as HTML with Copy button (passwords scrubbed).
 On next boot with diag_dur set: vprintf hook installs into 128KB PSRAM ring buffer,
@@ -75,9 +83,8 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-Active issue: PowerWalker VI 3000 RLE (VID:0764 PID:0601) battery.charge reads 0%% (user confirms 100%%).
-Awaiting user log submission for analysis. Likely rid=08 field extraction offset issue or
-USB disconnect at ~96s preventing charge data from populating before disconnect.
+PowerWalker charge=0 fix in v0.14 - push to GitHub, advise user to rebuild with v0.14 (or use IDF v5.3.1).
+Confirm with user after update that battery.charge reads correctly.
 
 When ready, candidate next tasks:
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)

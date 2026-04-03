@@ -125,7 +125,15 @@
       "Bash(powershell -Command \"git add docs/DECISIONS.md docs/next_steps.md docs/project_state.md docs/github_push.md && git status --short\")",
       "Bash(powershell -Command \"git add docs/DECISIONS.md docs/next_steps.md docs/project_state.md docs/github_push.md; git status --short\")",
       "Bash(powershell -Command \"git push origin main; git tag -a v0.10 -m ''v0.10 - esp32-s3-nut-node-flex''; git push origin v0.10\")",
-      "Bash(powershell -Command \"Get-ChildItem -Recurse ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging'' | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize\")"
+      "Bash(powershell -Command \"Get-ChildItem -Recurse ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging'' | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize\")",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging'' -Directory | Sort-Object LastWriteTime | Format-Table Name, LastWriteTime\")",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging\\\\2026-04-03_121935_BlueWalker_BlueWalker-PowerWalker-UPS-VI_0764-0601_fb2c24'' | Format-Table Name, Length\")",
+      "Bash(powershell -Command \"Get-ChildItem ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging\\\\2026-04-03_122215_BlueWalker_BlueWalker-PowerWalker-UPS-VI_0764-0601_e88c29'' | Format-Table Name, Length\")",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging\\\\2026-04-03_121935_BlueWalker_BlueWalker-PowerWalker-UPS-VI_0764-0601_fb2c24\\\\serial.log'' -Pattern ''battery|charge|rid|CACHE|field|CyberPower|decode|0x08|rid=08'' -CaseSensitive:$false | Select-Object -First 60 | Format-Table LineNumber, Line -Wrap\")",
+      "Bash(powershell -Command \"Select-String -Path ''D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Submissions\\\\staging\\\\2026-04-03_121935_BlueWalker_BlueWalker-PowerWalker-UPS-VI_0764-0601_fb2c24\\\\serial.log'' -Pattern ''battery|charge|CACHE|CyberPower|decode|0x08'' | Select-Object -First 60 | ForEach-Object { ''{0}: {1}'' -f $_LineNumber, $_Line }\")",
+      "Bash(Select-String -Pattern \"error:|warning:|Build SUCCESSFUL|ninja: build|Linking\")",
+      "Bash(Select-Object -Last 30)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"D:\\\\Users\\\\Stryder\\\\Documents\\\\Claude\\\\Projects\\\\esp32-s3-nut-node-flex\\\\git-push.ps1\")"
     ]
   }
 }

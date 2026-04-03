@@ -32,8 +32,13 @@
  This is the correct single-owner pattern for ESP-IDF USB host.
 
  VERSION HISTORY
- R0  v15.8  Initial — APC Back-UPS Feature report polling.
- R1  v15.8  Rewrite — single-owner queue pattern to fix USB concurrency.
+ R0  v15.8  Initial - APC Back-UPS Feature report polling.
+ R1  v15.8  Rewrite - single-owner queue pattern to fix USB concurrency.
+ R2  v0.14  Fix XCHK probe buffer: cap raised 16->64, buf[64] to match large
+            declared Feature report sizes (e.g. rid=0x28 declares 63 bytes).
+            wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
+            assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
+            up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
 
 ============================================================================*/
 
@@ -556,12 +561,12 @@ static void service_probe_queue(void)
     if (xQueueReceive(s_probe_queue, &req, 0) != pdTRUE) return;
 
     uint16_t sz = req.size;
-    if (sz == 0u || sz > 16u) sz = 8u;
+    if (sz == 0u || sz > 64u) sz = 8u;
 
     ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X wlen=%u - issuing GET_REPORT (Feature type=3)",
              (unsigned)req.rid, (unsigned)sz);
 
-    uint8_t   buf[16];
+    uint8_t   buf[64];
     size_t    got = 0;
     esp_err_t err = do_get_feature_report(s_probe_client, s_probe_dev, s_probe_intf,
                                            req.rid, buf, (size_t)sz, &got);
