@@ -5,3 +5,4 @@ src/current/sdkconfig.old
 src/current/*.log
 docs/monitor.log
 *.log
+.claude/

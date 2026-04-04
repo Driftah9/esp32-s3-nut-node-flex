@@ -462,26 +462,25 @@ static void decode_eaton_feature(uint8_t rid, const uint8_t *data, size_t len)
     switch (rid) {
     case 0x20: {
         /*
-         * rid=0x20 = battery.charge (confirmed Eaton 3S 700, 2026-03-30)
-         * Response: [0x20, charge_pct]  byte[1] = charge 0-100%
-         * Two submissions both returned 0x02 (2%) - battery was depleted.
+         * rid=0x20: NOT live battery.charge despite initial assumption.
+         * Three Eaton 3S 700 submissions (2026-03-30, 2026-04-02) all returned
+         * 0x02 (2%) on batteries confirmed by the submitters to be fully charged.
+         * This register likely reflects a discharge threshold or configuration
+         * value, not the live state of charge.
+         *
+         * Real battery.charge and runtime come from rid=0x06 interrupt-IN,
+         * which fires on power events (mains loss, state change). Decoded in
+         * ups_hid_parser.c DECODE_EATON_MGE path.
+         *
+         * Logged here for diagnostics only. NOT applied to state.
          */
         if (len < 2u) {
             ESP_LOGW(TAG, "[MGE Feature] rid=0x20: short read %u bytes", (unsigned)len);
             break;
         }
-        uint8_t charge = data[1];
-        if (charge <= 100u) {
-            ups_state_update_t upd;
-            memset(&upd, 0, sizeof(upd));
-            upd.valid                 = true;
-            upd.battery_charge_valid  = true;
-            upd.battery_charge        = charge;
-            ups_state_apply_update(&upd);
-            ESP_LOGI(TAG, "[MGE Feature] battery.charge=%u%%", (unsigned)charge);
-        } else {
-            ESP_LOGW(TAG, "[MGE Feature] rid=0x20 charge=%u - out of range, ignoring", (unsigned)charge);
-        }
+        uint8_t charge_raw = data[1];
+        ESP_LOGI(TAG, "[MGE Feature] rid=0x20 raw=0x%02X (%u) - diagnostic only, not applied",
+                 (unsigned)charge_raw, (unsigned)charge_raw);
         break;
     }
     case 0xFD:

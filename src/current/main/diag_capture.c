@@ -16,6 +16,9 @@
 
  REVERT HISTORY
  R0  v0.12-flex  Initial implementation
+ R1  v0.15       Inject app_init header (App version + ESP-IDF) into buffer
+                 before hook installs. Fixes missing firmware/IDF version in
+                 diag logs submitted to compatibility portal.
 
 ============================================================================*/
 
@@ -31,6 +34,7 @@
 #include "esp_timer.h"
 #include "esp_heap_caps.h"
 #include "nvs.h"
+#include "esp_app_desc.h"
 
 static const char *TAG = "diag_cap";
 
@@ -149,7 +153,29 @@ void diag_capture_check_and_arm(void)
     s_scrubbed = false;
     s_arm_us   = esp_timer_get_time();
 
-    /* Install vprintf hook */
+    /* Inject app_init header lines before hook goes live.
+     * The real app_init lines run at ~290ms but capture arms at ~495ms,
+     * so they are always missing from diag logs. Write them directly into
+     * the buffer first so handler.php and submit.html JS can extract
+     * firmware version and IDF version from the submitted log.
+     * Format matches what IDF app_init logs at boot - regexes expect:
+     *   "App version:\s+(v[\d.]+)"
+     *   "app_init.*ESP-IDF:\s+(v[\d.]+)" */
+    {
+        const esp_app_desc_t *app = esp_app_get_description();
+        int n = snprintf(s_buf, s_cap,
+                         "I (0) app_init: Project name:     %s\n"
+                         "I (0) app_init: App version:      %s\n"
+                         "I (0) app_init: ESP-IDF:          %s\n",
+                         app->project_name,
+                         app->version,
+                         app->idf_ver);
+        if (n > 0 && (size_t)n < s_cap) {
+            s_pos = (size_t)n;
+        }
+    }
+
+    /* Install vprintf hook - everything from here goes into the buffer */
     s_orig_vp = esp_log_set_vprintf(diag_vprintf);
 
     ESP_LOGI(TAG, "armed - %us capture, buffer %uKB (%s)",

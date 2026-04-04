@@ -185,3 +185,27 @@ elseif ($HasVersion) { Write-Host " Pushed: $Branch + tag $Tag" -ForegroundColor
 else { Write-Host " Pushed: $Branch" -ForegroundColor Green }
 Write-Host "=======================================" -ForegroundColor Green
 Write-Host ""
+
+# === DISCORD PUSH NOTIFICATION ===
+# Fires only on versioned pushes - posts to the channel/thread set in PUSH_CHANNEL_ID on the bot
+if ($HasVersion) {
+    $BotWebhookUrl = "http://10.0.0.105:3000/webhook/push"
+    $RepoUrl = "https://github.com/Driftah9/$RepoName"
+    $NotifyBody = @{
+        project    = $ProjectName
+        version    = $Version
+        repo       = $RepoUrl
+        branch     = $Branch
+        summary    = $CommitBody
+        channel_id = "1489730620337684570"
+    } | ConvertTo-Json -Compress
+
+    try {
+        $response = Invoke-WebRequest -Uri $BotWebhookUrl -Method POST `
+            -ContentType "application/json" -Body $NotifyBody `
+            -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+        Write-Host "Discord notified." -ForegroundColor DarkGray
+    } catch {
+        Write-Host "Discord notification skipped (bot unreachable or PUSH_CHANNEL_ID not set)." -ForegroundColor DarkGray
+    }
+}
