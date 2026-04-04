@@ -317,3 +317,110 @@ Files changed (additional):
 
 Status at end: Phase 4 + reboot UX complete. Build clean. v0.6 ready to push.
 Next session starts at: Push v0.6. Flash + monitor to verify reboot countdown and XCHK at 30s.
+
+---
+
+## Session 008 - 2026-04-03
+
+Tags: phase4-probe, mge-hid, annotation, xchk-fix, diag-capture, v0.7-v0.14
+
+Work completed (reconstructed from project_state - multiple sub-sessions):
+- v0.7: Targeted GET_REPORT probe on descriptor-declared Input RIDs only
+  xchk queues probe per unseen Input RID via ups_xchk_probe_fn_t callback
+  Probe fires in usb_client_task via ups_get_report_service_queue()
+  Raw hex logged as [XCHK Probe]
+- v0.8: NUT mge-hid.c mapping table pattern evaluated for ESP portability
+  ups_hid_map.c/h: static table covering HID pages 0x84 and 0x85, ~50 entries
+  ups_hid_map_lookup() + annotate_report() functions
+  ups_hid_desc_dump() appends -> nut_var_name per field
+  Portability confirmed for APC/Eaton standard HID usages
+  CyberPower: all 14 fields unmapped (vendor usage IDs) - direct-decode required
+  D005 decision: annotation layer only, no decode migration
+- v0.10: All-mode verification on APC XS 1500M (Mode 1/2/3 confirmed)
+  rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage
+  D006 documented. 5 confirmed UPS total.
+- v0.11: op_mode constants renumbered 1/2/3 (was 0/1/2)
+  cfg_store.h, cfg_store.c, http_config_page.c updated
+  NVS old value 0 falls to default STANDALONE - no migration needed
+- v0.12: diag_capture.c/h new module - in-device log capture
+  /diag-start POST: sets NVS diag_dur, countdown page, reboots
+  /diag-log GET: captured log as HTML with Copy button (passwords scrubbed)
+  128KB PSRAM ring buffer via vprintf hook
+  FreeRTOS timer fires at selected duration, marks log ready, restores hook
+- v0.14: XCHK probe size cap fix (two locations: 16->64 bytes)
+  Root cause: PowerWalker VI 3000 RLE (0764:0601) crash-loop every ~34s
+  rid=0x28 declared 63 bytes, probed with wLength=16, IDF v5.5.4 DWC assert fires
+  Fix: buf[16]->buf[64], cap 16->64 in both ups_hid_parser.c and ups_get_report.c
+  Confirmed on APC XS 1500M: rid=0x07 (50 bytes) probed with wlen=50, no crash
+
+Problems encountered:
+- PORTAL_CSS inclusion caused stack overflow on simple pages - removed from 3 pages
+
+Files changed:
+- src/current/main/ups_hid_parser.c (R5-R7, seen_rids, xchk probe, mge annotation, probe cap)
+- src/current/main/ups_hid_desc.c (expected_rids removed, dump annotation)
+- src/current/main/ups_get_report.c (R1-R2, probe queue service, cap fix)
+- src/current/main/ups_usb_hid.c (xchk probe callback registration)
+- src/current/main/ups_hid_map.c + ups_hid_map.h (new - mge-hid annotation layer)
+- src/current/main/diag_capture.c + diag_capture.h (new - log capture module)
+- src/current/main/http_portal.c (diag endpoints, reboot countdown)
+- src/current/main/cfg_store.h + cfg_store.c (op_mode renumber, diag_dur NVS key)
+- src/current/main/http_config_page.c (mode renumber, two-column layout)
+- src/current/main/CMakeLists.txt (ups_hid_map, diag_capture added)
+- docs/ (multiple updates)
+
+Status at end: v0.14 pushed. Dynamic scanning, annotation, diag-capture all working.
+Next session: Eaton 3S 700 submission analysis.
+
+---
+
+## Session 009 - 2026-04-03 to 2026-04-04
+
+Tags: eaton-decode, cyberpower-goto, submission-analysis, v0.15, v0.16
+
+Work completed:
+- Inspected 4 staging submissions (read-only, main repo and flex repo data)
+- Eaton 3S 700 (VID:0463 PID:FFFF) - 3 submissions analyzed:
+  rid=0x06 interrupt-IN identified as primary data source (byte1=charge%, bytes2-3=runtime LE)
+  rid=0x20 GET_REPORT confirmed returning wrong value (2% on full batteries across all 3 subs)
+  flags[3:4]=0x0000 -> OL/input_utility_present=true confirmed from interrupt-IN sample
+- v0.15 Eaton decode changes:
+  ups_get_report.c decode_eaton_feature() rid=0x20: state-apply removed, log-only
+  ups_hid_parser.c DECODE_EATON_MGE rid=0x06: flags[3:4] decode added
+  ups_db_eaton.c: corrected comments (rid=0x06 as primary, rid=0x20 as log-only)
+  diag_capture.c: inject app+IDF version lines at arm time (t=290ms lines missed otherwise)
+  CMakeLists.txt: project renamed to esp32-s3-nut-node-flex
+  git-push.ps1: Discord push notification added (channel_id per-project)
+- CyberPower 3000R (VID:0764 PID:0601) submission analyzed:
+  DB match confirmed: DECODE_CYBERPOWER, quirks=0x002f
+  Interrupt-IN: rid=0x08 byte[0]=0x64=100% every 2s, rid=0x0B byte[0]=0x13 every 2s
+  Bug found: "if (rid != 0x20) goto finalize" silently discarded rid=0x08 battery.charge
+  Field cache had battery.charge at rid=0x08 (correct), but decode path never reached it
+  PID 0601 vs 0501 distinction: 0501 uses vendor RIDs 0x20-0x88, 0601 uses standard HIDs
+- v0.16 CyberPower goto fix:
+  ups_hid_parser.c: "if (rid != 0x20) goto finalize" changed to
+  "if (changed) goto finalize" - CP direct decode returns false for unknown RIDs,
+  those now fall through to standard field-cache path
+  ups_hid_parser.c: rid=0x0B case added to decode_cyberpower_direct() for diagnostic logging
+  R9 version history entry added
+  ups_db_cyberpower.c: PID 0601 corrected, known_good=false, comment updated
+- Build clean (idf-build.ps1 -Target build, zero warnings)
+
+Problems encountered:
+- Previous session context compacted - resumed from summary
+
+Files changed:
+- src/current/main/ups_hid_parser.c (R8 Eaton, R9 CyberPower goto fix + rid=0x0B)
+- src/current/main/ups_get_report.c (Eaton rid=0x20 log-only)
+- src/current/main/ups_db_eaton.c (comment corrections)
+- src/current/main/ups_db_cyberpower.c (PID 0601 corrected)
+- src/current/main/diag_capture.c (version injection at arm time)
+- src/current/CMakeLists.txt (project rename)
+- git-push.ps1 (Discord notification)
+- docs/github_push.md (v0.16)
+- docs/project_state.md (v0.16 status)
+- docs/next_steps.md (CyberPower 3000R follow-up)
+- docs/session_log.md (this entry)
+
+Status at end: v0.16 build clean. Pushed to GitHub.
+Next session: Flash v0.16, monitor for rid=0x08 battery.charge applying correctly.

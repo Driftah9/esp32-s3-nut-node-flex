@@ -18,28 +18,48 @@ public
 main
 
 ## Version
-v0.14
+v0.16
 
 ## Commit Message
-v0.14 - Fix XCHK probe size cap end-to-end (16->64)
+v0.16 - Fix DECODE_CYBERPOWER goto silently discarding standard HID RIDs
 
-Two-location fix for PowerWalker VI 3000 RLE battery.charge=0 crash.
+Root cause: ups_hid_parse_report() had "if (rid != 0x20) goto finalize"
+after calling decode_cyberpower_direct(). This bypassed the standard
+field-cache path for ALL RIDs except 0x20, even when direct decode
+returned false (RID unrecognized by CP path).
 
-Root cause: XCHK probe for rid=0x28 (63 bytes declared) was sent with
-wLength=16. IDF v5.5.4 DWC assert fires (hcd_dwc.c:2388) when wLength
-is less than the declared report size. Device crash-loops every ~34s.
-battery.charge=0 is a symptom of the crash loop, not a decode bug.
+CyberPower 3000R (0764:0601) sends battery.charge on rid=0x08 - a
+standard HID RID present in the field cache. Field found at parse
+time but silently discarded at decode time due to premature goto.
+Fix: goto finalize only when direct decode returns true. Unknown RIDs
+fall through to standard field-cache path.
 
-Caps were in two places - both now raised 16->64:
-1. ups_hid_parser.c run_xchk: probe_sz clamped at 64 (was 16)
-2. ups_get_report.c service_probe_queue: buf[64] cap at 64 (was 16)
+Also adds rid=0x0B diagnostic logging (3000R sends 1 byte every 2s,
+value 0x13=19 observed on AC - meaning TBD, need discharge event).
 
-Verified on APC XS 1500M: rid=0x07 (50 bytes declared) now probed
-with wlen=50 (was wlen=16). No assert. No crash. Device stays up.
+ups_db_cyberpower.c: PID 0601 corrected. Not same decode path as
+PID 0501. Uses standard HID RIDs (0x08, 0x0B) not vendor RIDs.
+known_good=false pending re-submission confirmation.
+
+Bundles v0.15 Eaton decode corrections:
+- ups_get_report.c: Eaton rid=0x20 changed from state-apply to log-only
+  (3-submission analysis confirmed: returns 2% on full batteries)
+- ups_hid_parser.c: Eaton rid=0x06 flags[3:4] decode added
+  (flags=0x0000 -> OL / input_utility_present=true)
+- ups_db_eaton.c: corrected comments, rid=0x06 documented as primary source
+- diag_capture.c: inject app+IDF version at arm time (was missing before)
+- CMakeLists.txt: project renamed to esp32-s3-nut-node-flex
+- git-push.ps1: Discord push notification added
 
 ## Files Staged
-- src/current/main/ups_hid_parser.c
+- src/current/CMakeLists.txt
+- src/current/main/diag_capture.c
+- src/current/main/ups_db_eaton.c
 - src/current/main/ups_get_report.c
-- docs/next_steps.md
-- docs/project_state.md
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_db_cyberpower.c
+- git-push.ps1
 - docs/github_push.md
+- docs/project_state.md
+- docs/next_steps.md
+- docs/session_log.md

@@ -9,12 +9,15 @@
    0x0005  Older CP/BC models
    0x0000  VID-only wildcard fallback
 
- All CyberPower devices use QUIRK_DIRECT_DECODE - the HID descriptor declares
- only ~2 Input fields on power pages; all runtime data arrives on vendor/
- undocumented report IDs (0x20-0x88 range).
+ PID 0x0501 (consumer): all runtime data on vendor RIDs 0x20-0x88.
+ PID 0x0601 (rackmount): uses standard HID RIDs (0x08, 0x0B) - NOT vendor RIDs.
+   DECODE_CYBERPOWER falls through to standard field-cache path for 0x0601.
 
  VERSION HISTORY
  R0  v15.17  Extracted from ups_device_db.c.
+ R1  v0.16   Corrected 0x0601 entry: not same decode path as 0x0501. Uses
+             standard HID RIDs. known_good=false pending re-submission.
+             Source: CyberPower 3000R submission 2026-04-04.
 ============================================================================*/
 #include "ups_db_cyberpower.h"
 
@@ -45,9 +48,15 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .ups_type                   = "line-interactive",
     },
 
-    /* CyberPower OR/PR rackmount - same direct-decode path as 0x0501
-     * Rackmount units typically 24V battery
-     * NUT DDL: battery.voltage.nominal=24V */
+    /* CyberPower OR/PR/RT/UT rackmount (PID 0601).
+     * NOTE: PID 0601 does NOT use vendor RIDs 0x20-0x88 like PID 0501.
+     * Interrupt-IN data arrives on standard HID RIDs: rid=0x08 (battery.charge)
+     * and rid=0x0B (status byte, meaning TBD). The DECODE_CYBERPOWER direct path
+     * will not recognize these RIDs and falls through to the standard field-cache
+     * path. QUIRK_DIRECT_DECODE is retained but QUIRK_NEEDS_GET_REPORT is NOT
+     * set - device sends unsolicited interrupt-IN every 2s.
+     * Source: CyberPower 3000R submission 2026-04-04 (0764:0601).
+     * known_good=false until fix is verified with re-submission. */
     {
         .vid         = 0x0764,
         .pid         = 0x0601,
@@ -59,7 +68,7 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
                        QUIRK_BATT_VOLT_SCALE |
                        QUIRK_FREQ_SCALE_0_1 |
                        QUIRK_ACTIVE_PWR_LOGMAX_FIX,
-        .known_good  = true,
+        .known_good  = false,
         .battery_voltage_nominal_mv = 24000,
         .battery_runtime_low_s      = 300,
         .battery_charge_low         = 20,

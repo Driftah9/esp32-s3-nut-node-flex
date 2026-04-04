@@ -78,6 +78,20 @@
                 CyberPower/PowerWalker devices. IDF v5.5.4 DWC assert fires
                 when wLength < declared size (hcd_dwc.c:2388). Now passes
                 declared size up to 64 bytes end-to-end.
+ R8  v0.15      Eaton/MGE rid=0x06 flags decode: flags=0x0000 -> OL
+                (input_utility_present=true). Confirmed from Eaton 3S 700
+                submission 2026-04-02 (sample: 06 63 B4 10 00 00).
+                OB bit positions remain TBD - need discharge event log.
+ R9  v0.16      Fix DECODE_CYBERPOWER goto: changed "if (rid != 0x20) goto
+                finalize" to "if (changed) goto finalize". Old logic silently
+                discarded all RIDs except 0x20 without running the standard
+                path. CyberPower 3000R (0764:0601) sends battery.charge on
+                rid=0x08 which IS in the field cache - but was silently
+                dropped. Fix allows standard path to run as fallback for any
+                RID the CP direct decode does not recognise.
+                Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
+                0x13=19 observed - meaning TBD, need discharge event).
+                Source: CyberPower 3000R submission 2026-04-04.
 
 ============================================================================*/
 
@@ -557,7 +571,19 @@ static bool decode_cyberpower_direct(uint8_t rid,
                      p[0], (p[0] == 0x00u) ? "OL" : "OB");
         }
         break;
-    /* Unresolved reports — silently ignore */
+    case 0x0B:
+        /*
+         * rid=0x0B - observed on CyberPower 3000R (0764:0601).
+         * 1 byte, value 0x13=19 seen on AC (OL) at steady state.
+         * Usage/meaning unknown. Fires every 2s alongside rid=0x08.
+         * Logged for analysis - need discharge event to identify meaning.
+         */
+        if (plen >= 1) {
+            ESP_LOGI(TAG, "[CP] rid=0x0B raw=0x%02X (%u) - diagnostic only",
+                     (unsigned)p[0], (unsigned)p[0]);
+        }
+        break;
+    /* Unresolved reports - silently ignore */
     case 0x22: case 0x25: case 0x28:
     case 0x86: case 0x87:
         break;
@@ -829,8 +855,11 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
     if (mode == DECODE_CYBERPOWER) {
         if (decode_cyberpower_direct(rid, payload, payload_len, upd)) {
             changed = true;
+            goto finalize;  /* CP direct decode consumed this RID - skip standard path */
         }
-        if (rid != 0x20) goto finalize;
+        /* RID not recognized by CP direct path - fall through to standard decode.
+         * CyberPower 3000R (0764:0601) sends battery.charge on rid=0x08 which is
+         * a standard HID RID handled by the field cache below. */
     } else if (mode == DECODE_APC_BACKUPS) {
         /* APC Back-UPS: direct for vendor rids, then fall through to
            standard path to pick up charging/discharging from descriptor. */
@@ -862,9 +891,9 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
          *   charge=0x63=99%, runtime=0x10B4=4276s (~71 min), flags=0x0000
          */
         if (rid == 0x06 && payload_len >= 5) {
-            uint8_t charge = payload[0];
+            uint8_t  charge    = payload[0];
             uint16_t runtime_s = (uint16_t)(payload[1] | ((uint16_t)payload[2] << 8));
-            /* status flags in payload[3:4] - OB/OL decode TBD, need discharge log */
+            uint16_t flags     = (uint16_t)(payload[3] | ((uint16_t)payload[4] << 8));
             if (charge <= 100u) {
                 upd->battery_charge_valid = true;
                 upd->battery_charge       = charge;
@@ -876,6 +905,18 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
                 upd->battery_runtime_s     = runtime_s;
                 changed = true;
                 ESP_LOGI(TAG, "[EATON] rid=0x06 battery.runtime=%us", runtime_s);
+            }
+            /* Flags decode: confirmed sample 06 63 B4 10 00 00 -> OL (AC present, online).
+             * OB bit positions unknown - need an on-battery discharge event log to confirm.
+             * Any non-zero flags are logged raw for future analysis. */
+            if (flags == 0x0000u) {
+                upd->input_utility_present_valid = true;
+                upd->input_utility_present       = true;
+                changed = true;
+                ESP_LOGI(TAG, "[EATON] rid=0x06 flags=0x0000 -> OL (ac_present)");
+            } else {
+                ESP_LOGW(TAG, "[EATON] rid=0x06 flags=0x%04X - OB/event decode TBD, log for analysis",
+                         (unsigned)flags);
             }
             ESP_LOGI(TAG, "[EATON] rid=0x06 raw: %02X %02X %02X %02X %02X",
                      payload[0], payload[1], payload[2], payload[3], payload[4]);

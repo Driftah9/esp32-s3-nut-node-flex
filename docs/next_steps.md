@@ -126,6 +126,21 @@ The crash-loop was flex-only, caused by XCHK probe firing on rid=0x28.
 
 ---
 
+## CyberPower 3000R (0764:0601) goto fix - v0.16 (2026-04-04)
+
+Root cause found: ups_hid_parse_report() had "if (rid != 0x20) goto finalize" after
+decode_cyberpower_direct(). All RIDs except 0x20 were silently discarded without running
+the standard field-cache path. CyberPower 3000R sends battery.charge on rid=0x08
+(standard HID) which was in the cache but never applied.
+
+- [x] Bug identified from submission log analysis
+- [x] Goto fix applied in ups_hid_parser.c
+- [x] rid=0x0B diagnostic logging added (value 0x13=19 on AC, meaning TBD)
+- [x] ups_db_cyberpower.c PID 0601 corrected (not same decode path as 0501)
+- [x] Build clean
+- [ ] Flash v0.16, confirm battery.charge reads correctly
+- [ ] Need discharge event log to decode rid=0x0B (value 0x13=19 on AC = ?)
+
 ## Possible Future Additions
 
 - [ ] **In-device diagnostic log capture** - STANDBY. Full design spec in docs/diag-log-capture.md.

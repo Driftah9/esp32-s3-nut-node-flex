@@ -2,7 +2,12 @@
 <!-- Updated: 2026-04-03 -->
 
 ## Status
-v0.14 - XCHK probe size cap fix: 16->64 in both locations. ups_hid_parser.c run_xchk and ups_get_report.c service_probe_queue both raised. Verified on APC XS 1500M: rid=0x07 (50 bytes declared) now probed with wlen=50 (was wlen=16). No assert. No crash.
+v0.16 - CyberPower 3000R goto fix. Build clean. Ready to push.
+- Fix: DECODE_CYBERPOWER goto no longer silently discards standard HID RIDs
+- rid=0x08 (battery.charge) now reaches field-cache path on CyberPower 3000R
+- rid=0x0B diagnostic logging added (value 0x13=19 on AC, meaning TBD)
+- ups_db_cyberpower.c: PID 0601 corrected (known_good=false, not same as 0501)
+- Bundles v0.15 Eaton fixes (see Last Action below)
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -38,11 +43,36 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-03 - v0.14: XCHK probe size cap fix - two locations. ups_hid_parser.c run_xchk
-probe_sz clamped at 64 (was 16). ups_get_report.c service_probe_queue buf[64] + cap at 64
-(was buf[16] + cap at 16). Root cause: PowerWalker rid=0x28 (63 bytes declared) probed
-with wLength=16, IDF v5.5.4 DWC assert fires (hcd_dwc.c:2388), device crash-loops.
-Verified: APC XS 1500M rid=0x07 (50 bytes) now shows wlen=50 in setup packet. No crash.
+2026-04-04 - v0.16: CyberPower 3000R goto fix (submission 2026-04-04).
+ups_hid_parse_report(): changed "if (rid != 0x20) goto finalize" to
+"if (changed) goto finalize". Old code silently discarded all RIDs except
+0x20 without running standard field-cache path. CyberPower 3000R sends
+battery.charge on rid=0x08 (standard HID), which was in the cache but
+never applied. rid=0x0B case added to decode_cyberpower_direct() for
+diagnostic logging. ups_db_cyberpower.c PID 0601 corrected.
+Build: clean.
+
+Previous: 2026-04-03 - v0.15: Eaton/MGE decode update + diag_capture header fix.
+diag_capture.c R1: injects "I (0) app_init: App version: vX.Y" and
+"I (0) app_init: ESP-IDF: vX.Y" directly into buffer before hook installs.
+App_init lines run at ~290ms, capture arms at ~495ms - always missing otherwise.
+Confirmed missing from Back-UPS XS 1500M test log. Fix uses esp_app_get_description().
+Build clean.
+
+Previous: 2026-04-03 - v0.15: Eaton/MGE decode update from 3-submission analysis.
+Three changes, build clean:
+1. ups_get_report.c decode_eaton_feature() rid=0x20: changed from state-apply to log-only.
+   Confirmed across all 3 submissions: returns 2% on fully charged batteries. Not live charge.
+   Real charge comes from rid=0x06 interrupt-IN. Removing the apply prevents 30s GET_REPORT
+   poll from overwriting correct value after rid=0x06 fires.
+2. ups_hid_parser.c DECODE_EATON_MGE rid=0x06: added flags[3:4] decode.
+   flags=0x0000 -> input_utility_present=true (OL confirmed from submission sample).
+   Non-zero flags logged as WARN for future OB analysis.
+3. ups_db_eaton.c: corrected comments. rid=0x06 documented as primary source.
+   rid=0x20 noted as wrong. rid=0xFD (0x29=41) noted as TBD.
+R8 added to ups_hid_parser.c version history.
+
+Previous: 2026-04-03 - v0.14: XCHK probe size cap fix - two locations.
 
 Previous (2026-04-03) - v0.12: diag_capture.c/h (new module). Dashboard capture section (radio + button).
 /diag-start POST: sets NVS diag_dur key, sends countdown page, reboots.
@@ -81,14 +111,21 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-PowerWalker charge=0 fix in v0.14 - push to GitHub, advise user to rebuild with v0.14 (or use IDF v5.3.1).
-Confirm with user after update that battery.charge reads correctly.
+Flash v0.16 and monitor. CyberPower 3000R user should re-submit to confirm fix.
+- battery.charge should now read correctly (rid=0x08 reaching field-cache path)
+- rid=0x0B value 0x13=19 will appear in log - need discharge event to decode meaning
 
-When ready, candidate next tasks:
+Eaton 3S 700 user should also flash and confirm:
+- battery.charge reads correct value when rid=0x06 fires
+- ups.status shows OL after first rid=0x06 fires
+
+Candidate next tasks:
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
 - Bridge GET_REPORT forwarding (type=0x02) for Feature reports
 - APC direct-decode: add input.transfer.low/high from rid=0x52 (D006)
-- Eaton 3S 700 decode path: add RID 0x06 handler for battery.charge/runtime/status
+- Eaton: capture OB discharge event log to decode rid=0x06 flags non-zero case
+- Eaton: decode rid=0xFD (need second submission at different charge state)
+- CyberPower 3000R: need discharge event to decode rid=0x0B (value 0x13=19 seen on AC)
 - Wider device testing with additional UPS hardware
 
 ## Key Constraint
