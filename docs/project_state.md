@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.21 - Adaptive dashboard poll rate. Build clean. Ready to push.
+v0.22 - 300s diagnostic capture option. Build clean. Ready to push.
 - Self-calibrating EMA interval tracker for all interrupt-IN RIDs
 - Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
 - Prevents false OL<->OB transitions from single anomalous reports
@@ -47,7 +47,15 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.21: Adaptive dashboard poll rate.
+2026-04-05 - v0.22: Add 300s diagnostic log capture option.
+diag_capture duration type widened from uint8_t to uint16_t (300 > 255).
+NVS key diag_dur changed from nvs_set/get_u8 to nvs_set/get_u16.
+Whitelist in portal updated (90 / 120 / 300). Dashboard radio button added.
+300s capture useful for event-driven devices (Eaton 3S) where first data
+may not appear until a mains event occurs after boot.
+Build: clean.
+
+Previous: 2026-04-05 - v0.21: Adaptive dashboard poll rate.
 Dashboard JS changed from fixed setInterval(5000) to setTimeout-based adaptive polling.
 While ups_valid=false: poll every 1500ms.
 Once ups_valid=true: poll every 5000ms.

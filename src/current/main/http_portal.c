@@ -413,18 +413,19 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         free(page);
 
     } else if (strcmp(path, "/diag-start") == 0 && strcasecmp(method, "POST") == 0) {
-        /* Parse duration from form body */
-        uint8_t dur = 90;
+        /* Parse duration from form body - whitelist only (90, 120, 300) */
+        uint16_t dur = 90;
         char *dp = strstr(body, "dur=");
         if (dp) {
             int v = atoi(dp + 4);
             if (v == 120) dur = 120;
+            else if (v == 300) dur = 300;
         }
 
         /* Write NVS flag */
         nvs_handle_t nh;
         if (nvs_open("cfg", NVS_READWRITE, &nh) == ESP_OK) {
-            nvs_set_u8(nh, "diag_dur", dur);
+            nvs_set_u16(nh, "diag_dur", dur);
             nvs_commit(nh);
             nvs_close(nh);
         }

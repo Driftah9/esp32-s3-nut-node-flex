@@ -53,7 +53,7 @@ static volatile size_t  s_pos        = 0;
 static volatile bool    s_armed      = false;
 static volatile bool    s_ready      = false;
 static bool             s_scrubbed   = false;
-static uint8_t          s_duration   = 0;
+static uint16_t         s_duration   = 0;
 static int64_t          s_arm_us     = 0;   /* esp_timer_get_time() at arm */
 static vprintf_like_t   s_orig_vp    = NULL;
 
@@ -120,16 +120,16 @@ void diag_capture_check_and_arm(void)
     nvs_handle_t h;
     if (nvs_open(DIAG_NVS_NS, NVS_READWRITE, &h) != ESP_OK) return;
 
-    uint8_t dur = 0;
-    nvs_get_u8(h, DIAG_NVS_KEY, &dur);
+    uint16_t dur = 0;
+    nvs_get_u16(h, DIAG_NVS_KEY, &dur);
 
-    if (dur != 90 && dur != 120) {
+    if (dur != 90 && dur != 120 && dur != 300) {
         nvs_close(h);
         return; /* normal boot */
     }
 
     /* Clear NVS flag immediately - crash during capture = clean next boot */
-    nvs_set_u8(h, DIAG_NVS_KEY, 0);
+    nvs_set_u16(h, DIAG_NVS_KEY, 0);
     nvs_commit(h);
     nvs_close(h);
 
@@ -189,7 +189,7 @@ void diag_capture_check_and_arm(void)
 
 bool diag_capture_is_armed(void)    { return s_armed; }
 bool diag_capture_is_ready(void)    { return s_ready; }
-uint8_t diag_capture_get_duration(void) { return s_duration; }
+uint16_t diag_capture_get_duration(void) { return s_duration; }
 
 uint32_t diag_capture_get_elapsed_s(void)
 {

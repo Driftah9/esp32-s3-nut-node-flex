@@ -18,24 +18,23 @@ public
 main
 
 ## Version
-v0.21
+v0.22
 
 ## Commit Message
-v0.21 - Adaptive dashboard poll rate: fast while waiting, normal once live
+v0.22 - Add 300s diagnostic log capture option
 
-Dashboard AJAX changed from fixed setInterval(5000) to setTimeout-based
-adaptive scheduling driven by ups_valid from /status JSON.
+Duration type widened from uint8_t to uint16_t throughout (300 > 255).
+NVS key diag_dur migrated from nvs_set/get_u8 to nvs_set/get_u16.
+Whitelist accepts 90, 120, or 300. Dashboard shows third radio button.
 
-Poll rate: 1500ms while ups_valid=false, 5000ms once ups_valid=true.
-XHR errors also fall back to 1500ms.
-
-data_age indicator shows waiting message while ups_valid=false instead
-of showing a potentially misleading stale age value.
-
-Addresses visible delay for event-driven devices such as Eaton 3S.
-When the first data arrives the page now reflects it within 1.5s.
+300s is useful for event-driven devices such as Eaton 3S where the
+first interrupt-IN report may not arrive until a mains event occurs
+after boot. 128KB PSRAM buffer handles 300s at INFO log level easily.
 
 ## Files Staged
+- src/current/main/diag_capture.h
+- src/current/main/diag_capture.c
+- src/current/main/http_portal.c
 - src/current/main/http_dashboard.c
 - docs/github_push.md
 - docs/project_state.md

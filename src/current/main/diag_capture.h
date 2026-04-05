@@ -3,7 +3,7 @@
 
  RESPONSIBILITY
  - Opt-in boot log capture for user debugging
- - User selects duration (90s or 120s) via portal, device reboots,
+ - User selects duration (90s, 120s, or 300s) via portal, device reboots,
    captures full boot log to a ring buffer, then makes it available
    at GET /diag-log for copy/paste. Passwords are redacted before display.
 
@@ -29,7 +29,7 @@ void diag_capture_check_and_arm(void);
 /* State query functions - safe to call at any time */
 bool     diag_capture_is_armed(void);       /* true while capture is running */
 bool     diag_capture_is_ready(void);       /* true after timer fires, log available */
-uint8_t  diag_capture_get_duration(void);   /* requested duration in seconds */
+uint16_t diag_capture_get_duration(void);   /* requested duration in seconds */
 uint32_t diag_capture_get_elapsed_s(void);  /* seconds since capture started */
 
 /* Returns pointer to captured log buffer and sets *len_out to byte count.
