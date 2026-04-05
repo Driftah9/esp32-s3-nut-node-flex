@@ -130,7 +130,11 @@ static void emit_var_list(int fd, const char *ups, const ups_state_t *st)
     const char *ups_type_str = (db && db->ups_type) ? db->ups_type : UPS_TYPE;
 
     /* --- Battery --- */
-    nut_sendf(fd, "VAR %s battery.charge \"%u\"\n",     ups, (unsigned)st->battery_charge);
+    /* battery.charge gated on valid: avoids sending 0 to HA before first
+     * real data arrives (default struct value is 0, not a real reading). */
+    if (st->valid) {
+        nut_sendf(fd, "VAR %s battery.charge \"%u\"\n", ups, (unsigned)st->battery_charge);
+    }
     nut_sendf(fd, "VAR %s battery.charge.low \"%u\"\n",
               ups, db ? (unsigned)db->battery_charge_low : (unsigned)st->battery_charge_low);
     if (db && db->battery_charge_warning) {

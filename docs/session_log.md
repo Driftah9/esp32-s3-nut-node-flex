@@ -480,3 +480,69 @@ Files changed:
 
 Status at end: v0.20 build clean. Ready to push.
 Next session: Flash v0.20, request re-submission from sollandk for CyberPower 3000R.
+
+---
+
+## Session 007 - 2026-04-05
+
+Tags: v0.21, v0.22, v0.23, v0.24, dashboard-poll, diag-capture, community-fix, mode-validation, ha-zero-data
+
+Work completed (context-compacted session - covers v0.21 through v0.24):
+
+v0.21 - Adaptive dashboard poll rate:
+- http_dashboard.c: replaced fixed setInterval(5000) with setTimeout-based adaptive polling
+  While ups_valid=false: poll every 1500ms. Once valid: poll every 5000ms.
+  schedPoll(ms) wrapper manages timer with clearTimeout/setTimeout
+  XHR errors fall back to 1500ms. onerror handler added.
+  data_age block: shows "Waiting for UPS data..." while !ups_valid, age otherwise
+  Motivation: Eaton 3S and other event-driven devices may not send data until mains event
+  Dashboard now reflects first data the moment it arrives without user refresh
+
+v0.22 - 300s diagnostic log capture option:
+- diag_capture.h: description updated, get_duration() return type uint8_t -> uint16_t
+- diag_capture.c: s_duration uint8_t -> uint16_t, dur uint8_t -> uint16_t
+  nvs_get_u8 -> nvs_get_u16, nvs_set_u8 -> nvs_set_u16
+  Whitelist: dur != 90 && dur != 120 now also checks dur != 300
+- http_portal.c: dur uint8_t -> uint16_t, 300 case added, nvs_set_u8 -> nvs_set_u16
+- http_dashboard.c: 300s radio button added, 120s label style updated
+  NVS note: old u8 key returns ESP_ERR_NVS_TYPE_MISMATCH, falls to dur=0 (no capture) safely
+
+v0.23 - Remove unused strlcpy0 from http_dashboard.c:
+- http_dashboard.c: removed static strlcpy0 helper (5 lines, function never called)
+  Reported by Eaton community user building locally (IDF v5.5.3) - -Wunused-function warning
+
+v0.24 - Config mode validation + NUT server battery.charge valid gate:
+- http_config_page.c: form onsubmit='return chkSave()' added
+  upstream_host input given id='upstream_host'
+  Inline error div added (upstream_err, red, hidden by default)
+  chkSave() function: blocks save if Mode 2 or 3 with blank upstream_host
+  onModeChange() updated to clear upstream_err on mode change
+- nut_server.c: battery.charge VAR send wrapped in if (st->valid)
+  Prevents HA from receiving "0" during boot window before first UPS data arrives
+  All other gated variables (runtime, voltage, load) already had valid checks
+
+Problems encountered:
+- v0.21 initial push: ellipsis "..." in commit message body caused PowerShell parse error
+  Fix: simplified commit message to remove problematic characters
+
+Submissions reviewed this session:
+- a0043f (CyberPower 3000R, sollandk/redandblue): DWC assert root cause confirmed, v0.20 fix
+- bc8a09 (Eaton 3S 700, MyDisplayName): NOT a firmware bug - user had Mode 3 Bridge configured
+  with no upstream_host set. Bridge has nowhere to connect. v0.24 validation prevents this.
+- 9543fe (Eaton M5Stack Atom S3 Lite, MyDisplayName): incomplete log, needs 90s+ without DEBUG level
+- 77eaee (Eaton 3S 700, standard ESP32-S3): confirmed working, battery.charge=89% correct
+
+Files changed:
+- src/current/main/http_dashboard.c (v0.21 adaptive poll, v0.22 300s button, v0.23 strlcpy0 removed)
+- src/current/main/diag_capture.h (v0.22 uint16_t return type)
+- src/current/main/diag_capture.c (v0.22 uint16_t throughout, nvs_set/get_u16)
+- src/current/main/http_portal.c (v0.22 uint16_t, 300 case, nvs_set_u16)
+- src/current/main/http_config_page.c (v0.24 chkSave validation)
+- src/current/main/nut_server.c (v0.24 battery.charge valid gate)
+- docs/github_push.md (v0.24)
+- docs/project_state.md (v0.24)
+- docs/next_steps.md (v0.24 follow-up items)
+- docs/session_log.md (this entry)
+
+Status at end: v0.24 build clean. Push in progress.
+Next session: Flash v0.24. Request re-submission from sollandk (CyberPower 3000R, confirm no crash loop).

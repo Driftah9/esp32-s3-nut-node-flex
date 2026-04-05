@@ -217,6 +217,28 @@ Remaining issues for this device (no fix yet):
 - [ ] Decode rid=0x0B to determine ac_present bit for ups.status
 - [ ] Consider Feature report polling for battery.runtime (rid=0x08 byte 2) and battery.voltage (rid=0x07)
 
+## Adaptive Dashboard + Diag + Community Fixes (v0.21-v0.23) - COMPLETE
+
+- [x] v0.21: Adaptive dashboard poll rate (1500ms while !ups_valid, 5000ms steady state)
+- [x] v0.22: 300s diagnostic log capture option (uint16_t duration widening throughout)
+- [x] v0.23: Remove unused strlcpy0 from http_dashboard.c (-Wunused-function warning)
+
+## Mode Validation + HA Zero Data (v0.24) - COMPLETE
+
+- [x] Config page: chkSave() blocks Save if Mode 2/3 with blank upstream_host
+- [x] NUT server: battery.charge gated on st->valid (HA receives no "0" during boot)
+- [x] bc8a09 root cause: bridge mode with no upstream_host - v0.24 validation prevents recurrence
+
+## Pending Follow-Up
+
+- [ ] sollandk/redandblue (CyberPower 3000R): re-submit on v0.24 to confirm no crash loop
+      - ups.status still WAIT (no rid=0x80 ac_present on this device) - known limitation
+      - battery.charge should still read correctly (96% confirmed in a0043f)
+- [ ] MyDisplayName (9543fe M5Stack Atom S3 Lite): submit 90s+ log without DEBUG log level
+- [ ] MyDisplayName (bc8a09 bridge mode user): switch to Mode 1 or configure upstream_host
+      - Also check IDF version: using v5.5.3, project target is v5.3.1 (PSRAM init may differ)
+- [ ] Flash v0.24 to APC test device and confirm clean boot (v0.19 abort fix still unverified on device)
+
 ## Possible Future Additions
 
 - [ ] **OTA (Over-the-Air) firmware updates** - FUTURE.

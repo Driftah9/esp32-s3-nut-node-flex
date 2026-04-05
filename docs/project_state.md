@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.23 - Remove unused strlcpy0 from http_dashboard.c. Build clean. Zero warnings.
+v0.24 - Mode validation + HA zero data fix. Build clean. Ready to push.
 - Self-calibrating EMA interval tracker for all interrupt-IN RIDs
 - Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
 - Prevents false OL<->OB transitions from single anomalous reports
@@ -47,7 +47,16 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.23: Remove unused strlcpy0 from http_dashboard.c.
+2026-04-05 - v0.24: Config mode validation + NUT server battery.charge valid gate.
+http_config_page.c: onsubmit chkSave() blocks save if Mode 2 or 3 selected
+  with no upstream_host filled in. Shows inline error and focuses the field.
+  onModeChange() also clears the error when mode changes back to 1.
+nut_server.c: battery.charge now gated on st->valid. Prevents HA receiving
+  "0" during boot window before first UPS data arrives (default struct = 0).
+  All other gated variables (runtime, voltage, load) already had valid checks.
+Build: clean.
+
+Previous: 2026-04-05 - v0.23: Remove unused strlcpy0 from http_dashboard.c.
 Reported by Eaton user building locally. strlcpy0 was copied from another
 module but never called in http_dashboard.c. Removed to eliminate the
 -Wunused-function warning. Build clean, zero warnings.

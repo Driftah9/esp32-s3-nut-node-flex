@@ -18,16 +18,23 @@ public
 main
 
 ## Version
-v0.23
+v0.24
 
 ## Commit Message
-v0.23 - Remove unused strlcpy0 from http_dashboard.c
+v0.24 - Config mode validation + HA zero data fix
 
-strlcpy0 was copied from another module but never called in
-http_dashboard.c, producing a -Wunused-function warning on clean
-builds. Reported by community user building locally.
+http_config_page.c: chkSave() blocks Save when Mode 2 or 3 is selected
+with no upstream_host filled in. Shows inline error and focuses the field.
+onModeChange() clears the error when mode switches back to 1.
+
+nut_server.c: battery.charge now gated on st->valid. Prevents HA from
+receiving "0" during the boot window before first UPS data arrives.
+All other gated variables (runtime, voltage, load) already had valid checks.
 
 ## Files Staged
-- src/current/main/http_dashboard.c
+- src/current/main/http_config_page.c
+- src/current/main/nut_server.c
 - docs/github_push.md
 - docs/project_state.md
+- docs/next_steps.md
+- docs/session_log.md
