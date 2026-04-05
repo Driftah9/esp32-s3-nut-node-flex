@@ -18,6 +18,10 @@
                 Mode shown in subtitle. ups.vendorid/productid added.
  R5  v0.17  Replace hardcoded "v0.6-flex" subtitle version string with
             esp_app_get_description()->version so it tracks the built firmware.
+ R6  v0.21  Adaptive AJAX poll rate: 1500ms while ups_valid=false (waiting for
+            first data), 5000ms once valid. Prevents the long visible delay
+            between data becoming ready on the ESP and the page updating.
+            data_age shows "Waiting for UPS data..." while not yet valid.
 ============================================================================*/
 
 #include "http_dashboard.h"
@@ -266,7 +270,13 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
           "var ap=h>=12?'PM':'AM';h=h%%12||12;"
           "return h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+ap;"
         "}"
+        /* Adaptive poll rate: 1500ms while ups_valid=false, 5000ms once valid */
         "var lastOk=null;"
+        "var pollTimer=null;"
+        "function schedPoll(ms){"
+          "if(pollTimer)clearTimeout(pollTimer);"
+          "pollTimer=setTimeout(doPoll,ms);"
+        "}"
         "setInterval(function(){"
           "var el=document.getElementById('td_poll');"
           "var now=fmtTime(new Date());"
@@ -278,7 +288,7 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
           "var x=new XMLHttpRequest();"
           "x.open('GET','/status',true);"
           "x.onload=function(){"
-            "if(x.status!==200)return;"
+            "if(x.status!==200){schedPoll(1500);return;}"
             "try{"
               "var d=JSON.parse(x.responseText);"
               "var sc=d.ups_status||'UNKNOWN';"
@@ -310,12 +320,16 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
               "sv('v_umdl',naRaw(d.device_model));"
               "sv('v_upid',na(d.ups_productid));"
               "sv('v_ust', sc,scl);"
-              /* Data age indicator */
-              "if(d.data_age_ms!==undefined){"
-                "var ag=d.data_age_ms;"
-                "var ags=ag<2000?(ag+'ms'):(Math.round(ag/1000)+'s');"
-                "var agEl=document.getElementById('data_age');"
-                "if(agEl)agEl.textContent='UPS data: '+ags+' old';"
+              /* Data age: waiting message while not yet valid, age once valid */
+              "var agEl=document.getElementById('data_age');"
+              "if(agEl){"
+                "if(!d.ups_valid){"
+                  "agEl.textContent='Waiting for UPS data...';"
+                "}else if(d.data_age_ms!==undefined){"
+                  "var ag=d.data_age_ms;"
+                  "var ags=ag<2000?(ag+'ms'):(Math.round(ag/1000)+'s');"
+                  "agEl.textContent='UPS data: '+ags+' old';"
+                "}"
               "}"
               "sv('v_utp', naRaw(d.ups_type));"
               "sv('v_uvid',na(d.ups_vendorid));"
@@ -328,12 +342,14 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
               /* nav ip */
               "document.getElementById('td_ip').textContent=d.sta_ip||'';"
               "lastOk=new Date();"
-            "}catch(e){}"
+              /* schedule next poll: fast while waiting for data, slow once live */
+              "schedPoll(d.ups_valid?5000:1500);"
+            "}catch(e){schedPoll(1500);}"
           "};"
+          "x.onerror=function(){schedPoll(1500);};"
           "x.send();"
         "}"
         "doPoll();"
-        "setInterval(doPoll,5000);"
         "</script>"
         "</body></html>",
 

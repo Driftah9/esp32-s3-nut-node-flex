@@ -18,35 +18,24 @@ public
 main
 
 ## Version
-v0.20
+v0.21
 
 ## Commit Message
-v0.20 - Fix GET_REPORT DWC OTG buffer overflow on CyberPower 3000R
+v0.21 - Adaptive dashboard poll rate: fast while waiting, normal once live
 
-CyberPower 3000R (0764:0601) returns more data for rid=0x28 than its
-descriptor declares (63 bytes). XCHK probe issues GET_REPORT with
-wLength=63, device sends back more bytes. DWC OTG HCI asserts:
+Dashboard AJAX changed from fixed setInterval(5000) to setTimeout-based
+adaptive scheduling driven by ups_valid from /status JSON.
 
-  _buffer_parse_ctrl hcd_dwc.c:2341
-  (rem_len <= transfer->num_bytes - sizeof(usb_setup_packet_t))
+Poll rate: 1500ms while ups_valid=false, 5000ms once ups_valid=true.
+XHR errors also fall back to 1500ms.
 
-Transfer was allocated as 8 + buf_sz = 71 bytes. With rem_len > 63
-the assert fires, aborting and triggering a crash-loop every boot
-after the 30s XCHK settle window.
+data_age indicator shows waiting message while ups_valid=false instead
+of showing a potentially misleading stale age value.
 
-Fix: pad GET_REPORT transfer allocation by 64 bytes beyond declared
-report size. wLength in setup packet unchanged - device still told to
-send buf_sz bytes. ctrl_cb clips payload to CTRL_PAYLOAD_MAX=24.
-
-Distinct from v0.14 fix (which matched wLength to declared size).
-This fix handles devices that ignore wLength and send extra bytes.
-
-Confirmed from submission a0043f: 8803-line crash-loop log, same
-assert repeated on every boot after 30s XCHK window.
+Addresses visible delay for event-driven devices such as Eaton 3S.
+When the first data arrives the page now reflects it within 1.5s.
 
 ## Files Staged
-- src/current/main/ups_get_report.c
+- src/current/main/http_dashboard.c
 - docs/github_push.md
 - docs/project_state.md
-- docs/next_steps.md
-- docs/session_log.md

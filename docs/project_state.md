@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.20 - GET_REPORT DWC buffer overflow fix. Build clean. Ready to push.
+v0.21 - Adaptive dashboard poll rate. Build clean. Ready to push.
 - Self-calibrating EMA interval tracker for all interrupt-IN RIDs
 - Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
 - Prevents false OL<->OB transitions from single anomalous reports
@@ -47,7 +47,16 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.20: Fix GET_REPORT DWC OTG buffer overflow assert (CyberPower 3000R).
+2026-04-05 - v0.21: Adaptive dashboard poll rate.
+Dashboard JS changed from fixed setInterval(5000) to setTimeout-based adaptive polling.
+While ups_valid=false: poll every 1500ms.
+Once ups_valid=true: poll every 5000ms.
+data_age shows "Waiting for UPS data..." while not yet valid.
+XHR errors fall back to 1500ms. Handles Eaton/event-driven devices where data
+may take time to arrive after boot - page reflects data the moment it lands.
+Build: clean.
+
+Previous: 2026-04-05 - v0.20: Fix GET_REPORT DWC OTG buffer overflow assert (CyberPower 3000R).
 CyberPower 3000R (0764:0601) submission a0043f analyzed. XCHK probes rid=0x28 with
 wLength=63 (declared size). Device returns MORE than 63 bytes. DWC OTG assert fires:
   assert failed: _buffer_parse_ctrl hcd_dwc.c:2341
