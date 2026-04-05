@@ -18,35 +18,31 @@ public
 main
 
 ## Version
-v0.17
+v0.18
 
 ## Commit Message
-v0.17 - Fix Task Watchdog crash on large HID descriptors + version string cleanup
+v0.18 - Per-RID interval learning and status debounce
 
-Root cause (CyberPower 3000R submission 9b89d6):
-ups_hid_desc_dump() looped over all descriptor fields at ESP_LOGI level.
-CyberPower 3000R rid=0x29 has 237 fields. At 10ms per ESP_LOGI call the
-loop blocked the ups_usb task on core 0 for ~2.4s, starving IDLE0 past
-the TWDT threshold. Watchdog fired at ~t=11.6s, device crash-looped on
-every boot.
+Self-calibrating EMA interval tracker for all interrupt-IN RIDs.
+Three parallel arrays track rolling average inter-report interval per
+RID. Stabilises in ~5 reports (~10s for a 2s interval device).
 
-Fix: per-field loop in ups_hid_desc_dump() changed from ESP_LOGI to
-ESP_LOGD. Summary line kept at INFO. Normal builds emit 1 line per
-connection instead of 237.
+Status debounce in ups_state_apply_update(): a new ups_status string
+must be seen consistently for min(1.5x learned interval, 3500ms)
+before it overwrites the committed g_state status. Prevents false
+OL-OB transitions caused by a single anomalous report. During warmup
+debounce is disabled and status applies immediately.
 
-Version string cleanup:
-- http_dashboard.c: hardcoded v0.6-flex subtitle replaced with
-  esp_app_get_description version (tracks git tag automatically)
-- http_portal.c: hardcoded 15.13 driver_version in /status JSON
-  replaced with esp_app_get_description version
-
-Eaton 3S analysis - 77eaee confirmed working (battery.charge=89%,
-runtime=1401s, OL). 9543fe incomplete log, undiagnosable.
+data_age_ms added to ups_state_t (now minus last_update_ms at snapshot).
+Dashboard shows age indicator below status badge.
+/status JSON includes data_age_ms field.
 
 ## Files Staged
-- src/current/main/ups_hid_desc.c
-- src/current/main/http_dashboard.c
+- src/current/main/ups_hid_parser.h
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_state.h
+- src/current/main/ups_state.c
 - src/current/main/http_portal.c
+- src/current/main/http_dashboard.c
 - docs/github_push.md
 - docs/project_state.md
-- docs/next_steps.md

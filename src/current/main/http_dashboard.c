@@ -133,6 +133,8 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         "%s"
 
         "<div class='st %s'>%s</div>"
+        "<div id='data_age' style='font-size:0.72em;color:#555;"
+             "font-family:Arial,sans-serif;margin-bottom:12px'></div>"
 
         "<table class='nt'>"
 
@@ -308,6 +310,13 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
               "sv('v_umdl',naRaw(d.device_model));"
               "sv('v_upid',na(d.ups_productid));"
               "sv('v_ust', sc,scl);"
+              /* Data age indicator */
+              "if(d.data_age_ms!==undefined){"
+                "var ag=d.data_age_ms;"
+                "var ags=ag<2000?(ag+'ms'):(Math.round(ag/1000)+'s');"
+                "var agEl=document.getElementById('data_age');"
+                "if(agEl)agEl.textContent='UPS data: '+ags+' old';"
+              "}"
               "sv('v_utp', naRaw(d.ups_type));"
               "sv('v_uvid',na(d.ups_vendorid));"
               /* device */

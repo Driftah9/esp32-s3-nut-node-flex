@@ -2,7 +2,11 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.17 - Task Watchdog fix + version string cleanup. Build clean. Ready to push.
+v0.18 - Per-RID interval learning + status debounce. Build clean. Ready to push.
+- Self-calibrating EMA interval tracker for all interrupt-IN RIDs
+- Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
+- Prevents false OL<->OB transitions from single anomalous reports
+- data_age_ms exposed in /status JSON and dashboard ("UPS data: Xs old")
 - Fix: ups_hid_desc_dump() per-field loop demoted ESP_LOGI -> ESP_LOGD
   (CyberPower 3000R crash-loop: rid=0x29 has 237 fields, INFO loop starved IDLE0)
 - Fix: dashboard subtitle "v0.6-flex" replaced with esp_app_get_description()->version
@@ -43,7 +47,18 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.17: Task Watchdog crash fix + version string cleanup.
+2026-04-05 - v0.18: Per-RID interval learning + status debounce.
+Three parallel arrays (s_rid_last_ms, s_rid_ema_ms, s_rid_samples) track EMA
+inter-report interval per RID. After 3+ samples the learned interval is passed
+through ups_state_update_t (source_rid + status_debounce_ms) to the debounce
+logic in ups_state_apply_update(). A new ups_status candidate must persist for
+min(1.5x learned interval, 3500ms) before overwriting g_state. During warmup
+(< 3 samples) debounce_ms=0 so status is applied immediately. Pending state
+cleared on USB disconnect. data_age_ms added to ups_state_t snapshot.
+Dashboard shows "UPS data: Xs old" below status badge. /status JSON includes
+data_age_ms. Build: clean, zero new warnings.
+
+Previous: 2026-04-05 - v0.17: Task Watchdog crash fix + version string cleanup.
 Root cause from CyberPower 3000R submission (sollandk): ups_hid_desc_dump() looped
 over 237 fields at ESP_LOGI level (each ~10ms). IDLE0 on core 0 was starved
 past the TWDT threshold, triggering watchdog and USB re-enumeration every ~11s.
@@ -123,7 +138,7 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-Flash v0.17 and monitor. CyberPower 3000R user should re-submit to confirm WDT fix.
+Flash v0.18 and monitor. CyberPower 3000R user should re-submit to confirm WDT fix.
 - Should no longer crash-loop every ~11s
 - battery.charge should still read correctly (rid=0x08 from v0.16 fix)
 - rid=0x0B value meaning still TBD (need discharge event)

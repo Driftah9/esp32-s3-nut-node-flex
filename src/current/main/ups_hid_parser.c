@@ -92,6 +92,14 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R10 v0.18      Per-RID arrival interval tracker. Three parallel arrays
+                (s_rid_last_ms, s_rid_ema_ms, s_rid_samples) track the EMA
+                inter-report interval for each RID seen in traffic. After 3+
+                samples the learned interval feeds the status debounce in
+                ups_state_apply_update(). source_rid and status_debounce_ms
+                are filled in the finalize block and passed through
+                ups_state_update_t. Exposed via
+                ups_hid_parser_get_rid_interval().
 
 ============================================================================*/
 
@@ -118,6 +126,20 @@ static const ups_device_entry_t *s_device = NULL;
 /* Cleared on reset. XCHK runs 30s after enumeration via one-shot timer.  */
 static uint8_t            s_seen_rids[32];
 static esp_timer_handle_t s_xchk_timer = NULL;
+
+/* ---- Per-RID arrival interval tracker -------------------------------- */
+/* Tracks the EMA inter-report interval for each RID seen in traffic.     */
+/* Used to feed status debounce: require status stable for 1.5x interval  */
+/* before committing to g_state. Prevents false OL<->OB flicker caused    */
+/* by a single anomalous report during power events.                       */
+/*                                                                         */
+/* EMA formula: ema = (ema * 7 + new_delta) / 8                           */
+/* - Stabilises in ~5 reports (~10s for a 2s-interval device)             */
+/* - Weights recent samples; tracks slow drift over time                   */
+/* Samples capped at 31 - prevents overflow and keeps EMA responsive.     */
+static uint32_t s_rid_last_ms[256];   /* last arrival timestamp per RID   */
+static uint32_t s_rid_ema_ms[256];    /* EMA interval in ms (0 = no data) */
+static uint8_t  s_rid_samples[256];   /* sample count (capped at 31)      */
 
 /* XCHK probe callback - set by ups_usb_hid, routes to ups_get_report.    */
 static ups_xchk_probe_fn_t s_xchk_probe_cb = NULL;
@@ -154,7 +176,10 @@ void ups_hid_parser_reset(void)
     memset(&s_cache, 0, sizeof(s_cache));
     memset(&s_desc,  0, sizeof(s_desc));
     s_device = NULL;
-    memset(s_seen_rids, 0, sizeof(s_seen_rids));
+    memset(s_seen_rids,    0, sizeof(s_seen_rids));
+    memset(s_rid_last_ms,  0, sizeof(s_rid_last_ms));
+    memset(s_rid_ema_ms,   0, sizeof(s_rid_ema_ms));
+    memset(s_rid_samples,  0, sizeof(s_rid_samples));
     if (s_xchk_timer) {
         esp_timer_stop(s_xchk_timer);
         esp_timer_delete(s_xchk_timer);
@@ -808,6 +833,14 @@ static void derive_status(ups_state_update_t *upd)
              buf, (int)on_battery, (int)utility_known, (int)charging);
 }
 
+/* ---- Per-RID interval accessor --------------------------------------- */
+
+uint32_t ups_hid_parser_get_rid_interval(uint8_t rid, uint8_t *samples_out)
+{
+    if (samples_out) *samples_out = s_rid_samples[rid];
+    return s_rid_ema_ms[rid];
+}
+
 /* ---- Main decode entry point ----------------------------------------- */
 
 bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
@@ -837,6 +870,25 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
 
     /* Track which RIDs we see in actual traffic (Phase 4 dynamic XCHK) */
     s_seen_rids[rid >> 3] |= (1u << (rid & 7u));
+
+    /* Update per-RID arrival interval tracker */
+    {
+        uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+        if (s_rid_last_ms[rid] != 0) {
+            uint32_t delta = now_ms - s_rid_last_ms[rid];
+            /* Accept intervals 10ms - 60s; ignore bursts and long silences */
+            if (delta >= 10 && delta <= 60000) {
+                if (s_rid_samples[rid] == 0) {
+                    s_rid_ema_ms[rid] = delta;
+                } else {
+                    /* EMA: 7/8 old + 1/8 new - stable after ~5 samples */
+                    s_rid_ema_ms[rid] = (s_rid_ema_ms[rid] * 7u + delta) / 8u;
+                }
+                if (s_rid_samples[rid] < 31) s_rid_samples[rid]++;
+            }
+        }
+        s_rid_last_ms[rid] = now_ms;
+    }
 
     bool    changed = false;
     int32_t raw     = 0;
@@ -1003,7 +1055,20 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
 
 finalize:
     if (changed) {
-        upd->valid = true;
+        upd->valid      = true;
+        upd->source_rid = rid;
+
+        /* Compute status debounce threshold from learned RID interval.
+         * Threshold = 1.5x EMA interval, capped at 3500ms.
+         * Requires 3+ samples so debounce is disabled during the first
+         * ~10 seconds of operation (warmup). 0 = apply immediately. */
+        if (s_rid_samples[rid] >= 3 && s_rid_ema_ms[rid] > 0) {
+            uint32_t thresh = (s_rid_ema_ms[rid] * 3u) / 2u;
+            upd->status_debounce_ms = (thresh < 3500u) ? thresh : 3500u;
+        } else {
+            upd->status_debounce_ms = 0;
+        }
+
         derive_status(upd);
     }
 

@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -358,7 +359,8 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             "\"ups_vendorid\":\"%s\","
             "\"ups_productid\":\"%s\","
             "\"ups_valid\":%s,"
-            "\"ap_active\":%s"
+            "\"ap_active\":%s,"
+            "\"data_age_ms\":%"PRIu32
             "}",
             cfg->ap_ssid, cfg->sta_ssid, sta_ip, cfg->ups_name,
             ups.ups_status[0] ? ups.ups_status : "UNKNOWN",
@@ -378,7 +380,8 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             fw_ver,
             vid_s, pid_s,
             ups.valid               ? "true" : "false",
-            wifi_mgr_ap_is_active() ? "true" : "false");
+            wifi_mgr_ap_is_active() ? "true" : "false",
+            ups.data_age_ms);
 
         http_send_json(fd, json);
 

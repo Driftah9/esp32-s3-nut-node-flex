@@ -9,6 +9,8 @@
             Replaced model-hint approach with hid_desc_t field map.
             New API: ups_hid_parser_set_descriptor() must be called after
             USB enumeration before decode_report() will produce data.
+ R4  v0.18  Add ups_hid_parser_get_rid_interval() - exposes per-RID EMA
+            inter-report interval learned from live interrupt-IN traffic.
 
 ============================================================================*/
 #pragma once
@@ -90,6 +92,16 @@ void ups_hid_parser_set_xchk_probe_cb(ups_xchk_probe_fn_t fn);
  * Used by the probe path to annotate GET_REPORT responses with NUT var names.
  */
 const hid_desc_t *ups_hid_parser_get_desc(void);
+
+/**
+ * Return the learned EMA inter-report interval for a given RID.
+ *
+ * @param rid         Report ID to query
+ * @param samples_out If non-NULL, receives the number of samples collected
+ *                    (0 = no data yet; debounce is disabled below 3 samples)
+ * @return            EMA interval in milliseconds, or 0 if not yet learned
+ */
+uint32_t ups_hid_parser_get_rid_interval(uint8_t rid, uint8_t *samples_out);
 
 #ifdef __cplusplus
 }

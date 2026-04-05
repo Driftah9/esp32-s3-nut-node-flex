@@ -21,6 +21,10 @@
  R10 v15.8  Re-add input_voltage_mv and output_voltage_mv — now populated by
             ups_get_report.c Feature report polling for QUIRK_NEEDS_GET_REPORT
             devices. Fields remain absent from interrupt-IN path.
+ R11 v0.18  Add data_age_ms to ups_state_t (computed at snapshot time).
+            Add source_rid + status_debounce_ms to ups_state_update_t so the
+            parser can pass its learned per-RID interval to the state module
+            without a circular header dependency.
 
 ============================================================================*/
 #pragma once
@@ -66,6 +70,7 @@ typedef struct {
 
     bool     valid;
     uint32_t last_update_ms;
+    uint32_t data_age_ms;     /* ms since last update - computed at snapshot time */
 } ups_state_t;
 
 typedef struct {
@@ -95,6 +100,15 @@ typedef struct {
     uint32_t output_voltage_mv;
 
     char     ups_status[16];
+
+    /* Interval hint from parser - used for status debounce.
+     * source_rid:        the RID that produced this update.
+     * status_debounce_ms: 0 = apply ups_status immediately (warmup or no data);
+     *                     >0 = require ups_status stable for this many ms before
+     *                          committing to g_state. Computed by parser from
+     *                          learned per-RID interval: min(1.5 * ema, 3500). */
+    uint8_t  source_rid;
+    uint32_t status_debounce_ms;
 } ups_state_update_t;
 
 void ups_state_init(ups_state_t *st);

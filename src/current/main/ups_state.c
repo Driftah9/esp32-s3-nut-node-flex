@@ -18,6 +18,12 @@
  R10 v15.7  Remove input_voltage/output_voltage from state and update structs.
  R11 v15.8  Re-add input_voltage_mv/output_voltage_mv — Feature report only.
             ups_state_on_usb_disconnect() now also clears them.
+ R12 v0.18  Status debounce: require ups_status stable for status_debounce_ms
+            before committing to g_state. Threshold is set by parser from the
+            learned per-RID EMA interval (1.5x, capped at 3500ms). Debounce
+            disabled during warmup (< 3 samples) and cleared on disconnect.
+            data_age_ms added to ups_state_t, computed in ups_state_snapshot()
+            as now_ms - last_update_ms.
 
 ============================================================================*/
 #include "ups_state.h"
@@ -31,6 +37,15 @@
 static const char *TAG = "ups_state";
 static ups_state_t  g_state;
 static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED;
+
+/* ---- Status debounce state ------------------------------------------- */
+/* Prevents false OL<->OB transitions from a single anomalous report.     */
+/* A new status candidate must persist for status_debounce_ms before      */
+/* it overwrites g_state.ups_status. Disabled during warmup (< 3 samples) */
+/* when debounce_ms == 0 (apply immediately).                              */
+static char     s_pending_status[16] = {0};
+static uint32_t s_pending_since_ms   = 0;
+static uint32_t s_pending_debounce_ms = 0;
 
 static void strlcpy0(char *dst, const char *src, size_t dstsz)
 {
@@ -113,6 +128,11 @@ void ups_state_on_usb_disconnect(void)
 
     g_state.last_update_ms = (uint32_t)(esp_timer_get_time() / 1000);
 
+    /* Clear debounce state - fresh start on reconnect */
+    s_pending_status[0]    = 0;
+    s_pending_since_ms     = 0;
+    s_pending_debounce_ms  = 0;
+
     portEXIT_CRITICAL(&s_lock);
 
     ESP_LOGI(TAG, "ups_state invalidated on USB disconnect");
@@ -124,6 +144,10 @@ void ups_state_snapshot(ups_state_t *dst)
     portENTER_CRITICAL(&s_lock);
     *dst = g_state;
     portEXIT_CRITICAL(&s_lock);
+    /* Compute data age at snapshot time - avoids storing a moving value */
+    uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+    dst->data_age_ms = (now_ms >= dst->last_update_ms)
+                       ? (now_ms - dst->last_update_ms) : 0;
 }
 
 void ups_state_apply_update(const ups_state_update_t *upd)
@@ -158,7 +182,53 @@ void ups_state_apply_update(const ups_state_update_t *upd)
     }
 
     if (upd->ups_status[0]) {
-        strlcpy0(g_state.ups_status, upd->ups_status, sizeof(g_state.ups_status));
+        uint32_t now_ms = (uint32_t)(esp_timer_get_time() / 1000);
+
+        if (strcmp(upd->ups_status, g_state.ups_status) == 0) {
+            /* Matches current committed status - clear any pending candidate */
+            s_pending_status[0]   = 0;
+            s_pending_since_ms    = 0;
+            s_pending_debounce_ms = 0;
+
+        } else if (upd->status_debounce_ms == 0) {
+            /* Warmup (< 3 samples) or no interval learned - apply immediately */
+            if (strcmp(g_state.ups_status, upd->ups_status) != 0) {
+                ESP_LOGI(TAG, "status immediate: '%s' -> '%s' (rid=0x%02X, warmup)",
+                         g_state.ups_status, upd->ups_status,
+                         (unsigned)upd->source_rid);
+            }
+            strlcpy0(g_state.ups_status, upd->ups_status, sizeof(g_state.ups_status));
+            s_pending_status[0]   = 0;
+            s_pending_since_ms    = 0;
+            s_pending_debounce_ms = 0;
+
+        } else if (strcmp(upd->ups_status, s_pending_status) == 0) {
+            /* Same candidate already pending - check if timer has expired */
+            if ((now_ms - s_pending_since_ms) >= s_pending_debounce_ms) {
+                ESP_LOGI(TAG, "status debounce committed: '%s' -> '%s' "
+                         "(rid=0x%02X stable for %"PRIu32"ms, threshold %"PRIu32"ms)",
+                         g_state.ups_status, upd->ups_status,
+                         (unsigned)upd->source_rid,
+                         now_ms - s_pending_since_ms,
+                         s_pending_debounce_ms);
+                strlcpy0(g_state.ups_status, upd->ups_status, sizeof(g_state.ups_status));
+                s_pending_status[0]   = 0;
+                s_pending_since_ms    = 0;
+                s_pending_debounce_ms = 0;
+            }
+            /* else: still within debounce window - hold */
+
+        } else {
+            /* New candidate - start debounce timer */
+            ESP_LOGI(TAG, "status debounce started: '%s' -> '%s' "
+                     "(rid=0x%02X, will commit after %"PRIu32"ms)",
+                     g_state.ups_status, upd->ups_status,
+                     (unsigned)upd->source_rid,
+                     upd->status_debounce_ms);
+            strlcpy0(s_pending_status, upd->ups_status, sizeof(s_pending_status));
+            s_pending_since_ms    = now_ms;
+            s_pending_debounce_ms = upd->status_debounce_ms;
+        }
     }
 
     g_state.valid = upd->valid || g_state.valid;
