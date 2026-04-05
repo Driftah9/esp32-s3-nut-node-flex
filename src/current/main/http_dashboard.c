@@ -36,12 +36,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-static void strlcpy0(char *dst, const char *src, size_t dstsz) {
-    if (!dst || dstsz == 0) return;
-    if (!src) { dst[0] = 0; return; }
-    strlcpy(dst, src, dstsz);
-}
-
 void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
 {
     ups_state_t ups;

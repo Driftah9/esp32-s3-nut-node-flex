@@ -18,23 +18,16 @@ public
 main
 
 ## Version
-v0.22
+v0.23
 
 ## Commit Message
-v0.22 - Add 300s diagnostic log capture option
+v0.23 - Remove unused strlcpy0 from http_dashboard.c
 
-Duration type widened from uint8_t to uint16_t throughout (300 > 255).
-NVS key diag_dur migrated from nvs_set/get_u8 to nvs_set/get_u16.
-Whitelist accepts 90, 120, or 300. Dashboard shows third radio button.
-
-300s is useful for event-driven devices such as Eaton 3S where the
-first interrupt-IN report may not arrive until a mains event occurs
-after boot. 128KB PSRAM buffer handles 300s at INFO log level easily.
+strlcpy0 was copied from another module but never called in
+http_dashboard.c, producing a -Wunused-function warning on clean
+builds. Reported by community user building locally.
 
 ## Files Staged
-- src/current/main/diag_capture.h
-- src/current/main/diag_capture.c
-- src/current/main/http_portal.c
 - src/current/main/http_dashboard.c
 - docs/github_push.md
 - docs/project_state.md
