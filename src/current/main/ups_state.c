@@ -154,6 +154,16 @@ void ups_state_apply_update(const ups_state_update_t *upd)
 {
     if (!upd) return;
 
+    /* Log params captured inside critical section, emitted after exit.
+     * ESP_LOGI acquires internal mutexes - MUST NOT be called inside
+     * portENTER_CRITICAL on multi-core ESP32-S3 (causes abort). */
+    int      log_action  = 0;   /* 0=none 1=immediate 2=committed 3=started */
+    char     log_old[16] = {0};
+    char     log_new[16] = {0};
+    uint8_t  log_rid     = 0;
+    uint32_t log_stable  = 0;
+    uint32_t log_thresh  = 0;
+
     portENTER_CRITICAL(&s_lock);
 
     if (upd->battery_charge_valid) g_state.battery_charge = upd->battery_charge;
@@ -193,9 +203,10 @@ void ups_state_apply_update(const ups_state_update_t *upd)
         } else if (upd->status_debounce_ms == 0) {
             /* Warmup (< 3 samples) or no interval learned - apply immediately */
             if (strcmp(g_state.ups_status, upd->ups_status) != 0) {
-                ESP_LOGI(TAG, "status immediate: '%s' -> '%s' (rid=0x%02X, warmup)",
-                         g_state.ups_status, upd->ups_status,
-                         (unsigned)upd->source_rid);
+                strlcpy0(log_old, g_state.ups_status, sizeof(log_old));
+                strlcpy0(log_new, upd->ups_status,    sizeof(log_new));
+                log_rid    = upd->source_rid;
+                log_action = 1;
             }
             strlcpy0(g_state.ups_status, upd->ups_status, sizeof(g_state.ups_status));
             s_pending_status[0]   = 0;
@@ -205,12 +216,12 @@ void ups_state_apply_update(const ups_state_update_t *upd)
         } else if (strcmp(upd->ups_status, s_pending_status) == 0) {
             /* Same candidate already pending - check if timer has expired */
             if ((now_ms - s_pending_since_ms) >= s_pending_debounce_ms) {
-                ESP_LOGI(TAG, "status debounce committed: '%s' -> '%s' "
-                         "(rid=0x%02X stable for %"PRIu32"ms, threshold %"PRIu32"ms)",
-                         g_state.ups_status, upd->ups_status,
-                         (unsigned)upd->source_rid,
-                         now_ms - s_pending_since_ms,
-                         s_pending_debounce_ms);
+                strlcpy0(log_old, g_state.ups_status, sizeof(log_old));
+                strlcpy0(log_new, upd->ups_status,    sizeof(log_new));
+                log_rid    = upd->source_rid;
+                log_stable = now_ms - s_pending_since_ms;
+                log_thresh = s_pending_debounce_ms;
+                log_action = 2;
                 strlcpy0(g_state.ups_status, upd->ups_status, sizeof(g_state.ups_status));
                 s_pending_status[0]   = 0;
                 s_pending_since_ms    = 0;
@@ -220,11 +231,11 @@ void ups_state_apply_update(const ups_state_update_t *upd)
 
         } else {
             /* New candidate - start debounce timer */
-            ESP_LOGI(TAG, "status debounce started: '%s' -> '%s' "
-                     "(rid=0x%02X, will commit after %"PRIu32"ms)",
-                     g_state.ups_status, upd->ups_status,
-                     (unsigned)upd->source_rid,
-                     upd->status_debounce_ms);
+            strlcpy0(log_old, g_state.ups_status, sizeof(log_old));
+            strlcpy0(log_new, upd->ups_status,    sizeof(log_new));
+            log_rid    = upd->source_rid;
+            log_thresh = upd->status_debounce_ms;
+            log_action = 3;
             strlcpy0(s_pending_status, upd->ups_status, sizeof(s_pending_status));
             s_pending_since_ms    = now_ms;
             s_pending_debounce_ms = upd->status_debounce_ms;
@@ -235,6 +246,25 @@ void ups_state_apply_update(const ups_state_update_t *upd)
     g_state.last_update_ms = (uint32_t)(esp_timer_get_time() / 1000);
 
     portEXIT_CRITICAL(&s_lock);
+
+    /* Emit deferred log lines now that critical section is exited */
+    switch (log_action) {
+    case 1:
+        ESP_LOGI(TAG, "status immediate: '%s' -> '%s' (rid=0x%02X, warmup)",
+                 log_old, log_new, (unsigned)log_rid);
+        break;
+    case 2:
+        ESP_LOGI(TAG, "status debounce committed: '%s' -> '%s' "
+                 "(rid=0x%02X stable for %"PRIu32"ms, threshold %"PRIu32"ms)",
+                 log_old, log_new, (unsigned)log_rid, log_stable, log_thresh);
+        break;
+    case 3:
+        ESP_LOGI(TAG, "status debounce started: '%s' -> '%s' "
+                 "(rid=0x%02X, will commit after %"PRIu32"ms)",
+                 log_old, log_new, (unsigned)log_rid, log_thresh);
+        break;
+    default: break;
+    }
 }
 
 void ups_state_set_usb_identity(uint16_t vid, uint16_t pid, uint16_t hid_report_desc_len,

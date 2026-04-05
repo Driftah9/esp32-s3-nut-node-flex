@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.18 - Per-RID interval learning + status debounce. Build clean. Ready to push.
+v0.19 - Critical crash fix for v0.18 debounce logging. Build clean. Ready to push.
 - Self-calibrating EMA interval tracker for all interrupt-IN RIDs
 - Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
 - Prevents false OL<->OB transitions from single anomalous reports
@@ -47,7 +47,15 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.18: Per-RID interval learning + status debounce.
+2026-04-05 - v0.19: Fix abort in ups_state_apply_update (multi-core ESP32-S3).
+ESP_LOGI was called inside portENTER_CRITICAL in ups_state_apply_update().
+ESP_LOGI acquires internal IDF mutexes - illegal inside a spinlock critical
+section on dual-core ESP32-S3. Abort fires immediately at first status log.
+Confirmed from APC Back-UPS XS 1500M boot test: crash at t=1492ms.
+Fix: capture log params as locals inside CS, exit CS, then log.
+Build: clean.
+
+Previous: 2026-04-05 - v0.18: Per-RID interval learning + status debounce.
 Three parallel arrays (s_rid_last_ms, s_rid_ema_ms, s_rid_samples) track EMA
 inter-report interval per RID. After 3+ samples the learned interval is passed
 through ups_state_update_t (source_rid + status_debounce_ms) to the debounce

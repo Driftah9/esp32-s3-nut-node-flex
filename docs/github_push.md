@@ -18,31 +18,25 @@ public
 main
 
 ## Version
-v0.18
+v0.19
 
 ## Commit Message
-v0.18 - Per-RID interval learning and status debounce
+v0.19 - Fix abort in ups_state_apply_update on multi-core ESP32-S3
 
-Self-calibrating EMA interval tracker for all interrupt-IN RIDs.
-Three parallel arrays track rolling average inter-report interval per
-RID. Stabilises in ~5 reports (~10s for a 2s interval device).
+v0.18 added ESP_LOGI calls inside portENTER_CRITICAL in
+ups_state_apply_update(). ESP_LOGI acquires internal mutexes and
+cannot be called inside a spinlock critical section on multi-core
+ESP32-S3 - causes immediate abort().
 
-Status debounce in ups_state_apply_update(): a new ups_status string
-must be seen consistently for min(1.5x learned interval, 3500ms)
-before it overwrites the committed g_state status. Prevents false
-OL-OB transitions caused by a single anomalous report. During warmup
-debounce is disabled and status applies immediately.
+Fix: capture all log parameters as local variables inside the critical
+section, exit the critical section, then emit the log lines. Pattern
+used: log_action enum (0=none, 1=immediate, 2=committed, 3=started)
+with log_old, log_new, log_rid, log_stable, log_thresh locals.
 
-data_age_ms added to ups_state_t (now minus last_update_ms at snapshot).
-Dashboard shows age indicator below status badge.
-/status JSON includes data_age_ms field.
+Confirmed via APC Back-UPS XS 1500M test: abort at t=1492ms right
+after first battery.charge decode. Device crash-looped on every boot.
 
 ## Files Staged
-- src/current/main/ups_hid_parser.h
-- src/current/main/ups_hid_parser.c
-- src/current/main/ups_state.h
 - src/current/main/ups_state.c
-- src/current/main/http_portal.c
-- src/current/main/http_dashboard.c
 - docs/github_push.md
 - docs/project_state.md
