@@ -424,3 +424,59 @@ Files changed:
 
 Status at end: v0.16 build clean. Pushed to GitHub.
 Next session: Flash v0.16, monitor for rid=0x08 battery.charge applying correctly.
+
+---
+
+## Session 006 - 2026-04-05
+
+Tags: v0.17, v0.18, v0.19, v0.20, cyberpower, crash-fix, debounce, dwc-assert
+
+Work completed (context-compacted session - covers v0.17 through v0.20):
+
+v0.17 - CyberPower 3000R WDT fix + version string cleanup:
+- ups_hid_desc.c: per-field loop demoted ESP_LOGI -> ESP_LOGD (rid=0x29 has 237 fields)
+- http_dashboard.c: hardcoded "v0.6-flex" subtitle replaced with esp_app_get_description()
+- http_portal.c: hardcoded "15.13" driver_version replaced with app description version
+
+v0.18 - Per-RID EMA interval learning + status debounce:
+- ups_hid_parser.c: three new static arrays (s_rid_last_ms, s_rid_ema_ms, s_rid_samples)
+  track inter-report interval per RID. EMA = (ema * 7 + delta) / 8
+- ups_state_update_t: source_rid + status_debounce_ms fields added
+- ups_state.c: s_pending_status debounce logic - new status must persist 1.5x EMA before commit
+- ups_state_t: data_age_ms added, computed at snapshot time
+- http_dashboard.c: "UPS data: Xs old" below status badge
+- http_portal.c: data_age_ms in /status JSON
+
+v0.19 - Fix abort in ups_state_apply_update (multi-core ESP32-S3):
+- v0.18 added ESP_LOGI inside portENTER_CRITICAL -> abort on first battery.charge decode
+- Confirmed from APC Back-UPS XS 1500M test: crash at t=1492ms
+- Fix: capture log params as locals inside CS, exit CS, then emit log via switch
+
+v0.20 - GET_REPORT DWC OTG buffer overflow fix:
+- Analyzed CyberPower 3000R submission a0043f (sollandk/redandblue, v0.17-dirty)
+- 8803-line log: crash-loop every boot after XCHK 30s settle fires rid=0x28 probe
+- Root cause: device returns more data than descriptor declares (63 bytes) for rid=0x28
+  DWC assert: _buffer_parse_ctrl hcd_dwc.c:2341 rem_len check fires
+- ups_get_report.c: alloc = 8 + buf_sz + 64 (was 8 + buf_sz), wLength unchanged
+- Also analyzed: ups.status MISSING (no rid=0x80 ac_present), battery.runtime/voltage
+  only in Feature reports, ups.load/input.voltage/output.voltage absent from descriptor
+
+Problems encountered:
+- v0.18 introduced ESP_LOGI inside portENTER_CRITICAL (fixed in v0.19)
+- CyberPower 3000R DWC assert was a second layer beyond the v0.14 wLength fix
+
+Files changed:
+- src/current/main/ups_hid_desc.c (v0.17 LOGD demotion)
+- src/current/main/ups_hid_parser.c (v0.18 EMA tracking + v0.20 no change)
+- src/current/main/ups_state.h (v0.18 new fields)
+- src/current/main/ups_state.c (v0.18 debounce + v0.19 deferred logging)
+- src/current/main/http_dashboard.c (v0.17 version, v0.18 data_age)
+- src/current/main/http_portal.c (v0.17 version, v0.18 data_age_ms JSON)
+- src/current/main/ups_get_report.c (v0.20 alloc padding)
+- docs/github_push.md (v0.20)
+- docs/project_state.md (v0.20)
+- docs/next_steps.md (v0.20 analysis)
+- docs/session_log.md (this entry)
+
+Status at end: v0.20 build clean. Ready to push.
+Next session: Flash v0.20, request re-submission from sollandk for CyberPower 3000R.

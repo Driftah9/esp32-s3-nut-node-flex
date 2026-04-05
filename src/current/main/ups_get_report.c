@@ -39,6 +39,16 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R3  v0.20  GET_REPORT transfer allocation padded by 64 bytes beyond declared
+            size. CyberPower 3000R (0764:0601) returns MORE data than its
+            descriptor declares for rid=0x28 (63 bytes declared, device sends
+            more). DWC OTG assert fires at hcd_dwc.c:2341:
+              rem_len <= (transfer->num_bytes - sizeof(usb_setup_packet_t))
+            With alloc = 8 + 63 = 71, assert fires when rem_len > 63.
+            Fix: alloc = 8 + buf_sz + 64 so transfer->num_bytes allows up to
+            buf_sz + 64 bytes of response. wLength in setup packet unchanged
+            (device is still told to send buf_sz bytes). ctrl_cb already
+            clips payload to CTRL_PAYLOAD_MAX=24 so callers are unaffected.
 
 ============================================================================*/
 
@@ -179,7 +189,13 @@ static esp_err_t do_get_feature_report(usb_host_client_handle_t client,
 {
     if (!dev || !client || intf_num < 0) return ESP_ERR_INVALID_STATE;
 
-    size_t alloc = 8u + buf_sz;
+    /* Add 64-byte overflow padding beyond the declared report size.
+     * Non-compliant devices (e.g. CyberPower 3000R rid=0x28) return more
+     * bytes than their descriptor declares. Without padding the DWC OTG
+     * assertion fires: rem_len > (transfer->num_bytes - setup_packet_size).
+     * wLength in the setup packet stays at buf_sz (device told to send
+     * buf_sz bytes). Extra alloc only prevents the HCI buffer overflow. */
+    size_t alloc = 8u + buf_sz + 64u;
     usb_transfer_t *t = NULL;
     esp_err_t err = usb_host_transfer_alloc(alloc, 0, &t);
     if (err != ESP_OK || !t) {

@@ -18,25 +18,35 @@ public
 main
 
 ## Version
-v0.19
+v0.20
 
 ## Commit Message
-v0.19 - Fix abort in ups_state_apply_update on multi-core ESP32-S3
+v0.20 - Fix GET_REPORT DWC OTG buffer overflow on CyberPower 3000R
 
-v0.18 added ESP_LOGI calls inside portENTER_CRITICAL in
-ups_state_apply_update(). ESP_LOGI acquires internal mutexes and
-cannot be called inside a spinlock critical section on multi-core
-ESP32-S3 - causes immediate abort().
+CyberPower 3000R (0764:0601) returns more data for rid=0x28 than its
+descriptor declares (63 bytes). XCHK probe issues GET_REPORT with
+wLength=63, device sends back more bytes. DWC OTG HCI asserts:
 
-Fix: capture all log parameters as local variables inside the critical
-section, exit the critical section, then emit the log lines. Pattern
-used: log_action enum (0=none, 1=immediate, 2=committed, 3=started)
-with log_old, log_new, log_rid, log_stable, log_thresh locals.
+  _buffer_parse_ctrl hcd_dwc.c:2341
+  (rem_len <= transfer->num_bytes - sizeof(usb_setup_packet_t))
 
-Confirmed via APC Back-UPS XS 1500M test: abort at t=1492ms right
-after first battery.charge decode. Device crash-looped on every boot.
+Transfer was allocated as 8 + buf_sz = 71 bytes. With rem_len > 63
+the assert fires, aborting and triggering a crash-loop every boot
+after the 30s XCHK settle window.
+
+Fix: pad GET_REPORT transfer allocation by 64 bytes beyond declared
+report size. wLength in setup packet unchanged - device still told to
+send buf_sz bytes. ctrl_cb clips payload to CTRL_PAYLOAD_MAX=24.
+
+Distinct from v0.14 fix (which matched wLength to declared size).
+This fix handles devices that ignore wLength and send extra bytes.
+
+Confirmed from submission a0043f: 8803-line crash-loop log, same
+assert repeated on every boot after 30s XCHK window.
 
 ## Files Staged
-- src/current/main/ups_state.c
+- src/current/main/ups_get_report.c
 - docs/github_push.md
 - docs/project_state.md
+- docs/next_steps.md
+- docs/session_log.md

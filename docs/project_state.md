@@ -2,7 +2,7 @@
 <!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.19 - Critical crash fix for v0.18 debounce logging. Build clean. Ready to push.
+v0.20 - GET_REPORT DWC buffer overflow fix. Build clean. Ready to push.
 - Self-calibrating EMA interval tracker for all interrupt-IN RIDs
 - Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
 - Prevents false OL<->OB transitions from single anomalous reports
@@ -47,7 +47,23 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-05 - v0.19: Fix abort in ups_state_apply_update (multi-core ESP32-S3).
+2026-04-05 - v0.20: Fix GET_REPORT DWC OTG buffer overflow assert (CyberPower 3000R).
+CyberPower 3000R (0764:0601) submission a0043f analyzed. XCHK probes rid=0x28 with
+wLength=63 (declared size). Device returns MORE than 63 bytes. DWC OTG assert fires:
+  assert failed: _buffer_parse_ctrl hcd_dwc.c:2341
+  (rem_len <= (transfer->num_bytes - sizeof(usb_setup_packet_t)))
+Transfer allocated as 8+63=71, rem_len > 63 -> assert -> abort -> crash loop.
+Fix: ups_get_report.c do_get_feature_report() alloc padded by 64 bytes:
+  alloc = 8 + buf_sz + 64 (was 8 + buf_sz)
+wLength in setup packet unchanged (device told to send buf_sz bytes).
+ctrl_cb already clips payload to CTRL_PAYLOAD_MAX=24, so callers unaffected.
+Build: clean.
+Submission a0043f analysis complete. Remaining CyberPower 3000R issues:
+- ups.status: no rid=0x80 (ac_present) sent by this device - status stays WAIT
+- battery.runtime, battery.voltage: Feature report only, not polled
+- ups.load, input.voltage, output.voltage: not in this device's descriptor
+
+Previous: 2026-04-05 - v0.19: Fix abort in ups_state_apply_update (multi-core ESP32-S3).
 ESP_LOGI was called inside portENTER_CRITICAL in ups_state_apply_update().
 ESP_LOGI acquires internal IDF mutexes - illegal inside a spinlock critical
 section on dual-core ESP32-S3. Abort fires immediately at first status log.
@@ -146,22 +162,25 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-Flash v0.18 and monitor. CyberPower 3000R user should re-submit to confirm WDT fix.
-- Should no longer crash-loop every ~11s
-- battery.charge should still read correctly (rid=0x08 from v0.16 fix)
-- rid=0x0B value meaning still TBD (need discharge event)
+Flash v0.20 and request new submission from CyberPower 3000R user (sollandk/redandblue).
+- XCHK probe crash loop is now fixed
+- battery.charge should still read correctly (96% confirmed in a0043f log)
+- ups.status will still be WAIT (no ac_present source on this device) - known limitation
+- battery.runtime, battery.voltage still missing (Feature report polling not yet added)
+- rid=0x0B meaning still TBD (0x03 during init, 0x04 stable - decode needed for status)
 
 Eaton 3S (9543fe/M5Stack) user: submit longer log (90s+) to diagnose battery.charge issue.
 - First submission (77eaee) showed correct battery.charge=89% on standard ESP32-S3
 - M5Stack Atom S3 Lite may have USB timing differences - need full operational log
 
 Candidate next tasks:
+- CyberPower 3000R ups.status: decode rid=0x0B bits to extract ac_present (0x03/0x04 observed)
+- CyberPower 3000R battery.runtime/voltage: add Feature report polling for rid=0x08 byte 2 and rid=0x07
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
 - Bridge GET_REPORT forwarding (type=0x02) for Feature reports
 - APC direct-decode: add input.transfer.low/high from rid=0x52 (D006)
 - Eaton: capture OB discharge event log to decode rid=0x06 flags non-zero case
 - Eaton: decode rid=0xFD (need second submission at different charge state)
-- CyberPower 3000R: need discharge event to decode rid=0x0B (value 0x13=19 seen on AC)
 - Wider device testing with additional UPS hardware
 
 ## Key Constraint

@@ -180,6 +180,43 @@ M5Stack hardware timing may differ. Need longer log from 9543fe user.
 - [ ] 9543fe user: capture 90s+ log without debug logging enabled
 - [ ] Confirm battery.charge on M5Stack Atom S3 Lite once proper log received
 
+## CyberPower 3000R (0764:0601) DWC assert crash - FIXED v0.20 (2026-04-05)
+
+Submission a0043f (sollandk/redandblue, v0.17-dirty, IDF v5.3.1) analyzed.
+8803-line log shows crash-loop starting at first boot after XCHK fires (30s settle).
+
+Root cause: do_get_feature_report() allocates transfer as 8 + buf_sz bytes exactly.
+CyberPower 3000R returns more data for rid=0x28 than the 63 bytes declared in descriptor.
+DWC OTG HCI asserts: rem_len <= (transfer->num_bytes - sizeof(usb_setup_packet_t))
+With alloc=71, assertion fires when device sends >63 bytes -> abort -> reset -> loop.
+
+This is distinct from the v0.14 fix (which fixed wLength being too small: 16 vs declared 63).
+v0.14 made wLength match the declared size. v0.20 adds 64-byte overflow buffer padding
+so rem_len fits even if the device sends extra bytes beyond its own declaration.
+
+Fix applied in v0.20 (ups_get_report.c R3):
+- alloc = 8 + buf_sz + 64 (was 8 + buf_sz)
+- wLength in setup packet unchanged (device told to send buf_sz bytes)
+- ctrl_cb clips payload to CTRL_PAYLOAD_MAX=24, callers unaffected
+
+Remaining issues for this device (no fix yet):
+- ups.status: no rid=0x80 (ac_present) sent by this specific hardware
+  Only rid=0x08 (battery.charge) and rid=0x0B seen in traffic
+  rid=0x0B: 0x03 during init, transitions to 0x04 after ~20s on AC - meaning TBD
+- battery.runtime: only in Feature report rid=0x08 byte 2 (uid=0x0068). Not polled.
+- battery.voltage: only in Feature report rid=0x07 (uid=0x0083). Not polled.
+- ups.load, input.voltage, output.voltage: absent from descriptor. Device does not expose them.
+- WDT on boot 3 in submitter log: submitter built with DEBUG log level, all LOGD lines print.
+  v0.17 LOGD demotion fix is ineffective when compiled with CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y.
+  Submitter should use INFO log level (default release config).
+
+- [x] Root cause identified from submission a0043f
+- [x] Fix applied - v0.20 ups_get_report.c
+- [x] Build clean
+- [ ] sollandk/redandblue: re-submit on v0.20 to confirm no more crash loop
+- [ ] Decode rid=0x0B to determine ac_present bit for ups.status
+- [ ] Consider Feature report polling for battery.runtime (rid=0x08 byte 2) and battery.voltage (rid=0x07)
+
 ## Possible Future Additions
 
 - [ ] **OTA (Over-the-Air) firmware updates** - FUTURE.
