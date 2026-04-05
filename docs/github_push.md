@@ -18,48 +18,35 @@ public
 main
 
 ## Version
-v0.16
+v0.17
 
 ## Commit Message
-v0.16 - Fix DECODE_CYBERPOWER goto silently discarding standard HID RIDs
+v0.17 - Fix Task Watchdog crash on large HID descriptors + version string cleanup
 
-Root cause: ups_hid_parse_report() had "if (rid != 0x20) goto finalize"
-after calling decode_cyberpower_direct(). This bypassed the standard
-field-cache path for ALL RIDs except 0x20, even when direct decode
-returned false (RID unrecognized by CP path).
+Root cause (CyberPower 3000R submission 9b89d6):
+ups_hid_desc_dump() looped over all descriptor fields at ESP_LOGI level.
+CyberPower 3000R rid=0x29 has 237 fields. At 10ms per ESP_LOGI call the
+loop blocked the ups_usb task on core 0 for ~2.4s, starving IDLE0 past
+the TWDT threshold. Watchdog fired at ~t=11.6s, device crash-looped on
+every boot.
 
-CyberPower 3000R (0764:0601) sends battery.charge on rid=0x08 - a
-standard HID RID present in the field cache. Field found at parse
-time but silently discarded at decode time due to premature goto.
-Fix: goto finalize only when direct decode returns true. Unknown RIDs
-fall through to standard field-cache path.
+Fix: per-field loop in ups_hid_desc_dump() changed from ESP_LOGI to
+ESP_LOGD. Summary line kept at INFO. Normal builds emit 1 line per
+connection instead of 237.
 
-Also adds rid=0x0B diagnostic logging (3000R sends 1 byte every 2s,
-value 0x13=19 observed on AC - meaning TBD, need discharge event).
+Version string cleanup:
+- http_dashboard.c: hardcoded v0.6-flex subtitle replaced with
+  esp_app_get_description version (tracks git tag automatically)
+- http_portal.c: hardcoded 15.13 driver_version in /status JSON
+  replaced with esp_app_get_description version
 
-ups_db_cyberpower.c: PID 0601 corrected. Not same decode path as
-PID 0501. Uses standard HID RIDs (0x08, 0x0B) not vendor RIDs.
-known_good=false pending re-submission confirmation.
-
-Bundles v0.15 Eaton decode corrections:
-- ups_get_report.c: Eaton rid=0x20 changed from state-apply to log-only
-  (3-submission analysis confirmed: returns 2% on full batteries)
-- ups_hid_parser.c: Eaton rid=0x06 flags[3:4] decode added
-  (flags=0x0000 -> OL / input_utility_present=true)
-- ups_db_eaton.c: corrected comments, rid=0x06 documented as primary source
-- diag_capture.c: inject app+IDF version at arm time (was missing before)
-- CMakeLists.txt: project renamed to esp32-s3-nut-node-flex
-- git-push.ps1: Discord push notification added
+Eaton 3S analysis - 77eaee confirmed working (battery.charge=89%,
+runtime=1401s, OL). 9543fe incomplete log, undiagnosable.
 
 ## Files Staged
-- src/current/CMakeLists.txt
-- src/current/main/diag_capture.c
-- src/current/main/ups_db_eaton.c
-- src/current/main/ups_get_report.c
-- src/current/main/ups_hid_parser.c
-- src/current/main/ups_db_cyberpower.c
-- git-push.ps1
+- src/current/main/ups_hid_desc.c
+- src/current/main/http_dashboard.c
+- src/current/main/http_portal.c
 - docs/github_push.md
 - docs/project_state.md
 - docs/next_steps.md
-- docs/session_log.md

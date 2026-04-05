@@ -16,6 +16,8 @@
                 All groups (battery/input/output/ups/device/driver) visible.
                 Live AJAX updates every 5s. Lightbox removed.
                 Mode shown in subtitle. ups.vendorid/productid added.
+ R5  v0.17  Replace hardcoded "v0.6-flex" subtitle version string with
+            esp_app_get_description()->version so it tracks the built firmware.
 ============================================================================*/
 
 #include "http_dashboard.h"
@@ -24,6 +26,7 @@
 #include "wifi_mgr.h"
 #include "cfg_store.h"
 #include "diag_capture.h"
+#include "esp_app_desc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,6 +56,8 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         ? "<div class='warn'>Default password in use. "
           "<a href='/config'>Change it in Config.</a></div>"
         : "";
+
+    const char *fw_ver = esp_app_get_description()->version;
 
     /* Subtitle reflects active mode */
     const char *mode_sub;
@@ -124,7 +129,7 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         "</head><body>"
 
         "<h2>ESP32 UPS Node</h2>"
-        "<div class='subtitle'>v0.6-flex &mdash; %s</div>"
+        "<div class='subtitle'>%s &mdash; %s</div>"
         "%s"
 
         "<div class='st %s'>%s</div>"
@@ -323,6 +328,7 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         "</script>"
         "</body></html>",
 
+        fw_ver,             /* firmware version in subtitle */
         mode_sub,           /* subtitle mode string */
         pw_warn,            /* password warning */
         st_cls, st,         /* status badge: class + text */

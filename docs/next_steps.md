@@ -138,10 +138,60 @@ the standard field-cache path. CyberPower 3000R sends battery.charge on rid=0x08
 - [x] rid=0x0B diagnostic logging added (value 0x13=19 on AC, meaning TBD)
 - [x] ups_db_cyberpower.c PID 0601 corrected (not same decode path as 0501)
 - [x] Build clean
-- [ ] Flash v0.16, confirm battery.charge reads correctly
-- [ ] Need discharge event log to decode rid=0x0B (value 0x13=19 on AC = ?)
+- [ ] Flash v0.17, confirm battery.charge reads correctly (goto fix from v0.16)
+- [ ] Need discharge event log to decode rid=0x0B (value 0x13=19 on one device, 0x03 on another)
+
+## CyberPower 3000R (0764:0601) Task Watchdog crash - FIXED v0.17 (2026-04-05)
+
+Root cause found from submission 9b89d6 (sollandk/redandblue, v0.16-dirty):
+- rid=0x29 on CyberPower 3000R has 237+ fields in HID descriptor
+- ups_hid_desc_dump() looped over all fields at ESP_LOGI level (~10ms per log line)
+- 237 fields x 10ms = ~2.4s of continuous ESP_LOGI calls blocking ups_usb task on core 0
+- IDLE0 on core 0 starved past TWDT threshold (default 5s) -> watchdog fired at ~t=11.6s
+- Device crash-looped on boot: WDT -> USB re-enum -> descriptor dump -> WDT -> repeat
+- Manifested as device available 10s / unavailable 10s pattern
+
+Fix applied in v0.17 (ups_hid_desc.c R2):
+- Per-field loop in ups_hid_desc_dump() changed ESP_LOGI -> ESP_LOGD
+- Summary line "[DUMP] N fields, M reports" kept at INFO (1 line per connection)
+- Normal builds: 1 summary line instead of 237 INFO lines
+
+Confirmed from same submission: goto fix from v0.16 is working (battery.charge=93%)
+
+- [x] Root cause identified from submission 9b89d6
+- [x] Fix applied - v0.17 ups_hid_desc.c
+- [x] Build clean
+- [ ] User re-submits to confirm no more crash-loop
+
+## Eaton 3S 700 (0463:FFFF) - v0.17 follow-up (2026-04-05)
+
+Two new submissions from same user (MyDisplayName/Discord):
+- 77eaee (07:37): Standard ESP32-S3, v0.16 clean - battery.charge=89%, runtime=1401s,
+  status OL all confirmed working. No issues reported.
+- 9543fe (10:13): M5Stack Atom S3 Lite, v0.16-dirty, IDF v5.5.3 - debug logging on,
+  log cut off during descriptor parse (528 lines, no operational data captured).
+  User reports battery.charge and battery.runtime issues.
+
+Status: 9543fe is undiagnosable - log ends before rid=0x06 data appears.
+Eaton 3S decode itself is confirmed correct (77eaee).
+M5Stack hardware timing may differ. Need longer log from 9543fe user.
+
+- [x] 77eaee confirmed working (first confirmed Eaton 3S on flex repo)
+- [ ] 9543fe user: capture 90s+ log without debug logging enabled
+- [ ] Confirm battery.charge on M5Stack Atom S3 Lite once proper log received
 
 ## Possible Future Additions
+
+- [ ] **OTA (Over-the-Air) firmware updates** - FUTURE.
+      ESP-IDF supports OTA via esp_https_ota / esp_ota_ops with automatic rollback.
+      Requires: custom partitions.csv with dual OTA slots (ota_0 + ota_1 + otadata).
+      With 16MB flash two 2MB app slots fit easily alongside NVS.
+      Portal addition: /update page - user uploads .bin or pastes URL, device flashes
+      inactive slot, calls esp_ota_mark_app_valid_cancel_rollback() on clean boot,
+      rolls back automatically if new firmware fails to validate.
+      Constraint: existing devices need one manual reflash to adopt the new partition
+      layout. All subsequent updates would be OTA.
+      Pattern: same as ESPHome web OTA - fits naturally with existing /reboot + auth.
 
 - [ ] **In-device diagnostic log capture** - STANDBY. Full design spec in docs/diag-log-capture.md.
       90s boot capture, credential scrub before POST, opt-in checkbox gates button.

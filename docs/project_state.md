@@ -1,13 +1,13 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-03 -->
+<!-- Updated: 2026-04-05 -->
 
 ## Status
-v0.16 - CyberPower 3000R goto fix. Build clean. Ready to push.
-- Fix: DECODE_CYBERPOWER goto no longer silently discards standard HID RIDs
-- rid=0x08 (battery.charge) now reaches field-cache path on CyberPower 3000R
-- rid=0x0B diagnostic logging added (value 0x13=19 on AC, meaning TBD)
-- ups_db_cyberpower.c: PID 0601 corrected (known_good=false, not same as 0501)
-- Bundles v0.15 Eaton fixes (see Last Action below)
+v0.17 - Task Watchdog fix + version string cleanup. Build clean. Ready to push.
+- Fix: ups_hid_desc_dump() per-field loop demoted ESP_LOGI -> ESP_LOGD
+  (CyberPower 3000R crash-loop: rid=0x29 has 237 fields, INFO loop starved IDLE0)
+- Fix: dashboard subtitle "v0.6-flex" replaced with esp_app_get_description()->version
+- Fix: /status JSON driver_version "15.13" replaced with esp_app_get_description()->version
+- Submission analysis: 2 Eaton 3S (confirmed working), 1 CyberPower 3000R (WDT root cause found)
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -43,7 +43,19 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last Action
-2026-04-04 - v0.16: CyberPower 3000R goto fix (submission 2026-04-04).
+2026-04-05 - v0.17: Task Watchdog crash fix + version string cleanup.
+Root cause from CyberPower 3000R submission (sollandk): ups_hid_desc_dump() looped
+over 237 fields at ESP_LOGI level (each ~10ms). IDLE0 on core 0 was starved
+past the TWDT threshold, triggering watchdog and USB re-enumeration every ~11s.
+Fix: per-field loop in ups_hid_desc_dump() changed to ESP_LOGD. Summary line kept
+at INFO. Normal builds now emit 1 line per device connection instead of 237.
+Bonus: "v0.6-flex" hardcoded subtitle replaced with esp_app_get_description()->version.
+driver_version in /status JSON "15.13" literal replaced with app description version.
+Submissions analyzed: 2 Eaton 3S (77eaee confirmed working, 9543fe incomplete log),
+1 CyberPower 3000R (9b89d6 confirmed goto fix working, WDT root cause identified).
+Build: clean.
+
+Previous: 2026-04-04 - v0.16: CyberPower 3000R goto fix (submission 2026-04-04).
 ups_hid_parse_report(): changed "if (rid != 0x20) goto finalize" to
 "if (changed) goto finalize". Old code silently discarded all RIDs except
 0x20 without running standard field-cache path. CyberPower 3000R sends
@@ -111,13 +123,14 @@ Mode 2 BRIDGE: 1049B descriptor + interrupt-IN stream confirmed on LXC port 5493
 rid=0x52 page=0x84 uid=0x0044 researched: APC non-compliant transfer voltage field.
 
 ## Next Step
-Flash v0.16 and monitor. CyberPower 3000R user should re-submit to confirm fix.
-- battery.charge should now read correctly (rid=0x08 reaching field-cache path)
-- rid=0x0B value 0x13=19 will appear in log - need discharge event to decode meaning
+Flash v0.17 and monitor. CyberPower 3000R user should re-submit to confirm WDT fix.
+- Should no longer crash-loop every ~11s
+- battery.charge should still read correctly (rid=0x08 from v0.16 fix)
+- rid=0x0B value meaning still TBD (need discharge event)
 
-Eaton 3S 700 user should also flash and confirm:
-- battery.charge reads correct value when rid=0x06 fires
-- ups.status shows OL after first rid=0x06 fires
+Eaton 3S (9543fe/M5Stack) user: submit longer log (90s+) to diagnose battery.charge issue.
+- First submission (77eaee) showed correct battery.charge=89% on standard ESP32-S3
+- M5Stack Atom S3 Lite may have USB timing differences - need full operational log
 
 Candidate next tasks:
 - D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)

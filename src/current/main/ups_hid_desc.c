@@ -12,6 +12,12 @@
             usage expansion, and a final per-report-ID summary are logged
             so we can see exactly what the CyberPower descriptor contains
             and why fields are missing.
+ R2  v0.17  ups_hid_desc_dump() per-field loop demoted from ESP_LOGI to
+            ESP_LOGD. Devices with large descriptors (e.g. CyberPower 3000R
+            rid=0x29 with 237 fields) were triggering Task Watchdog on boot
+            because the INFO-level loop on core 0 blocked IDLE0 long enough
+            to fire the TWDT. Summary line kept at INFO; per-field detail
+            is debug-only.
 
             To enable debug output, add to sdkconfig.defaults (or menuconfig):
               CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y
@@ -722,7 +728,7 @@ void ups_hid_desc_dump(const hid_desc_t *desc)
     for (uint16_t i = 0; i < desc->field_count; i++) {
         const hid_field_t *f = &desc->fields[i];
         const char *nut = ups_hid_map_lookup(f->usage_page, f->usage_id);
-        ESP_LOGI(TAG, "  [%3u] rid=%02X type=%u bit_off=%3u size=%2u page=%02X uid=%04X"
+        ESP_LOGD(TAG, "  [%3u] rid=%02X type=%u bit_off=%3u size=%2u page=%02X uid=%04X"
                  " lmin=%"PRId32" lmax=%"PRId32" exp=%d  -> %s",
                  (unsigned)i,
                  (unsigned)f->report_id,

@@ -28,6 +28,8 @@
               input_voltage_nominal_v, ups_type, ups_firmware,
               device_mfr, device_model, device_serial, driver_version)
               Added ups_device_db.h include for DB lookup on /status.
+ R21  v0.17  driver_version in /status JSON now reads esp_app_get_description()->version
+             instead of hardcoded "15.13".
 
 ============================================================================*/
 
@@ -35,6 +37,7 @@
 #include "http_dashboard.h"
 #include "http_config_page.h"
 #include "http_compat.h"
+#include "esp_app_desc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -286,6 +289,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         /* Look up DB entry for static NUT fields */
         const ups_device_entry_t *db = ups_device_db_lookup(ups.vid, ups.pid);
 
+        const char *fw_ver = esp_app_get_description()->version;
         char json[1100];
         char bvolt_s[20], load_s[12], runtime_s[12], ivolt_s[20], ovolt_s[20];
         char bvolt_nom_s[20], runtime_low_s[12], ivolt_nom_s[12];
@@ -350,7 +354,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             "\"device_mfr\":\"%s\","
             "\"device_model\":\"%s\","
             "\"device_serial\":\"%s\","
-            "\"driver_version\":\"15.13\","
+            "\"driver_version\":\"%s\","
             "\"ups_vendorid\":\"%s\","
             "\"ups_productid\":\"%s\","
             "\"ups_valid\":%s,"
@@ -371,6 +375,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             ups.manufacturer[0] ? ups.manufacturer : "unknown",
             ups.product[0]      ? ups.product      : "unknown",
             ups.serial[0]       ? ups.serial        : "unknown",
+            fw_ver,
             vid_s, pid_s,
             ups.valid               ? "true" : "false",
             wifi_mgr_ap_is_active() ? "true" : "false");
