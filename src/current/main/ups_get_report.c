@@ -39,12 +39,18 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R5  v0.26   Add rid=0x85 to Eaton GET_REPORT probe list and bootstrap queue.
+            0x85 is a speculative OB status probe: in MGE HID the 0x8x range
+            maps to alarm/event rids in interrupt-IN. GET_REPORT on 0x85 may
+            return a snapshot of current alarm flags including AC status.
+            decode_eaton_feature() case 0x85 logs raw bytes at WARN for
+            discharge-event correlation. Decode follows once OB byte confirmed.
  R4  vFIX2  Add rid=0x06 to decode_eaton_feature(): if Eaton firmware supports
             Feature GET_REPORT on rid=0x06, the bootstrap probe queued at
             enumeration (ups_usb_hid Step 7b) now actually applies the result
             to state instead of logging and discarding it.
             Feed service_probe_queue() responses through decode_eaton_feature()
-            for DECODE_EATON_MGE devices — previously all probe responses were
+            for DECODE_EATON_MGE devices -- previously all probe responses were
             logged only, making the Eaton bootstrap probes completely inert.
  R3  v0.20  GET_REPORT transfer allocation padded by 64 bytes beyond declared
             size. CyberPower 3000R (0764:0601) returns MORE data than its
@@ -406,8 +412,12 @@ static const size_t  s_apc_smartups_rids_n = sizeof(s_apc_smartups_rids) / sizeo
  *             Response: [0x20, charge_pct]  e.g. [0x20, 0x02] = 2%
  *   rid=0xFD  unknown - returns 2 bytes [0xFD, 0x29], short read
  *             Not decoded yet - logged for future analysis.
+ *   rid=0x85  speculative BatterySystem status probe.
+ *             In MGE/Eaton HID 0x8x maps to alarm/event rids in interrupt-IN.
+ *             Probed here to see if GET_REPORT returns readable status bytes.
+ *             Raw bytes logged in decode_eaton_feature() for OB analysis.
  */
-static const uint8_t s_eaton_rids[]        = { 0x20, 0xFD };
+static const uint8_t s_eaton_rids[]        = { 0x20, 0xFD, 0x85 };
 static const size_t  s_eaton_rids_n        = sizeof(s_eaton_rids) / sizeof(s_eaton_rids[0]);
 static const uint8_t s_tripplite_rids[]    = { 0x01, 0x0C };
 static const size_t  s_tripplite_rids_n    = sizeof(s_tripplite_rids) / sizeof(s_tripplite_rids[0]);
@@ -546,6 +556,17 @@ static void decode_eaton_feature(uint8_t rid, const uint8_t *data, size_t len)
         uint8_t charge_raw = data[1];
         ESP_LOGI(TAG, "[MGE Feature] rid=0x20 raw=0x%02X (%u) - diagnostic only, not applied",
                  (unsigned)charge_raw, (unsigned)charge_raw);
+        break;
+    }
+    case 0x85: {
+        /* rid=0x85: speculative BatterySystem/alarm status probe.
+         * 0x8x rids arrive as interrupt-IN ALARM/EVENT reports during steady state.
+         * GET_REPORT on 0x85 may return a snapshot of current alarm flags.
+         * Byte layout unknown - log all bytes for discharge-event correlation.
+         * If a mains-loss log shows this rid with a consistent non-zero byte,
+         * that byte position is the OB status source. Decode follows in next version. */
+        ESP_LOGW(TAG, "[MGE Feature] rid=0x85 raw (%u bytes): %s - OB status probe",
+                 (unsigned)len, hexbuf);
         break;
     }
     case 0xFD:

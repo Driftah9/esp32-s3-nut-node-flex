@@ -938,9 +938,11 @@ static void usb_client_task(void *arg)
                  * normally fires as an interrupt-IN.  Harmless if not supported. */
                 if (entry && entry->decode_mode == DECODE_EATON_MGE) {
                     ESP_LOGI(TAG, "[EATON] Queuing bootstrap GET_REPORT probes "
-                             "(rid=0x20 charge, rid=0x06 state) — bypassing 30s XCHK wait");
+                             "(rid=0x20 charge, rid=0x06 state, rid=0x85 OB probe) "
+                             "-- bypassing 30s XCHK wait");
                     ups_get_report_probe_rid(0x20, 8);
                     ups_get_report_probe_rid(0x06, 6);
+                    ups_get_report_probe_rid(0x85, 8);
                 }
             }
         }

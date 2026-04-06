@@ -92,7 +92,13 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
- R12 vFIX2  Decode rid=0x21 in DECODE_EATON_MGE path — same byte layout as
+ R13 v0.26   Eaton 0x8x alarm rids: raise log cap from 8 to 16 bytes, elevate
+                0x8x range to WARN level. These rids are the most likely source
+                of OL->OB state change notification on mains loss. Full byte
+                capture at WARN ensures visibility in discharge-event logs even
+                at reduced verbosity. OB decode follows once a discharge log is
+                captured confirming which byte(s) change.
+ R12 vFIX2  Decode rid=0x21 in DECODE_EATON_MGE path -- same byte layout as
                 rid=0x06, treated as steady-state heartbeat. rid=0x06 fires on
                 mains events only; rid=0x21 arrives during normal steady-state
                 operation within the first 30s (confirmed from Eaton 3S 700
@@ -1039,21 +1045,29 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             }
         }
 
-        /* Log all other unrecognised Eaton interrupt-IN rids at INFO level.
-         * These arrive during steady state (0x2x = UPS state data; 0x8x = alarms).
-         * Raw bytes are needed to identify future decode candidates.
+        /* Log all other unrecognised Eaton interrupt-IN rids.
+         * 0x2x range = steady-state UPS data. 0x8x range = alarm/event rids:
+         * these are the most likely source of OL->OB state change notifications
+         * on mains loss. Log ALL bytes (up to 16) at WARN for 0x8x so they
+         * remain visible in discharge-event captures even at reduced log levels.
          * Fall through to standard path after logging (finds nothing, harmless). */
         else if (payload_len > 0) {
-            char hexbuf[48] = {0};
+            char hexbuf[64] = {0};
             int  hpos = 0;
-            size_t hn = (payload_len > 8u) ? 8u : payload_len;
+            size_t hn = (payload_len > 16u) ? 16u : payload_len;
             for (size_t hi = 0; hi < hn; hi++) {
                 hpos += snprintf(hexbuf + hpos, sizeof(hexbuf) - (size_t)hpos,
                                  "%02X%s", payload[hi], (hi == hn - 1u) ? "" : " ");
             }
-            ESP_LOGI(TAG, "[EATON] rid=0x%02X unrecognised (%u bytes): %s%s",
-                     (unsigned)rid, (unsigned)payload_len, hexbuf,
-                     payload_len > 8u ? "..." : "");
+            if (rid >= 0x80u && rid <= 0x8Fu) {
+                ESP_LOGW(TAG, "[EATON] rid=0x%02X ALARM/EVENT (%u bytes): %s%s",
+                         (unsigned)rid, (unsigned)payload_len, hexbuf,
+                         payload_len > 16u ? "..." : "");
+            } else {
+                ESP_LOGI(TAG, "[EATON] rid=0x%02X unrecognised (%u bytes): %s%s",
+                         (unsigned)rid, (unsigned)payload_len, hexbuf,
+                         payload_len > 16u ? "..." : "");
+            }
         }
 
         /* Fall through to standard path for all Eaton rids */

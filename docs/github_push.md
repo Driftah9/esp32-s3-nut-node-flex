@@ -18,20 +18,28 @@ public
 main
 
 ## Version
-v0.25b
+v0.26
 
 ## Commit Message
-v0.25b - extern C guard on app_main, IDF target updated to v5.5.4
+v0.26 - Eaton OB diagnostic improvements
 
-Fix: Users building with a C++ component (or ESP-IDF v5.5.x which links
-via g++) get undefined reference to app_main at link time. main.c defines
-app_main with C linkage but the C++ linker mangles it. Added extern "C"
-guard around app_main - harmless in pure C builds, fixes link error when
-any .cpp file is present in the project.
+OL status on Eaton 3S is correct when on AC power. The unknown is whether
+OB transitions correctly on mains loss (no discharge log yet captured from
+any Eaton submission).
 
-Update: IDF version string in startup banner updated from v5.3.1 to v5.5.4
-to reflect current remote build environment.
+Changes to improve discharge-event capture and OB probe coverage:
+- ups_hid_parser.c: raise 0x8x alarm/event rid log cap from 8 to 16 bytes,
+  elevate to WARN level so these rids are visible in reduced-verbosity logs.
+  The 0x8x interrupt-IN range is the most likely source of OL->OB notification.
+- ups_get_report.c: add rid=0x85 to Eaton recurring probe list and
+  decode_eaton_feature() case 0x85 (raw log at WARN for OB analysis).
+- ups_usb_hid.c: add rid=0x85 to bootstrap probe queue at enumeration.
+
+When the Eaton user captures a log with a mains-loss event, the 0x8x WARN
+lines and rid=0x85 Feature response will identify the OB status byte.
 
 ## Files Staged
-- src/current/main/main.c
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_get_report.c
+- src/current/main/ups_usb_hid.c
 - docs/github_push.md
