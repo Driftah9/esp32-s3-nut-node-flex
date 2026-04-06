@@ -457,6 +457,37 @@ static esp_err_t parse_active_config(usb_device_handle_t dev)
     return ESP_OK;
 }
 
+
+
+/* -------------------------------------------------------------------------
+ Fetch HID Report Descriptor via control transfer and parse it.
+
+ USB GET_DESCRIPTOR request:
+   bmRequestType = 0x81  (Device-to-Host, Standard, Interface)
+   bRequest      = 0x06  (GET_DESCRIPTOR)
+   wValue        = 0x2200 | interface_num (type=0x22 Report, index=intf)
+   wIndex        = interface_number
+   wLength       = descriptor_length (from HID class descriptor)
+
+ IMPORTANT: This function is called from usb_client_task which owns the
+ USB host client handle.  We MUST continue pumping
+ usb_host_client_handle_events() while waiting for the control transfer
+ callback — otherwise the USB host library never delivers the completion
+ event and the transfer times out.  A simple xTaskNotifyWait() deadlocks.
+------------------------------------------------------------------------- */
+
+static volatile bool     s_ctrl_done   = false;
+static volatile esp_err_t s_ctrl_status = ESP_FAIL;
+static volatile uint32_t  s_ctrl_bytes  = 0;
+
+static void ctrl_transfer_cb(usb_transfer_t *t)
+{
+    if (!t) return;
+    s_ctrl_bytes  = (uint32_t)t->actual_num_bytes;
+    s_ctrl_status = (t->status == USB_TRANSFER_STATUS_COMPLETED) ? ESP_OK : ESP_FAIL;
+    s_ctrl_done   = true;   /* signal main loop — must be last write */
+}
+
 /* -------------------------------------------------------------------------
  HID SET_IDLE — force periodic interrupt-IN reports from event-driven devices.
 
@@ -467,7 +498,7 @@ static esp_err_t parse_active_config(usb_device_handle_t dev)
 
  SET_IDLE with duration > 0 instructs the device to retransmit the last
  report at the given interval even if nothing has changed.  Duration units
- are 4 ms; duration=4 → 16 ms refresh rate.
+ are 4 ms; duration=4 -> 16 ms refresh rate.
 
  Devices that do not support SET_IDLE will STALL the control transfer.
  That is defined behaviour in the HID spec and is safe to ignore.
@@ -485,11 +516,11 @@ static void send_set_idle(void)
     }
 
     /* HID class SET_IDLE:
-     *   bmRequestType = 0x21  (Host→Device, Class, Interface)
+     *   bmRequestType = 0x21  (Host->Device, Class, Interface)
      *   bRequest      = 0x0A  (SET_IDLE)
      *   wValue        = (duration << 8) | report_id
-     *                   duration=4 → 4×4ms = 16ms refresh
-     *                   report_id=0  → applies to all reports
+     *                   duration=4 -> 4x4ms = 16ms refresh
+     *                   report_id=0  -> applies to all reports
      *   wIndex        = interface number
      *   wLength       = 0 (no data phase)
      */
@@ -531,40 +562,11 @@ static void send_set_idle(void)
 
     /* STALL (ESP_FAIL) is normal for devices that don't support SET_IDLE. */
     if (s_ctrl_done && s_ctrl_status == ESP_OK) {
-        ESP_LOGI(TAG, "SET_IDLE accepted — device will send periodic INT-IN reports");
+        ESP_LOGI(TAG, "SET_IDLE accepted - device will send periodic INT-IN reports");
     } else {
-        ESP_LOGI(TAG, "SET_IDLE not accepted (done=%d status=%s) — event-driven mode only",
+        ESP_LOGI(TAG, "SET_IDLE not accepted (done=%d status=%s) - event-driven mode only",
                  (int)s_ctrl_done, esp_err_to_name(s_ctrl_status));
     }
-}
-
-/* -------------------------------------------------------------------------
- Fetch HID Report Descriptor via control transfer and parse it.
-
- USB GET_DESCRIPTOR request:
-   bmRequestType = 0x81  (Device-to-Host, Standard, Interface)
-   bRequest      = 0x06  (GET_DESCRIPTOR)
-   wValue        = 0x2200 | interface_num (type=0x22 Report, index=intf)
-   wIndex        = interface_number
-   wLength       = descriptor_length (from HID class descriptor)
-
- IMPORTANT: This function is called from usb_client_task which owns the
- USB host client handle.  We MUST continue pumping
- usb_host_client_handle_events() while waiting for the control transfer
- callback — otherwise the USB host library never delivers the completion
- event and the transfer times out.  A simple xTaskNotifyWait() deadlocks.
-------------------------------------------------------------------------- */
-
-static volatile bool     s_ctrl_done   = false;
-static volatile esp_err_t s_ctrl_status = ESP_FAIL;
-static volatile uint32_t  s_ctrl_bytes  = 0;
-
-static void ctrl_transfer_cb(usb_transfer_t *t)
-{
-    if (!t) return;
-    s_ctrl_bytes  = (uint32_t)t->actual_num_bytes;
-    s_ctrl_status = (t->status == USB_TRANSFER_STATUS_COMPLETED) ? ESP_OK : ESP_FAIL;
-    s_ctrl_done   = true;   /* signal main loop — must be last write */
 }
 
 static esp_err_t fetch_and_parse_report_descriptor(void)
