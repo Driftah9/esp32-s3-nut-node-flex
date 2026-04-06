@@ -92,6 +92,19 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R14 v0.26   Eaton vendor page 0xFFFF support for OL/OB detection.
+                Root cause: Eaton 3S descriptor has 111 fields ALL on vendor
+                page 0xFFFF. Parser filtered them out (only kept 0x84/0x85).
+                Standard field cache (ac_present, charging, discharging) was
+                always empty for Eaton - no standard-path OL/OB source.
+                Fix: include page 0xFFFF in descriptor interesting filter
+                (ups_hid_desc.c) and add page 0xFF to field cache scan.
+                MGE HID protocol uses same usage IDs as standard pages.
+                Demote flags-based OL from rid=0x06/0x21: flags=0x0000 was
+                observed in ALL submissions including mains-loss events.
+                Only non-zero flags trigger OB. OL now comes from standard
+                field cache (ACPresent/Charging/Discharging on declared rids)
+                or conservative charge-data default in derive_status().
  R13 v0.26   Eaton 0x8x alarm rids: raise log cap from 8 to 16 bytes, elevate
                 0x8x range to WARN level. These rids are the most likely source
                 of OL->OB state change notification on mains loss. Full byte
@@ -301,7 +314,9 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
         uint8_t  pg  = f->usage_page;
         uint16_t uid = f->usage_id;
 
-        if (pg == HID_PAGE_BATTERY_SYSTEM) {
+        /* Battery System usages (page 0x85 or Eaton/MGE vendor page 0xFF).
+         * MGE HID protocol uses same usage IDs as standard on vendor page. */
+        if (pg == HID_PAGE_BATTERY_SYSTEM || pg == 0xFFu) {
             switch (uid) {
             case HID_USAGE_BS_ABSOLUTESOC:      /* 0x66 RemainingCapacity */
             case HID_USAGE_BS_RELATIVESOC:      /* 0x65 AbsoluteSOC */
@@ -342,7 +357,11 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
                 break;
             default: break;
             }
-        } else if (pg == HID_PAGE_POWER_DEVICE) {
+        }
+        /* Power Device usages (page 0x84 or Eaton/MGE vendor page 0xFF).
+         * Separate 'if' (not 'else if') so 0xFF fields check both pages.
+         * Only overlap is uid=0xD0 (ACPresent) - first-match wins via guards. */
+        if (pg == HID_PAGE_POWER_DEVICE || pg == 0xFFu) {
             switch (uid) {
             case HID_USAGE_PD_FREQUENCY:        /* 0x32 */
                 if (!s_cache.input_frequency)       s_cache.input_frequency  = f;
@@ -968,9 +987,9 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
          *     data[0] = 0x06 (rid)
          *     data[1] = battery.charge (0-100%)
          *     data[2:3] = battery.runtime_s uint16 LE (seconds)
-         *     data[4:5] = status flags (0x00 0x00 = online/normal; OB decode TBD)
+         *     data[4:5] = flags (always 0x0000 in all submissions; non-zero = OB)
          *
-         * Sample: 06 63 B4 10 00 00 fired on mains loss:
+         * Sample: 06 63 B4 10 00 00 (from submission 2026-04-02):
          *   charge=0x63=99%, runtime=0x10B4=4276s (~71 min), flags=0x0000
          */
         if (rid == 0x06 && payload_len >= 5) {
@@ -989,18 +1008,22 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
                 changed = true;
                 ESP_LOGI(TAG, "[EATON] rid=0x06 battery.runtime=%us", runtime_s);
             }
-            /* Flags decode: 0x0000 confirmed OL (AC present).
-             * Any non-zero flags = not OL, therefore OB.
-             * Exact OB bit positions still TBD but logic is sound:
-             * if it is not OL it must be OB. */
-            upd->input_utility_present_valid = true;
-            upd->input_utility_present       = (flags == 0x0000u);
-            changed = true;
-            if (flags == 0x0000u) {
-                ESP_LOGI(TAG, "[EATON] rid=0x06 flags=0x0000 -> OL (ac_present)");
-            } else {
+            /* Flags decode: 0x0000 observed in ALL submissions (including
+             * events labeled as mains-loss). Do NOT assert OL from 0x0000
+             * - the flags field does not reliably indicate AC state.
+             * OL/OB now comes from the standard field cache (ACPresent,
+             * Charging, Discharging on vendor page 0xFFFF) or from the
+             * conservative charge-data default in derive_status().
+             * Only trust non-zero flags as an OB indicator (a genuine
+             * change from the always-zero baseline). */
+            if (flags != 0x0000u) {
+                upd->input_utility_present_valid = true;
+                upd->input_utility_present       = false;  /* OB */
+                changed = true;
                 ESP_LOGW(TAG, "[EATON] rid=0x06 flags=0x%04X -> OB (ac_absent)",
                          (unsigned)flags);
+            } else {
+                ESP_LOGI(TAG, "[EATON] rid=0x06 flags=0x0000 (no status assertion)");
             }
             ESP_LOGI(TAG, "[EATON] rid=0x06 raw: %02X %02X %02X %02X %02X",
                      payload[0], payload[1], payload[2], payload[3], payload[4]);
@@ -1034,14 +1057,16 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
                 changed = true;
                 ESP_LOGI(TAG, "[EATON] rid=0x21 battery.runtime=%us", runtime_s);
             }
-            upd->input_utility_present_valid = true;
-            upd->input_utility_present       = (flags == 0x0000u);
-            changed = true;
-            if (flags == 0x0000u) {
-                ESP_LOGI(TAG, "[EATON] rid=0x21 flags=0x0000 -> OL (ac_present)");
-            } else {
+            /* Same logic as rid=0x06: only trust non-zero flags for OB.
+             * OL comes from standard field cache or charge-data default. */
+            if (flags != 0x0000u) {
+                upd->input_utility_present_valid = true;
+                upd->input_utility_present       = false;  /* OB */
+                changed = true;
                 ESP_LOGW(TAG, "[EATON] rid=0x21 flags=0x%04X -> OB (ac_absent)",
                          (unsigned)flags);
+            } else {
+                ESP_LOGI(TAG, "[EATON] rid=0x21 flags=0x0000 (no status assertion)");
             }
         }
 

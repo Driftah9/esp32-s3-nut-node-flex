@@ -40,6 +40,10 @@
             interface claim for all devices. Forces periodic INT-IN reports from
             event-driven UPS firmware (Eaton/MGE). STALL response (unsupported)
             is ignored. Fixes 1-60 min init delay on Eaton 3S with stable AC.
+ R15 v0.26  Eaton/MGE: pre-seed OL status at enumeration before rid=0x21 arrives.
+            rid=0x21 heartbeat takes 20-30s; without the seed NUT returns UNKNOWN
+            during that window. Immediate OL seed replaced by rid=0x21 data on
+            arrival. Also adds rid=0x85 to bootstrap probe queue (OB status probe).
  R14 vFIX   Eaton/MGE bootstrap GET_REPORT probes at enumeration (Step 7b).
             Queues rid=0x20 (battery.charge Feature) and rid=0x06 immediately
             without waiting for the 30s XCHK settle timer. rid=0x20 is a Feature
@@ -937,6 +941,19 @@ static void usb_client_task(void *arg)
                  * firmware versions will respond with current state even though it
                  * normally fires as an interrupt-IN.  Harmless if not supported. */
                 if (entry && entry->decode_mode == DECODE_EATON_MGE) {
+                    /* Pre-seed OL immediately at enumeration.
+                     * rid=0x21 heartbeat takes 20-30s to arrive; without this
+                     * seed the NUT server returns UNKNOWN during that window.
+                     * Assumes AC present when USB is live - correct for the 3S
+                     * which stays enumerated on battery. OB will override if
+                     * rid=0x21 or rid=0x06 flags indicate discharge. */
+                    ups_state_update_t preseed;
+                    memset(&preseed, 0, sizeof(preseed));
+                    preseed.valid = true;
+                    strlcpy(preseed.ups_status, "OL", sizeof(preseed.ups_status));
+                    ups_state_apply_update(&preseed);
+                    ESP_LOGI(TAG, "[EATON] Pre-seeded OL at enumeration");
+
                     ESP_LOGI(TAG, "[EATON] Queuing bootstrap GET_REPORT probes "
                              "(rid=0x20 charge, rid=0x06 state, rid=0x85 OB probe) "
                              "-- bypassing 30s XCHK wait");

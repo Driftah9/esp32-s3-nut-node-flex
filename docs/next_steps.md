@@ -229,6 +229,24 @@ Remaining issues for this device (no fix yet):
 - [x] NUT server: battery.charge gated on st->valid (HA receives no "0" during boot)
 - [x] bc8a09 root cause: bridge mode with no upstream_host - v0.24 validation prevents recurrence
 
+## Eaton 3S OL/OB fix - v0.27 (2026-04-06)
+
+Root cause: Eaton 3S HID descriptor has 111 fields on vendor page 0xFFFF.
+Parser only kept pages 0x84/0x85/0xFF84/0xFF85, discarding all Eaton fields.
+Standard field cache (ac_present, charging_flag, discharging_flag) was always
+empty. The flags field in rid=0x06/0x21 was always 0x0000 - not a status indicator.
+
+Fix: include page 0xFFFF in descriptor parser and field cache scan (page 0xFF).
+MGE HID protocol uses same usage IDs as standard pages. Demoted flags-based OL
+assertion (only non-zero triggers OB). OL now from standard field cache or default.
+
+- [x] Root cause identified: vendor page 0xFFFF filtered out of descriptor parser
+- [x] ups_hid_desc.c: added 0xFFFF to interesting filter
+- [x] ups_hid_parser.c: added page 0xFF to field cache (BS + PD usage IDs)
+- [x] ups_hid_parser.c + ups_get_report.c: demoted flags-based OL from rid=0x06/0x21
+- [ ] Eaton user: confirm field cache populates on v0.27 (check log for ac_present: found)
+- [ ] Eaton user: test discharge event (unplug mains 10s) to confirm OB transition
+
 ## Pending Follow-Up
 
 - [ ] sollandk/redandblue (CyberPower 3000R): re-submit on v0.24 to confirm no crash loop

@@ -39,6 +39,9 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R6  v0.26   Eaton rid=0x06 Feature: demote flags-based OL assertion. flags=0x0000
+            in all submissions - not reliable for OL. Only non-zero flags trigger
+            OB. OL now from standard field cache (vendor page 0xFFFF) or default.
  R5  v0.26   Add rid=0x85 to Eaton GET_REPORT probe list and bootstrap queue.
             0x85 is a speculative OB status probe: in MGE HID the 0x8x range
             maps to alarm/event rids in interrupt-IN. GET_REPORT on 0x85 may
@@ -502,7 +505,7 @@ static void decode_eaton_feature(uint8_t rid, const uint8_t *data, size_t len)
          *   data[0] = rid echo
          *   data[1] = battery.charge (0-100%)
          *   data[2:3] = battery.runtime_s uint16 LE
-         *   data[4:5] = status flags (0x0000 = OL; OB bits TBD)
+         *   data[4:5] = flags (always 0x0000 observed; non-zero = OB)
          * Applied to state if values pass sanity checks.
          */
         if (len < 6u) {
@@ -523,9 +526,12 @@ static void decode_eaton_feature(uint8_t rid, const uint8_t *data, size_t len)
                 upd.battery_runtime_valid = true;
                 upd.battery_runtime_s     = runtime_s;
             }
-            /* flags=0x0000 confirmed OL. Any non-zero = OB. */
-            upd.input_utility_present_valid = true;
-            upd.input_utility_present       = (flags == 0x0000u);
+            /* flags=0x0000 in all submissions - not reliable for OL.
+             * Only trust non-zero flags for OB. OL from field cache. */
+            if (flags != 0x0000u) {
+                upd.input_utility_present_valid = true;
+                upd.input_utility_present       = false;  /* OB */
+            }
             ups_state_apply_update(&upd);
             ESP_LOGI(TAG, "[MGE Feature] rid=0x06 charge=%u%% runtime=%us flags=0x%04X -> applied",
                      (unsigned)charge, (unsigned)runtime_s, (unsigned)flags);

@@ -18,6 +18,11 @@
             because the INFO-level loop on core 0 blocked IDLE0 long enough
             to fire the TWDT. Summary line kept at INFO; per-field detail
             is debug-only.
+ R3  v0.26  Include vendor page 0xFFFF in interesting filter. Eaton/MGE
+            descriptors use page 0xFFFF with same usage IDs as standard
+            pages 0x84/0x85. Previously all 111 Eaton fields were skipped.
+            Now recorded in field table, enabling standard field cache to
+            populate ac_present/charging/discharging for OL/OB detection.
 
             To enable debug output, add to sdkconfig.defaults (or menuconfig):
               CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y
@@ -498,12 +503,13 @@ bool ups_hid_desc_parse(const uint8_t *desc_bytes, size_t desc_len, hid_desc_t *
                     }
 
                     /* Only record fields on pages we care about:
-                     * 0x84, 0x85, 0xFF84, 0xFF85 */
+                     * 0x84, 0x85, 0xFF84, 0xFF85, 0xFFFF (Eaton/MGE vendor) */
                     bool interesting =
                         (page == HID_PAGE_POWER_DEVICE)   ||
                         (page == HID_PAGE_BATTERY_SYSTEM) ||
                         ((usage_key >> 16) == 0xFF84u)     ||
-                        ((usage_key >> 16) == 0xFF85u);
+                        ((usage_key >> 16) == 0xFF85u)     ||
+                        ((usage_key >> 16) == 0xFFFFu);
 
                     if (global_state.report_size == 0) {
                         ESP_LOGD(TAG, "[SKIP #%"PRIu32"] field[%u] rid=0x%02X "

@@ -9,9 +9,11 @@
 
  Eaton 3S HID behaviour (confirmed from three community submissions, 2026-03-30/04-02):
    - 926-byte HID descriptor, 111 fields, 10 declared report IDs
-   - Descriptor uses vendor page 0xFFFF extensively - all skipped by parser
-   - All standard field cache entries (charge, runtime, voltage, status) MISSING
-     via the standard HID path - descriptor is not useful for live data
+   - Descriptor uses vendor page 0xFFFF extensively
+   - v0.26+: page 0xFFFF included in descriptor parser and field cache.
+     MGE HID protocol uses same usage IDs as standard pages 0x84/0x85.
+     Standard field cache (ac_present, charging, discharging) may now
+     populate from vendor page fields, enabling OL/OB via standard path.
    - 12 undeclared report IDs seen in interrupt-IN stream during first 30s:
        0x21, 0x22, 0x23, 0x25, 0x28, 0x29 (0x2x range - UPS state data)
        0x80, 0x82, 0x85, 0x86, 0x87, 0x88 (0x8x range - alarm/event)
@@ -19,7 +21,7 @@
        Fires on power events (mains loss, state change) - NOT during steady state.
        Format: [0x06][charge_pct][runtime_lo][runtime_hi][flags_lo][flags_hi]
        Confirmed sample: 06 63 B4 10 00 00
-         charge=0x63=99%, runtime=0x10B4=4276s, flags=0x0000 (OL)
+         charge=0x63=99%, runtime=0x10B4=4276s, flags=0x0000
        NOT seen during 30s XCHK window - event-driven only.
    - GET_REPORT rid=0x20: returns 0x02 (2%) consistently on fully charged
        batteries across all three submissions. Does NOT reflect live charge.
@@ -31,7 +33,8 @@
    - EU-targeted: input.voltage.nominal=230V, battery.voltage.nominal=12V (3S series)
 
  Open items for future versions:
-   - Capture rid=0x06 on-battery (OB) event to decode flag byte OB bit positions
+   - Confirm vendor page 0xFFFF field cache populates ACPresent on Eaton 3S
+   - Capture rid=0x06 on-battery (OB) event to confirm flag byte behavior
    - Decode rid=0xFD: need second submission at different charge state
    - Decode 0x2x interrupt-IN range for supplemental status/runtime
    - Map 0x8x interrupt rids to alarm flags
@@ -41,6 +44,8 @@
  R1  v0.15   Corrected rid=0x20 comment - confirmed NOT live charge (wrong on
              full batteries). rid=0x06 added as confirmed primary source.
              rid=0xFD meaning TBD noted.
+ R2  v0.26   Updated for vendor page 0xFFFF support. Field cache may now
+             populate from Eaton descriptor. Flags-based OL removed (always 0).
 ============================================================================*/
 #include "ups_db_eaton.h"
 
@@ -51,7 +56,8 @@ static const ups_device_entry_t s_eaton_entries[] = {
      * battery.charge + runtime: rid=0x06 interrupt-IN (event-driven, fires on mains events)
      * GET_REPORT rid=0x20 returns 2% on full batteries - not live charge, not used
      * GET_REPORT rid=0xFD: value=0x29=41, meaning TBD
-     * OL status: confirmed from rid=0x06 flags=0x0000. OB flags TBD.
+     * OL/OB: v0.26+ from standard field cache (vendor page 0xFFFF). Flags in
+     *   rid=0x06 always 0x0000 - not reliable for OL; non-zero = OB fallback.
      * NUT mge-hid: battery.voltage.nominal=12V for 3S series
      * EU-targeted: input.voltage.nominal=230V */
     {
