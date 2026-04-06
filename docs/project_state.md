@@ -1,20 +1,20 @@
 # Project State - esp32-s3-nut-node-flex
 <!-- Updated: 2026-04-06 -->
 
+## Last GitHub Push
+Version: v0.27
+Tag: v0.27
+Commit: a354858
+Message: v0.27 - Eaton OL/OB fix: vendor page 0xFFFF, pre-seed OL, OB-only flags
+Result: Success
+
 ## Status
-v0.25 - Eaton OB decode fix + SET_IDLE + rid=0x21 heartbeat + bootstrap probes. Build clean. Tested on APC. Ready to push.
-- Fix: Eaton OB stuck OL bug -- rid=0x06/0x21 flags non-zero now sets OB correctly in all 3 locations
-- Add: SET_IDLE after interface claim -- forces periodic INT-IN from event-driven Eaton/MGE firmware
-- Add: rid=0x21 decode (Eaton steady-state heartbeat, same layout as rid=0x06)
-- Add: Unrecognised Eaton RID raw logging at INFO level
-- Add: XCHK settle reduced 30s->5s for DECODE_EATON_MGE
-- Add: Step 7b bootstrap GET_REPORT probes (rid=0x20 + rid=0x06) at enumeration for Eaton
-- Add: Eaton probe responses now routed through decode_eaton_feature() (were log-only)
-- Add: decode_eaton_feature() rid=0x06 case -- applies Feature GET_REPORT to state
-  (CyberPower 3000R crash-loop: rid=0x29 has 237 fields, INFO loop starved IDLE0)
-- Fix: dashboard subtitle "v0.6-flex" replaced with esp_app_get_description()->version
-- Fix: /status JSON driver_version "15.13" replaced with esp_app_get_description()->version
-- Submission analysis: 2 Eaton 3S (confirmed working), 1 CyberPower 3000R (WDT root cause found)
+v0.27 - Eaton OL/OB fix. Pushed to GitHub.
+- Fix: ups_hid_desc.c include page 0xFFFF in interesting filter (Eaton fields were being discarded)
+- Fix: ups_hid_parser.c add page 0xFF to field cache scan (BS/PD usage IDs)
+- Fix: ups_hid_parser.c / ups_get_report.c demote flags-based OL - only non-zero flags trigger OB
+- Add: ups_get_report.c rid=0x85 handler for OB status probe
+- Add: ups_usb_hid.c pre-seed OL at enumeration to eliminate UNKNOWN boot window
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -50,12 +50,13 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last CLI Run
-Command: powershell -ExecutionPolicy Bypass -File idf-build.ps1 -Target flash (+ serial monitor via PowerShell COM3)
+Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-06
 Result: SUCCESS
-Output summary: Build clean. Flash OK. Boot confirmed v0.25 Apr 6 2026. APC Back-UPS XS 1500M: charge=100%, runtime=36000s, voltage=120V, status=OL. NUT server on tcp/3493. WiFi SoftAP up (ESP32-UPS-SETUP-4AE49D).
+Output summary: Build clean. Zero errors, zero warnings. App binary 0xee7f0 bytes (7% free, smallest partition 0x100000). Bootloader 0x5260 bytes (36% free).
+Next step: Flash v0.27 when ready, or continue development.
 
 ## Last Action
-2026-04-06 - v0.25: Eaton OB decode fix + SET_IDLE + rid=0x21 + bootstrap probes.
+2026-04-06 - Build clean for v0.26. Stale build directory (configured with IDF v5.5 python env) cleared and full rebuild run under IDF v5.3.1. Zero errors, zero warnings.
 Integrated inbox files from Eaton user (3 files). Applied OB stuck-OL bug fix
 across all 3 decode locations (hid_parser rid=0x06, hid_parser rid=0x21,
 get_report decode_eaton_feature rid=0x06). Non-zero flags now correctly set

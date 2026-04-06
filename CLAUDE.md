@@ -2,7 +2,7 @@
 # Type: ESP32 / IDF Firmware (Fork)
 
 > This file is read by Claude Code CLI when opening this project.
-> Read after the global CLAUDE.md at D:\Users\Stryder\Documents\Claude\.claude\CLAUDE.md
+> Read after the global CLAUDE.md at /home/claude\.claude\CLAUDE.md
 
 ---
 
@@ -57,7 +57,7 @@ Fallback: reverts to Mode 1 if upstream unreachable (configurable).
 
 Active source lives at:
 ```
-D:\Users\Stryder\Documents\Claude\Projects\esp32-s3-nut-node-flex\src\current\
+/home/claude\Projects\esp32-s3-nut-node-flex\src\current\
 ```
 All IDF commands must be run from this directory.
 
@@ -110,7 +110,7 @@ This fork tracks esp32-s3-nut-node as its upstream. When the main project is upd
 changes may be selectively merged into this fork.
 
 **Read-only access to main project source:**
-D:\Users\Stryder\Documents\Claude\Projects\esp32-s3-nut-node\src\current\
+/home/claude\Projects\esp32-s3-nut-node\src\current\
 
 Claude may read any file there at any time for cross-reference.
 Never write to, modify, or delete anything in that path.
