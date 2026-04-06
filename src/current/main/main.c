@@ -50,10 +50,13 @@ static const char *TAG = "UPS_USB_M15";
 static app_cfg_t g_cfg;
 static ups_state_t g_ups;
 
+#ifdef __cplusplus
+extern "C"
+#endif
 void app_main(void) {
     ESP_LOGI(TAG, "=======================================");
     ESP_LOGI(TAG, "ESP32 UPS NUT Node - flex v0.3");
-    ESP_LOGI(TAG, "ESP-IDF v5.3.1 target");
+    ESP_LOGI(TAG, "ESP-IDF v5.5.4 target");
     ESP_LOGI(TAG, "=======================================");
 
     ESP_ERROR_CHECK(nvs_flash_init());
