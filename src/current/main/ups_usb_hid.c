@@ -36,6 +36,14 @@
               DB vendor_name for all known devices.
             - Fall back to DB model_hint when USB product string contains
               '?' garbage chars (CyberPower CP550HG returns 'ST Series??').
+ R13 vFIX   Add send_set_idle() — HID SET_IDLE(duration=4, rid=0) issued after
+            interface claim for all devices. Forces periodic INT-IN reports from
+            event-driven UPS firmware (Eaton/MGE). STALL response (unsupported)
+            is ignored. Fixes 1-60 min init delay on Eaton 3S with stable AC.
+ R14 vFIX   Eaton/MGE bootstrap GET_REPORT probes at enumeration (Step 7b).
+            Queues rid=0x20 (battery.charge Feature) and rid=0x06 immediately
+            without waiting for the 30s XCHK settle timer. rid=0x20 is a Feature
+            report and invisible to XCHK (which only probes silent Input RIDs).
  R12 v15.12 Graceful USB disconnect — fix hub.c:837 assert on hot-unplug:
             - Added s_cleanup_pending flag set in client_event_cb on
               DEV_GONE, preventing intr_in_cb from resubmitting transfers.
@@ -450,6 +458,87 @@ static esp_err_t parse_active_config(usb_device_handle_t dev)
 }
 
 /* -------------------------------------------------------------------------
+ HID SET_IDLE — force periodic interrupt-IN reports from event-driven devices.
+
+ Eaton 3S (and similar MGE/Powerware firmware) only sends interrupt-IN
+ packets when mains state CHANGES.  At boot with stable AC, rid=0x06
+ never arrives and charge/runtime remain unknown until the next mains event
+ (which can be minutes or never).
+
+ SET_IDLE with duration > 0 instructs the device to retransmit the last
+ report at the given interval even if nothing has changed.  Duration units
+ are 4 ms; duration=4 → 16 ms refresh rate.
+
+ Devices that do not support SET_IDLE will STALL the control transfer.
+ That is defined behaviour in the HID spec and is safe to ignore.
+ We therefore treat any completion (success or STALL) as non-fatal.
+------------------------------------------------------------------------- */
+static void send_set_idle(void)
+{
+    if (s_dev == NULL || s_hid_intf_num < 0) return;
+
+    usb_transfer_t *t = NULL;
+    esp_err_t err = usb_host_transfer_alloc(8u, 0, &t);
+    if (err != ESP_OK || !t) {
+        ESP_LOGW(TAG, "SET_IDLE: transfer alloc failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    /* HID class SET_IDLE:
+     *   bmRequestType = 0x21  (Host→Device, Class, Interface)
+     *   bRequest      = 0x0A  (SET_IDLE)
+     *   wValue        = (duration << 8) | report_id
+     *                   duration=4 → 4×4ms = 16ms refresh
+     *                   report_id=0  → applies to all reports
+     *   wIndex        = interface number
+     *   wLength       = 0 (no data phase)
+     */
+    uint8_t *setup = t->data_buffer;
+    setup[0] = 0x21u;
+    setup[1] = 0x0Au;
+    setup[2] = 0x00u;                       /* report_id = 0 (all) */
+    setup[3] = 0x04u;                       /* duration  = 4 (16ms) */
+    setup[4] = (uint8_t)(s_hid_intf_num);
+    setup[5] = 0x00u;
+    setup[6] = 0x00u;
+    setup[7] = 0x00u;
+
+    t->device_handle    = s_dev;
+    t->bEndpointAddress = 0x00u;
+    t->callback         = ctrl_transfer_cb;
+    t->context          = NULL;
+    t->num_bytes        = 8u;
+
+    s_ctrl_done   = false;
+    s_ctrl_status = ESP_FAIL;
+    s_ctrl_bytes  = 0;
+
+    err = usb_host_transfer_submit_control(s_client, t);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "SET_IDLE: submit failed: %s", esp_err_to_name(err));
+        usb_host_transfer_free(t);
+        return;
+    }
+
+    /* Pump USB events while waiting — same pattern as descriptor fetch. */
+    const TickType_t slice = pdMS_TO_TICKS(10);
+    for (int i = 0; i < 10 && !s_ctrl_done; i++) {
+        usb_host_client_handle_events(s_client, 0);
+        vTaskDelay(slice);
+    }
+
+    usb_host_transfer_free(t);
+
+    /* STALL (ESP_FAIL) is normal for devices that don't support SET_IDLE. */
+    if (s_ctrl_done && s_ctrl_status == ESP_OK) {
+        ESP_LOGI(TAG, "SET_IDLE accepted — device will send periodic INT-IN reports");
+    } else {
+        ESP_LOGI(TAG, "SET_IDLE not accepted (done=%d status=%s) — event-driven mode only",
+                 (int)s_ctrl_done, esp_err_to_name(s_ctrl_status));
+    }
+}
+
+/* -------------------------------------------------------------------------
  Fetch HID Report Descriptor via control transfer and parse it.
 
  USB GET_DESCRIPTOR request:
@@ -780,6 +869,15 @@ static void usb_client_task(void *arg)
                 }
             }
 
+            /* Step 4b: HID SET_IDLE — ask device to send periodic INT-IN reports.
+             * Critical for event-driven devices (Eaton/MGE) that only send
+             * interrupt-IN on mains state changes.  Without this, charge/runtime
+             * data may not arrive for minutes at boot if AC is stable.
+             * Safe to call unconditionally — STALL response is ignored. */
+            if (s_hid_intf_num >= 0) {
+                send_set_idle();
+            }
+
             /* Step 5: Fetch & parse HID Report Descriptor → loads parser.
              * NOTE: This pumps usb_host_client_handle_events() internally
              * while waiting, so the USB event loop stays alive. */
@@ -821,6 +919,27 @@ static void usb_client_task(void *arg)
                 ups_get_report_probe_init(s_client, s_dev, s_hid_intf_num);
                 ups_hid_parser_set_xchk_probe_cb(xchk_probe_cb);
                 ESP_LOGI(TAG, "XCHK probe queue initialised - will fire after settle timer");
+
+                /* Step 7b: Eaton/MGE bootstrap probes — do NOT wait for XCHK.
+                 *
+                 * rid=0x06 is event-driven: fires on mains state changes only.
+                 * At boot with stable AC, it may never arrive naturally.
+                 * rid=0x20 is a Feature report (GET_REPORT only) that supplies
+                 * battery.charge immediately — confirmed on Eaton 3S 700.
+                 *
+                 * XCHK probes only cover declared Input RIDs; rid=0x20 is Feature
+                 * type and is invisible to XCHK.  We must probe it explicitly here
+                 * to guarantee bootstrap data within seconds of enumeration.
+                 *
+                 * rid=0x06 is also queued as a Feature GET_REPORT: some Eaton
+                 * firmware versions will respond with current state even though it
+                 * normally fires as an interrupt-IN.  Harmless if not supported. */
+                if (entry && entry->decode_mode == DECODE_EATON_MGE) {
+                    ESP_LOGI(TAG, "[EATON] Queuing bootstrap GET_REPORT probes "
+                             "(rid=0x20 charge, rid=0x06 state) — bypassing 30s XCHK wait");
+                    ups_get_report_probe_rid(0x20, 8);
+                    ups_get_report_probe_rid(0x06, 6);
+                }
             }
         }
 

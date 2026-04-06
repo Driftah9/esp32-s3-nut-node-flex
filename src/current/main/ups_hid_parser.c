@@ -92,6 +92,18 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R12 vFIX2  Decode rid=0x21 in DECODE_EATON_MGE path — same byte layout as
+                rid=0x06, treated as steady-state heartbeat. rid=0x06 fires on
+                mains events only; rid=0x21 arrives during normal steady-state
+                operation within the first 30s (confirmed from Eaton 3S 700
+                submissions). Sanity guards protect against wrong-format reads.
+                Log all other unrecognised Eaton interrupt-IN rids (0x2x, 0x8x)
+                at INFO level for field analysis.
+ R11 vFIX   Shorten XCHK settle timer from 30s to 5s for DECODE_EATON_MGE
+                devices. rid=0x06 is event-driven and may never arrive on
+                stable AC; the 30s wait delayed even the Input-RID cross-check.
+                Feature-report bootstrap (rid=0x20) is handled in ups_usb_hid
+                Step 7b immediately at enumeration, not via XCHK.
  R10 v0.18      Per-RID arrival interval tracker. Three parallel arrays
                 (s_rid_last_ms, s_rid_ema_ms, s_rid_samples) track the EMA
                 inter-report interval for each RID seen in traffic. After 3+
@@ -364,7 +376,19 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
     ESP_LOGI(TAG, "  low_battery_flag: %s", s_cache.low_battery_flag ? "found" : "MISSING");
     if (use_direct) ESP_LOGI(TAG, "  [direct-decode ACTIVE]");
 
-    /* ---- Schedule dynamic XCHK after 30s settle window ---- */
+    /* ---- Schedule dynamic XCHK after settle window ----
+     * Default: 30s for most devices (enough for interrupt-IN traffic to
+     * accumulate so cross-check is meaningful).
+     * Exception: DECODE_EATON_MGE uses a 5s window.  rid=0x06 is
+     * event-driven and may never arrive naturally on stable AC; a shorter
+     * settle keeps XCHK useful for Input RIDs that ARE declared, while the
+     * bootstrap GET_REPORT probes (queued in ups_usb_hid Step 7b) handle
+     * the Feature-report data path immediately on enumeration. */
+    uint64_t xchk_delay_us = 30ULL * 1000000ULL;
+    if (s_device && s_device->decode_mode == DECODE_EATON_MGE) {
+        xchk_delay_us = 5ULL * 1000000ULL;
+        ESP_LOGI(TAG, "[XCHK] Eaton/MGE detected — settle timer reduced to 5s");
+    }
     esp_timer_create_args_t xchk_ta = {
         .callback        = xchk_timer_cb,
         .arg             = NULL,
@@ -372,8 +396,9 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
         .name            = "hid_xchk"
     };
     if (esp_timer_create(&xchk_ta, &s_xchk_timer) == ESP_OK) {
-        esp_timer_start_once(s_xchk_timer, 30ULL * 1000000ULL); /* 30 seconds */
-        ESP_LOGI(TAG, "[XCHK] dynamic RID cross-check scheduled in 30s");
+        esp_timer_start_once(s_xchk_timer, xchk_delay_us);
+        ESP_LOGI(TAG, "[XCHK] dynamic RID cross-check scheduled in %"PRIu64"s",
+                 xchk_delay_us / 1000000ULL);
     } else {
         ESP_LOGW(TAG, "[XCHK] failed to create settle timer");
     }
@@ -958,22 +983,80 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
                 changed = true;
                 ESP_LOGI(TAG, "[EATON] rid=0x06 battery.runtime=%us", runtime_s);
             }
-            /* Flags decode: confirmed sample 06 63 B4 10 00 00 -> OL (AC present, online).
-             * OB bit positions unknown - need an on-battery discharge event log to confirm.
-             * Any non-zero flags are logged raw for future analysis. */
+            /* Flags decode: 0x0000 confirmed OL (AC present).
+             * Any non-zero flags = not OL, therefore OB.
+             * Exact OB bit positions still TBD but logic is sound:
+             * if it is not OL it must be OB. */
+            upd->input_utility_present_valid = true;
+            upd->input_utility_present       = (flags == 0x0000u);
+            changed = true;
             if (flags == 0x0000u) {
-                upd->input_utility_present_valid = true;
-                upd->input_utility_present       = true;
-                changed = true;
                 ESP_LOGI(TAG, "[EATON] rid=0x06 flags=0x0000 -> OL (ac_present)");
             } else {
-                ESP_LOGW(TAG, "[EATON] rid=0x06 flags=0x%04X - OB/event decode TBD, log for analysis",
+                ESP_LOGW(TAG, "[EATON] rid=0x06 flags=0x%04X -> OB (ac_absent)",
                          (unsigned)flags);
             }
             ESP_LOGI(TAG, "[EATON] rid=0x06 raw: %02X %02X %02X %02X %02X",
                      payload[0], payload[1], payload[2], payload[3], payload[4]);
         }
-        /* All other Eaton rids: fall through to standard path (finds nothing, harmless) */
+        /* rid=0x21: tentative steady-state heartbeat — same byte layout as rid=0x06.
+         * rid=0x06 fires on mains events only; rid=0x21 appears in the interrupt-IN
+         * stream during the first 30s of normal steady-state operation (confirmed from
+         * three Eaton 3S 700 submissions, 2026-03-30/04-02 in ups_db_eaton.c).
+         * Treating it as a periodic equivalent of rid=0x06. The sanity guards
+         * (charge <= 100, runtime > 0) protect against a wrong format assumption. */
+        else if (rid == 0x21 && payload_len >= 5) {
+            uint8_t  charge    = payload[0];
+            uint16_t runtime_s = (uint16_t)(payload[1] | ((uint16_t)payload[2] << 8));
+            uint16_t flags     = (uint16_t)(payload[3] | ((uint16_t)payload[4] << 8));
+
+            ESP_LOGI(TAG, "[EATON] rid=0x21 raw: %02X %02X %02X %02X %02X",
+                     payload[0], payload[1], payload[2], payload[3], payload[4]);
+
+            if (charge <= 100u) {
+                upd->battery_charge_valid = true;
+                upd->battery_charge       = charge;
+                changed = true;
+                ESP_LOGI(TAG, "[EATON] rid=0x21 battery.charge=%u%%", charge);
+            } else {
+                ESP_LOGW(TAG, "[EATON] rid=0x21 charge=0x%02X out of range - format mismatch?",
+                         charge);
+            }
+            if (runtime_s > 0u) {
+                upd->battery_runtime_valid = true;
+                upd->battery_runtime_s     = runtime_s;
+                changed = true;
+                ESP_LOGI(TAG, "[EATON] rid=0x21 battery.runtime=%us", runtime_s);
+            }
+            upd->input_utility_present_valid = true;
+            upd->input_utility_present       = (flags == 0x0000u);
+            changed = true;
+            if (flags == 0x0000u) {
+                ESP_LOGI(TAG, "[EATON] rid=0x21 flags=0x0000 -> OL (ac_present)");
+            } else {
+                ESP_LOGW(TAG, "[EATON] rid=0x21 flags=0x%04X -> OB (ac_absent)",
+                         (unsigned)flags);
+            }
+        }
+
+        /* Log all other unrecognised Eaton interrupt-IN rids at INFO level.
+         * These arrive during steady state (0x2x = UPS state data; 0x8x = alarms).
+         * Raw bytes are needed to identify future decode candidates.
+         * Fall through to standard path after logging (finds nothing, harmless). */
+        else if (payload_len > 0) {
+            char hexbuf[48] = {0};
+            int  hpos = 0;
+            size_t hn = (payload_len > 8u) ? 8u : payload_len;
+            for (size_t hi = 0; hi < hn; hi++) {
+                hpos += snprintf(hexbuf + hpos, sizeof(hexbuf) - (size_t)hpos,
+                                 "%02X%s", payload[hi], (hi == hn - 1u) ? "" : " ");
+            }
+            ESP_LOGI(TAG, "[EATON] rid=0x%02X unrecognised (%u bytes): %s%s",
+                     (unsigned)rid, (unsigned)payload_len, hexbuf,
+                     payload_len > 8u ? "..." : "");
+        }
+
+        /* Fall through to standard path for all Eaton rids */
     }
 
     /* ---- Standard descriptor path ---- */

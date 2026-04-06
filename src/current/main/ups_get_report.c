@@ -39,6 +39,13 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R4  vFIX2  Add rid=0x06 to decode_eaton_feature(): if Eaton firmware supports
+            Feature GET_REPORT on rid=0x06, the bootstrap probe queued at
+            enumeration (ups_usb_hid Step 7b) now actually applies the result
+            to state instead of logging and discarding it.
+            Feed service_probe_queue() responses through decode_eaton_feature()
+            for DECODE_EATON_MGE devices — previously all probe responses were
+            logged only, making the Eaton bootstrap probes completely inert.
  R3  v0.20  GET_REPORT transfer allocation padded by 64 bytes beyond declared
             size. CyberPower 3000R (0764:0601) returns MORE data than its
             descriptor declares for rid=0x28 (63 bytes declared, device sends
@@ -476,6 +483,48 @@ static void decode_eaton_feature(uint8_t rid, const uint8_t *data, size_t len)
     ESP_LOGI(TAG, "[MGE Feature] rid=0x%02X len=%u: %s", rid, (unsigned)len, hexbuf);
 
     switch (rid) {
+    case 0x06: {
+        /*
+         * rid=0x06 via GET_REPORT: some Eaton firmware versions respond to a
+         * Feature GET_REPORT on this rid with current UPS state, even though it
+         * normally only arrives as interrupt-IN on mains events.
+         * Format is identical to the interrupt-IN version (confirmed in hid_parser):
+         *   data[0] = rid echo
+         *   data[1] = battery.charge (0-100%)
+         *   data[2:3] = battery.runtime_s uint16 LE
+         *   data[4:5] = status flags (0x0000 = OL; OB bits TBD)
+         * Applied to state if values pass sanity checks.
+         */
+        if (len < 6u) {
+            ESP_LOGW(TAG, "[MGE Feature] rid=0x06: short read %u bytes (need 6)", (unsigned)len);
+            break;
+        }
+        uint8_t  charge    = data[1];
+        uint16_t runtime_s = (uint16_t)(data[2] | ((uint16_t)data[3] << 8));
+        uint16_t flags     = (uint16_t)(data[4] | ((uint16_t)data[5] << 8));
+
+        if (charge <= 100u) {
+            ups_state_update_t upd;
+            memset(&upd, 0, sizeof(upd));
+            upd.valid                 = true;
+            upd.battery_charge_valid  = true;
+            upd.battery_charge        = charge;
+            if (runtime_s > 0u) {
+                upd.battery_runtime_valid = true;
+                upd.battery_runtime_s     = runtime_s;
+            }
+            /* flags=0x0000 confirmed OL. Any non-zero = OB. */
+            upd.input_utility_present_valid = true;
+            upd.input_utility_present       = (flags == 0x0000u);
+            ups_state_apply_update(&upd);
+            ESP_LOGI(TAG, "[MGE Feature] rid=0x06 charge=%u%% runtime=%us flags=0x%04X -> applied",
+                     (unsigned)charge, (unsigned)runtime_s, (unsigned)flags);
+        } else {
+            ESP_LOGW(TAG, "[MGE Feature] rid=0x06 charge=0x%02X out of range - "
+                     "Feature GET_REPORT not supported by this firmware", (unsigned)charge);
+        }
+        break;
+    }
     case 0x20: {
         /*
          * rid=0x20: NOT live battery.charge despite initial assumption.
@@ -602,6 +651,16 @@ static void service_probe_queue(void)
         }
         ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X response (%u bytes): %s",
                  (unsigned)req.rid, (unsigned)got, hexbuf);
+    }
+
+    /* For Eaton/MGE devices, run probe responses through the feature decoder
+     * instead of just logging.  This gives the bootstrap GET_REPORT probes
+     * (queued at enumeration in ups_usb_hid Step 7b) a chance to actually
+     * update state — specifically rid=0x06 if this Eaton firmware supports it
+     * as a Feature GET_REPORT.  Non-Eaton devices are unaffected. */
+    if (err == ESP_OK && got >= 2u &&
+        s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
+        decode_eaton_feature(req.rid, buf, got);
     }
 
     /* Annotate each field in the descriptor for this RID with its NUT var name.

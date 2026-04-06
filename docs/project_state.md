@@ -1,13 +1,16 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-05 -->
+<!-- Updated: 2026-04-06 -->
 
 ## Status
-v0.24 - Mode validation + HA zero data fix. Build clean. Ready to push.
-- Self-calibrating EMA interval tracker for all interrupt-IN RIDs
-- Status debounce: 1.5x learned interval (max 3500ms), disabled during warmup
-- Prevents false OL<->OB transitions from single anomalous reports
-- data_age_ms exposed in /status JSON and dashboard ("UPS data: Xs old")
-- Fix: ups_hid_desc_dump() per-field loop demoted ESP_LOGI -> ESP_LOGD
+v0.25 - Eaton OB decode fix + SET_IDLE + rid=0x21 heartbeat + bootstrap probes. Build clean. Tested on APC. Ready to push.
+- Fix: Eaton OB stuck OL bug -- rid=0x06/0x21 flags non-zero now sets OB correctly in all 3 locations
+- Add: SET_IDLE after interface claim -- forces periodic INT-IN from event-driven Eaton/MGE firmware
+- Add: rid=0x21 decode (Eaton steady-state heartbeat, same layout as rid=0x06)
+- Add: Unrecognised Eaton RID raw logging at INFO level
+- Add: XCHK settle reduced 30s->5s for DECODE_EATON_MGE
+- Add: Step 7b bootstrap GET_REPORT probes (rid=0x20 + rid=0x06) at enumeration for Eaton
+- Add: Eaton probe responses now routed through decode_eaton_feature() (were log-only)
+- Add: decode_eaton_feature() rid=0x06 case -- applies Feature GET_REPORT to state
   (CyberPower 3000R crash-loop: rid=0x29 has 237 fields, INFO loop starved IDLE0)
 - Fix: dashboard subtitle "v0.6-flex" replaced with esp_app_get_description()->version
 - Fix: /status JSON driver_version "15.13" replaced with esp_app_get_description()->version
@@ -46,8 +49,20 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - bridge_receiver.py on port 5493 - Mode 3 target
 - SSH: nut-test-lxc key
 
+## Last CLI Run
+Command: powershell -ExecutionPolicy Bypass -File idf-build.ps1 -Target flash (+ serial monitor via PowerShell COM3)
+Result: SUCCESS
+Output summary: Build clean. Flash OK. Boot confirmed v0.25 Apr 6 2026. APC Back-UPS XS 1500M: charge=100%, runtime=36000s, voltage=120V, status=OL. NUT server on tcp/3493. WiFi SoftAP up (ESP32-UPS-SETUP-4AE49D).
+
 ## Last Action
-2026-04-05 - v0.24: Config mode validation + NUT server battery.charge valid gate.
+2026-04-06 - v0.25: Eaton OB decode fix + SET_IDLE + rid=0x21 + bootstrap probes.
+Integrated inbox files from Eaton user (3 files). Applied OB stuck-OL bug fix
+across all 3 decode locations (hid_parser rid=0x06, hid_parser rid=0x21,
+get_report decode_eaton_feature rid=0x06). Non-zero flags now correctly set
+input_utility_present=false (OB) instead of leaving state unchanged.
+Build: clean. Flash: OK. Monitor: APC confirmed working on test hardware.
+
+Previous: 2026-04-05 - v0.24: Config mode validation + NUT server battery.charge valid gate.
 http_config_page.c: onsubmit chkSave() blocks save if Mode 2 or 3 selected
   with no upstream_host filled in. Shows inline error and focuses the field.
   onModeChange() also clears the error when mode changes back to 1.
