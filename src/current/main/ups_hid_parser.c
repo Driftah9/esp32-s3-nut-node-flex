@@ -92,6 +92,19 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R15 v0.28   Fix Eaton stale-data regression from v0.27 (R14).
+                Root cause: v0.27 added 0xFFFF fields to the field cache, which
+                made the standard descriptor path find cache hits on Eaton rids.
+                The standard path then extracted bits from vendor-format payloads
+                using descriptor-declared bit offsets - corrupting the correctly
+                decoded charge/runtime values from the direct-decode path.
+                Fix: add goto finalize after Eaton rid=0x06/0x21 decode blocks
+                (skip standard path when direct decode succeeded) and add goto
+                finalize for all other Eaton rids (standard path cannot decode
+                vendor-format payloads). Also add !battery_runtime_valid guard
+                to standard path runtime extraction to prevent overwrite of
+                direct-decoded values.
+                Source: Eaton 3S submission 2026-04-07 (MyDisplayName).
  R14 v0.26   Eaton vendor page 0xFFFF support for OL/OB detection.
                 Root cause: Eaton 3S descriptor has 111 fields ALL on vendor
                 page 0xFFFF. Parser filtered them out (only kept 0x84/0x85).
@@ -1027,6 +1040,7 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             }
             ESP_LOGI(TAG, "[EATON] rid=0x06 raw: %02X %02X %02X %02X %02X",
                      payload[0], payload[1], payload[2], payload[3], payload[4]);
+            if (changed) goto finalize;  /* v0.28: skip standard path - it misreads vendor-format payloads */
         }
         /* rid=0x21: tentative steady-state heartbeat — same byte layout as rid=0x06.
          * rid=0x06 fires on mains events only; rid=0x21 appears in the interrupt-IN
@@ -1068,6 +1082,7 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             } else {
                 ESP_LOGI(TAG, "[EATON] rid=0x21 flags=0x0000 (no status assertion)");
             }
+            if (changed) goto finalize;  /* v0.28: skip standard path - it misreads vendor-format payloads */
         }
 
         /* Log all other unrecognised Eaton interrupt-IN rids.
@@ -1095,7 +1110,10 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             }
         }
 
-        /* Fall through to standard path for all Eaton rids */
+        /* v0.28: skip standard path for all Eaton rids - vendor page 0xFFFF
+         * fields in the field cache cause descriptor bit-extraction to run on
+         * vendor-format payloads, corrupting correctly decoded values. */
+        goto finalize;
     }
 
     /* ---- Standard descriptor path ---- */
@@ -1112,7 +1130,8 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
     }
 
     /* Battery Runtime */
-    if (extract_if_matches(s_cache.battery_runtime, payload, payload_len, rid, &raw)) {
+    if (!upd->battery_runtime_valid &&
+        extract_if_matches(s_cache.battery_runtime, payload, payload_len, rid, &raw)) {
         int8_t  exp     = s_cache.battery_runtime->unit_exponent;
         int32_t seconds = raw;
         if (exp != 0) {

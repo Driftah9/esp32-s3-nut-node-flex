@@ -247,6 +247,28 @@ assertion (only non-zero triggers OB). OL now from standard field cache or defau
 - [ ] Eaton user: confirm field cache populates on v0.27 (check log for ac_present: found)
 - [ ] Eaton user: test discharge event (unplug mains 10s) to confirm OB transition
 
+## Eaton 3S stale-data regression fix - v0.28 (2026-04-07)
+
+Root cause: v0.27 added 0xFFFF fields to the field cache. This made the standard
+descriptor path find cache hits on Eaton interrupt-IN rids. The standard path then
+extracted bits from vendor-format payloads using descriptor-declared bit offsets,
+corrupting the correctly decoded charge/runtime values from Eaton direct-decode.
+
+User report (MyDisplayName, submission 2026-04-07): stale data after boot, OL
+status locked, battery metrics not updating. Regression from v0.25b.
+
+Fix: add goto finalize after Eaton rid=0x06/0x21 decode blocks (skip standard path
+when direct decode succeeded). Add goto finalize for all unrecognized Eaton rids.
+Add !battery_runtime_valid guard to standard path runtime extraction.
+
+- [x] Root cause identified: standard path double-decoding vendor-format payloads
+- [x] ups_hid_parser.c: goto finalize after rid=0x06 and rid=0x21 blocks
+- [x] ups_hid_parser.c: goto finalize for all other Eaton rids (was fallthrough)
+- [x] ups_hid_parser.c: battery_runtime_valid guard on standard path
+- [x] Build clean (v0.28)
+- [ ] Flash/monitor blocked (COM3 not connected)
+- [ ] Eaton user: re-submit on v0.28 to confirm data refreshes and metrics update
+
 ## Pending Follow-Up
 
 - [ ] sollandk/redandblue (CyberPower 3000R): re-submit on v0.24 to confirm no crash loop
