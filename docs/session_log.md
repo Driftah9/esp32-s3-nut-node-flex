@@ -546,3 +546,151 @@ Files changed:
 
 Status at end: v0.24 build clean. Push in progress.
 Next session: Flash v0.24. Request re-submission from sollandk (CyberPower 3000R, confirm no crash loop).
+
+---
+
+## Session 008 - 2026-04-08
+
+Tags: v0.29, eaton, stale-data, GET_REPORT, rid-0x06, periodic-polling, submission-713d7c, submission-30b6f9
+
+Work completed:
+
+v0.29 - Eaton 3S periodic data refresh fix:
+- Analyzed submissions 30b6f9 (v0.27, 2026-04-07) and 713d7c (v0.28, 2026-04-08)
+  from MyDisplayName. Both logs truncated at 528 lines during descriptor parse
+  (user building with DEBUG level + 32KB capture buffer fills before operational data)
+- Root cause identified via code analysis: Eaton 3S sends rid=0x06 as interrupt-IN
+  ONLY on mains events, not periodically. After initial boot burst, data goes stale.
+  GET_REPORT polling ran every 30s but polled rids {0x20, 0xFD, 0x85} - none apply data.
+  decode_eaton_feature case 0x06 already applied charge/runtime/flags to state but
+  rid=0x06 was not in the polling list.
+- ups_get_report.c R7: added 0x06 to s_eaton_rids[] periodic polling list
+- ups_hid_parser.c R16: made goto finalize unconditional for rid=0x06/0x21 blocks
+  (was conditional on `changed` which could fail on edge cases)
+- OL/OB issue analyzed: Eaton vendor UIDs (0x0074, 0x0075, 0x006B) don't match
+  standard ACPresent (0x00D0) / Charging (0x0044) / Discharging (0x0045).
+  Field cache never finds ACPresent. derive_status defaults to "OL".
+  Need discharge event log from user.
+- Build clean. Pushed 5ca71cd, tag v0.29.
+
+Problems encountered:
+- Both user logs (527/528 lines) truncated mid-descriptor-parse at ~7.7s timestamp.
+  User building with CONFIG_LOG_DEFAULT_LEVEL_DEBUG on IDF v5.5.3. 32KB heap-based
+  capture buffer fills with DEBUG descriptor output before any operational data appears.
+  Undiagnosable from logs alone - root cause found by code analysis instead.
+- Git push required rebase: VM local repo was at v0.24, remote had v0.25-v0.28 pushed
+  from Windows. Fetched, rebased, force-updated tag.
+
+Files changed:
+- src/current/main/ups_get_report.c (R7: add 0x06 to s_eaton_rids[])
+- src/current/main/ups_hid_parser.c (R16: unconditional goto finalize)
+- docs/github_push.md (v0.29)
+- docs/project_state.md (v0.29 status)
+- docs/next_steps.md (v0.29 section)
+- docs/session_log.md (this entry)
+
+Status at end: v0.29 build clean, pushed to GitHub (5ca71cd).
+Next session: Eaton user re-submit on v0.29 to confirm periodic data refresh. Request discharge test (unplug mains 10s) for OB event capture.
+
+---
+
+## Session 008 - 2026-04-08
+
+Tags: v0.29, eaton-stale-data, get-report-polling, submission-713d7c, submission-30b6f9, MyDisplayName
+
+Work completed:
+
+Processed two new Eaton 3S submissions from MyDisplayName:
+- 30b6f9 (2026-04-07 4:40 PM, v0.27): stale data after boot, counter climbing
+- 713d7c (2026-04-08 2:25 PM, v0.28): same issue on v0.28, v0.25b claimed last working
+
+Both logs truncated mid-descriptor-parse (~line 528, t=7.7s). User built with
+DEBUG log level on IDF v5.5.3 - the 32KB diag capture buffer fills entirely with
+descriptor parse LOGD lines before any interrupt-IN data arrives. No operational
+data visible in either submission log.
+
+Root cause identified from code analysis (not log):
+- Eaton 3S sends rid=0x06 as interrupt-IN ONLY on mains events, not periodically
+- After boot burst (rid=0x06 at connect + rid=0x21 for ~30s), no data-bearing
+  interrupt-IN reports arrive during steady-state AC operation
+- GET_REPORT polling ran every 30s via s_eaton_rids[] = {0x20, 0xFD, 0x85}
+  - rid=0x20: logged only (returns 2%, known wrong value, not applied)
+  - rid=0xFD: logged only, meaning unknown
+  - rid=0x85: logged only, speculative OB probe
+- None of the polled rids applied data to state -> data_age climbed indefinitely
+- decode_eaton_feature case 0x06 already existed and applied charge/runtime/flags
+  but 0x06 was not in the polling list
+
+Fix applied (v0.29):
+- ups_get_report.c R7: add 0x06 to s_eaton_rids[] -> periodic GET_REPORT every 30s
+- ups_hid_parser.c R16: make goto finalize unconditional for rid=0x06/0x21 Eaton
+  blocks (was conditional on `changed`, edge case fallthrough to standard path)
+
+OL/OB remains unresolved:
+- Eaton vendor UIDs (0x0074, 0x0075, 0x006B on page 0xFFFF) don't match standard
+  HID power device usage IDs for ACPresent/Charging/Discharging
+- derive_status falls to "charge data only = OL" always
+- Need discharge event log (unplug mains 10s) to find which rid/byte carries AC state
+
+Problems encountered:
+- Git push: local branch "temp" was behind remote main (v0.25-v0.28 pushed from Windows)
+  Resolved via git fetch + git rebase origin/main + force tag update for v0.29
+- Both submission logs undiagnosable (DEBUG level + 32KB buffer fills before ops data)
+  Root cause found by reading source code directly rather than log analysis
+
+Files changed:
+- src/current/main/ups_get_report.c (R7: add 0x06 to s_eaton_rids[])
+- src/current/main/ups_hid_parser.c (R16: unconditional goto finalize)
+- docs/github_push.md (v0.29)
+- docs/project_state.md (v0.29)
+- docs/next_steps.md (v0.29 section)
+- docs/session_log.md (this entry)
+
+Status at end: v0.29 build clean, pushed to GitHub (commit 5ca71cd, tag v0.29).
+Next session starts at: Flash v0.29. Request re-submission from MyDisplayName to
+confirm data_age resets every ~30s. Also request discharge event log for OB decode.
+
+---
+
+## Session 009 - 2026-04-08 (continuation)
+
+Tags: submissions-42e716, submissions-6c964c, submissions-871496, eaton-discharge-test, cyberpower-bridge-fallback, MyDisplayName, sollandk
+
+Work completed:
+
+Processed three previously unanalyzed submissions from 2026-04-06:
+
+**42e716** (MyDisplayName, Eaton 3S, v0.25, 12:42 PM):
+- "Instantly have charge/runtime. HA disconnects/unavailable every 2-3 min. Web unresponsive."
+- Log truncated (DEBUG+32KB). Descriptor shows [SKIP] for all page 0xFFFF fields (v0.25 pre-filter).
+- Confirms: initial charge/runtime from rid=0x06 interrupt-IN at boot only.
+- HA disconnect/web unresponsive: likely ESP WDT-crashing from DEBUG log level (same as CyberPower
+  3000R WDT root cause - user always builds with CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y).
+
+**6c964c** (MyDisplayName, Eaton 3S, v0.27, 2:59 PM, discharge test):
+- "Shows OL/charge/runtime instantly. When unplugging mains it stops updating. 222s old after 222s."
+- Log truncated (DEBUG+32KB). No discharge event data visible.
+- Confirms: OB stale-data is a separate problem from AC stale-data.
+- On mains-loss, the Eaton 3S sends nothing that refreshes state.
+- v0.29 GET_REPORT polling of rid=0x06 MAY help if device responds while on battery.
+- User needs to flash v0.29 and retest discharge.
+
+**871496** (sollandk/redandblue, CyberPower 3000R 0764:0601, v0.27, bridge mode):
+- Upstream 192.168.2.4:3493 unreachable -> nut_bridge falling back to STANDALONE confirmed.
+- battery.charge=99% (rid=0x08) correct. runtime/voltage MISSING (Feature report not polled).
+- USB INT-IN status=7 at t=23s (disconnect event, then re-enum expected).
+- DWC assert crash loop (v0.20 fix) confirmed resolved - no crash in 2732-line log.
+- Bridge fallback validates D002 behavior works at boot.
+- Remaining issues: battery.runtime/voltage Feature polling not active in fallback mode.
+
+Key finding for Eaton user:
+- Persistent request: rebuild with INFO log level (not DEBUG). Every submission has been
+  undiagnosable due to 32KB buffer filling before operational data.
+- Next test: flash v0.29, unplug mains 10s while running 90s diag capture at INFO level.
+
+Files changed:
+- docs/session_log.md (this entry)
+- docs/next_steps.md (updated pending follow-up)
+
+Status at end: All three submissions analyzed. No code changes this sub-session.
+Next session: Monitor for v0.29 re-submission from MyDisplayName (Eaton discharge test).

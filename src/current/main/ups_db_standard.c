@@ -91,6 +91,28 @@ static const ups_device_entry_t s_standard_entries[] = {
         .ups_type                   = "line-interactive",
     },
 
+    /* ---- Powercom / PowerWalker (VID 0x0665) ------------------------- */
+    /* PowerWalker VI 3000 SCL (PID 0x5161). Standard HID fields on pages
+     * 0x84/0x85. Charging (0x44) and Discharging (0x45) on page 0x85.
+     * ACPresent (0x00D0) declared on page 0x85 (non-standard - normally 0x84).
+     * Large rid=0x30 Input report (~24 bytes) - requires buffer > MPS fix.
+     * 230V European model. */
+    {
+        .vid         = 0x0665,
+        .pid         = 0x5161,
+        .vendor_name = "PowerWalker",
+        .model_hint  = "VI 3000 SCL",
+        .decode_mode = DECODE_STANDARD,
+        .quirks      = 0,
+        .known_good  = false,
+        .battery_voltage_nominal_mv = 24000,
+        .battery_runtime_low_s      = 120,
+        .battery_charge_low         = 10,
+        .battery_charge_warning     = 50,
+        .input_voltage_nominal_v    = 230,
+        .ups_type                   = "line-interactive",
+    },
+
     /* ---- Dell (VID 0x047C) ------------------------------------------ */
     {
         .vid         = 0x047C,

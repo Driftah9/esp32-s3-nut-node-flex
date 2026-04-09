@@ -40,6 +40,10 @@
             interface claim for all devices. Forces periodic INT-IN reports from
             event-driven UPS firmware (Eaton/MGE). STALL response (unsupported)
             is ignored. Fixes 1-60 min init delay on Eaton 3S with stable AC.
+ R16 v0.30  Fix interrupt-IN buffer size: was MPS-only (8 bytes), truncating
+            reports larger than MPS. Powercom/PowerWalker rid=0x30 is 24 bytes -
+            Charging/Discharging flags at byte 20-21 were never received.
+            Now allocates max(MPS, largest_input_report), capped at 64 bytes.
  R15 v0.26  Eaton/MGE: pre-seed OL status at enumeration before rid=0x21 arrives.
             rid=0x21 heartbeat takes 20-30s; without the seed NUT returns UNKNOWN
             during that window. Immediate OL seed replaced by rid=0x21 data on
@@ -771,18 +775,25 @@ static esp_err_t start_interrupt_in_reader(void)
     if (!s_dev || s_ep_in_addr == 0U || s_ep_in_mps == 0U)
         return ESP_ERR_INVALID_STATE;
 
+    /* Buffer must hold the largest declared Input report, not just one MPS
+     * packet. Reports larger than MPS span multiple USB transactions which
+     * IDF assembles if the buffer is big enough. Floor at MPS, cap at 64. */
+    uint16_t max_input = ups_hid_parser_max_input_bytes();
+    size_t buf_sz = (max_input > s_ep_in_mps) ? max_input : s_ep_in_mps;
+    if (buf_sz > 64u) buf_sz = 64u;
+
     usb_transfer_t *t = NULL;
-    esp_err_t err = usb_host_transfer_alloc(s_ep_in_mps, 0, &t);
+    esp_err_t err = usb_host_transfer_alloc(buf_sz, 0, &t);
     if (err != ESP_OK || !t) return err;
 
     t->device_handle    = s_dev;
     t->bEndpointAddress = s_ep_in_addr;
     t->callback         = intr_in_cb;
     t->context          = NULL;
-    t->num_bytes        = s_ep_in_mps;
+    t->num_bytes        = buf_sz;
 
-    ESP_LOGI(TAG, "Starting interrupt IN reader: EP=0x%02X MPS=%u",
-             (unsigned)s_ep_in_addr, (unsigned)s_ep_in_mps);
+    ESP_LOGI(TAG, "Starting interrupt IN reader: EP=0x%02X MPS=%u buf=%u",
+             (unsigned)s_ep_in_addr, (unsigned)s_ep_in_mps, (unsigned)buf_sz);
 
     err = usb_host_transfer_submit(t);
     if (err != ESP_OK) usb_host_transfer_free(t);

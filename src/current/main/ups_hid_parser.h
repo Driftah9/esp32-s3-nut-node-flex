@@ -103,6 +103,14 @@ const hid_desc_t *ups_hid_parser_get_desc(void);
  */
 uint32_t ups_hid_parser_get_rid_interval(uint8_t rid, uint8_t *samples_out);
 
+/**
+ * @brief Return the largest Input report payload size from the parsed descriptor.
+ *
+ * Used by the interrupt-IN reader to allocate a transfer buffer large enough
+ * for the largest HID Input report. Returns 0 if no descriptor has been set.
+ */
+uint16_t ups_hid_parser_max_input_bytes(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -266,18 +266,48 @@ Add !battery_runtime_valid guard to standard path runtime extraction.
 - [x] ups_hid_parser.c: goto finalize for all other Eaton rids (was fallthrough)
 - [x] ups_hid_parser.c: battery_runtime_valid guard on standard path
 - [x] Build clean (v0.28)
-- [ ] Flash/monitor blocked (COM3 not connected)
-- [ ] Eaton user: re-submit on v0.28 to confirm data refreshes and metrics update
+- [x] Flash/monitor blocked (COM3 not connected)
+- [x] Eaton user re-submitted on v0.28 (713d7c) - still stale. Root cause found: not a parser bug.
+
+## Eaton 3S periodic data refresh - v0.29 (2026-04-08)
+
+Root cause: Eaton 3S sends rid=0x06 as interrupt-IN only on mains events (not periodic).
+After the initial boot burst (rid=0x06 + rid=0x21 for ~30s), no data-bearing reports arrive.
+GET_REPORT polling ran every 30s but polled rids {0x20, 0xFD, 0x85} - none apply data.
+decode_eaton_feature case 0x06 already existed and applies charge/runtime/flags to state,
+but 0x06 was not in the periodic polling list.
+
+Additionally, the intr_in_cb change-only filter (memcmp against last report) means that
+even if the Eaton device sends identical rid=0x06 packets periodically, they get dropped.
+GET_REPORT bypasses intr_in_cb entirely, so periodic polling solves both paths.
+
+OL/OB root cause: Eaton vendor UIDs (0x0074, 0x0075, 0x006B on page 0xFFFF) don't match
+standard ACPresent (0x00D0), Charging (0x0044), or Discharging (0x0045). Field cache
+never finds ACPresent. derive_status falls to "charge data only = OL" every time.
+Need discharge event log to find which bytes carry AC state.
+
+- [x] Root cause identified: rid=0x06 missing from s_eaton_rids[] polling list
+- [x] ups_get_report.c R7: add 0x06 to s_eaton_rids[] for periodic polling
+- [x] ups_hid_parser.c R16: make goto finalize unconditional for rid=0x06/0x21
+- [x] Build clean (v0.29)
+- [x] Pushed to GitHub (5ca71cd, tag v0.29)
+- [ ] Eaton user: re-submit on v0.29 to confirm data refreshes every ~30s
+- [ ] Eaton user: discharge test (unplug mains 10s) for OB event capture
 
 ## Pending Follow-Up
 
-- [ ] sollandk/redandblue (CyberPower 3000R): re-submit on v0.24 to confirm no crash loop
-      - ups.status still WAIT (no rid=0x80 ac_present on this device) - known limitation
-      - battery.charge should still read correctly (96% confirmed in a0043f)
-- [ ] MyDisplayName (9543fe M5Stack Atom S3 Lite): submit 90s+ log without DEBUG log level
-- [ ] MyDisplayName (bc8a09 bridge mode user): switch to Mode 1 or configure upstream_host
-      - Also check IDF version: using v5.5.3, project target is v5.3.1 (PSRAM init may differ)
-- [ ] Flash v0.24 to APC test device and confirm clean boot (v0.19 abort fix still unverified on device)
+- [ ] MyDisplayName (Eaton 3S): flash v0.29, re-run discharge test (unplug mains 10s)
+      - CRITICAL: rebuild with INFO log level (CONFIG_LOG_DEFAULT_LEVEL_INFO) - every submission
+        has been truncated by DEBUG output filling the 32KB diag buffer before operational data
+      - Confirm data_age resets every ~30s on AC (GET_REPORT rid=0x06 polling)
+      - Capture discharge event to see if GET_REPORT rid=0x06 works on battery, or if different
+        rid carries mains-loss status
+- [ ] sollandk/redandblue (CyberPower 3000R): DWC crash confirmed fixed (871496, v0.27).
+      Battery.charge=99% correct. Missing: battery.runtime/voltage/input/output voltage.
+      - In bridge mode with fallback to standalone: Feature report polling not active
+      - Re-submit on v0.29 standalone mode to get clean comparison
+- [ ] MyDisplayName (9543fe M5Stack Atom S3 Lite): submit 90s+ log with INFO log level (not DEBUG)
+- [ ] Flash v0.29 to APC test device and confirm clean boot
 
 ## Possible Future Additions
 

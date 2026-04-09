@@ -39,6 +39,12 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R7  v0.29   Add rid=0x06 to s_eaton_rids[] periodic polling list.
+            Eaton 3S sends rid=0x06 as interrupt-IN only on mains events,
+            not periodically. After initial boot burst data goes stale.
+            Periodic GET_REPORT on rid=0x06 (every 30s) provides fresh
+            charge/runtime via decode_eaton_feature case 0x06. Fixes
+            Eaton 3S stale data regression reported in submission 713d7c.
  R6  v0.26   Eaton rid=0x06 Feature: demote flags-based OL assertion. flags=0x0000
             in all submissions - not reliable for OL. Only non-zero flags trigger
             OB. OL now from standard field cache (vendor page 0xFFFF) or default.
@@ -420,7 +426,7 @@ static const size_t  s_apc_smartups_rids_n = sizeof(s_apc_smartups_rids) / sizeo
  *             Probed here to see if GET_REPORT returns readable status bytes.
  *             Raw bytes logged in decode_eaton_feature() for OB analysis.
  */
-static const uint8_t s_eaton_rids[]        = { 0x20, 0xFD, 0x85 };
+static const uint8_t s_eaton_rids[]        = { 0x06, 0x20, 0xFD, 0x85 };
 static const size_t  s_eaton_rids_n        = sizeof(s_eaton_rids) / sizeof(s_eaton_rids[0]);
 static const uint8_t s_tripplite_rids[]    = { 0x01, 0x0C };
 static const size_t  s_tripplite_rids_n    = sizeof(s_tripplite_rids) / sizeof(s_tripplite_rids[0]);

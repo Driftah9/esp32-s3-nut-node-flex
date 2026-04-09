@@ -18,7 +18,7 @@ public
 main
 
 ## Version
-v0.28
+v0.29
 
 ## Status
 pending push
@@ -35,9 +35,16 @@ Tag: v0.27
 Message: v0.27 - Eaton OL/OB fix: vendor page 0xFFFF, pre-seed OL, OB-only flags
 
 ## Commit Message
-v0.28 - Fix Eaton stale-data regression: add goto finalize after direct-decode
+v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
+
+- ups_get_report.c (R7): add rid=0x06 to s_eaton_rids[] periodic polling list - Eaton 3S only sends rid=0x06 on mains events, not periodically - data went stale after boot burst
+- ups_hid_parser.c (R16): make goto finalize unconditional for rid=0x06/0x21 Eaton blocks - was conditional on `changed`, edge case could fall through to standard path
+- Root cause: GET_REPORT polled rids 0x20/0xFD/0x85 but none applied data. decode_eaton_feature case 0x06 already handles and applies charge/runtime/flags
+- Source: Eaton 3S submissions 30b6f9 (v0.27) + 713d7c (v0.28) from MyDisplayName
 
 ## Files Staged
-- src/current/main/ups_hid_parser.c (R15: goto finalize + runtime guard)
-- docs/next_steps.md (v0.28 section)
+- src/current/main/ups_get_report.c (R7: add 0x06 to s_eaton_rids[])
+- src/current/main/ups_hid_parser.c (R16: unconditional goto finalize)
 - docs/github_push.md (version bump)
+- docs/project_state.md (v0.29 status)
+- docs/next_steps.md (v0.29 section)

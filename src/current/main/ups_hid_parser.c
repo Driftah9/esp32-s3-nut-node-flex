@@ -92,6 +92,18 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R17 v0.30   Add ups_hid_parser_max_input_bytes() API. Returns the largest
+                Input report payload size from the parsed descriptor. Used by
+                ups_usb_hid to size the interrupt-IN transfer buffer correctly
+                for devices whose reports exceed MPS (e.g. PowerWalker 24-byte
+                rid=0x30 on MPS=8 endpoint).
+ R16 v0.29   Make goto finalize unconditional for rid=0x06/0x21 Eaton blocks.
+                v0.28 used `if (changed) goto finalize` which would fail to
+                skip the standard path if charge>100 or runtime=0 left changed
+                false. Now unconditionally skips standard path for all Eaton
+                rids. Primary stale-data fix is in ups_get_report.c R7 (add
+                rid=0x06 to periodic polling).
+                Source: Eaton 3S submissions 30b6f9 + 713d7c (MyDisplayName).
  R15 v0.28   Fix Eaton stale-data regression from v0.27 (R14).
                 Root cause: v0.27 added 0xFFFF fields to the field cache, which
                 made the standard descriptor path find cache hits on Eaton rids.
@@ -904,6 +916,17 @@ uint32_t ups_hid_parser_get_rid_interval(uint8_t rid, uint8_t *samples_out)
     return s_rid_ema_ms[rid];
 }
 
+uint16_t ups_hid_parser_max_input_bytes(void)
+{
+    uint16_t max_bytes = 0;
+    for (uint8_t i = 0; i < s_desc.report_count; i++) {
+        if (s_desc.reports[i].input_bytes > max_bytes) {
+            max_bytes = s_desc.reports[i].input_bytes;
+        }
+    }
+    return max_bytes;
+}
+
 /* ---- Main decode entry point ----------------------------------------- */
 
 bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
@@ -1040,7 +1063,7 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             }
             ESP_LOGI(TAG, "[EATON] rid=0x06 raw: %02X %02X %02X %02X %02X",
                      payload[0], payload[1], payload[2], payload[3], payload[4]);
-            if (changed) goto finalize;  /* v0.28: skip standard path - it misreads vendor-format payloads */
+            goto finalize;  /* v0.29: always skip standard path for Eaton rids (vendor-format payloads) */
         }
         /* rid=0x21: tentative steady-state heartbeat — same byte layout as rid=0x06.
          * rid=0x06 fires on mains events only; rid=0x21 appears in the interrupt-IN
@@ -1082,7 +1105,7 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
             } else {
                 ESP_LOGI(TAG, "[EATON] rid=0x21 flags=0x0000 (no status assertion)");
             }
-            if (changed) goto finalize;  /* v0.28: skip standard path - it misreads vendor-format payloads */
+            goto finalize;  /* v0.29: always skip standard path for Eaton rids (vendor-format payloads) */
         }
 
         /* Log all other unrecognised Eaton interrupt-IN rids.
