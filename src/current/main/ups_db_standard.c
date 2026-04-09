@@ -91,12 +91,14 @@ static const ups_device_entry_t s_standard_entries[] = {
         .ups_type                   = "line-interactive",
     },
 
-    /* ---- Powercom / PowerWalker (VID 0x0665) ------------------------- */
-    /* PowerWalker VI 3000 SCL (PID 0x5161). Standard HID fields on pages
+    /* ---- PowerWalker / BlueWalker (VID 0x0665) ----------------------- */
+    /* VID 0665 = WayTech/INNO TECH USB controller OEM used by BlueWalker.
+     * NOT Powercom (Powercom = VID 0x0d9f). Confirmed from USB ID databases.
+     * PowerWalker VI 3000 SCL (PID 0x5161). Standard HID fields on pages
      * 0x84/0x85. Charging (0x44) and Discharging (0x45) on page 0x85.
      * ACPresent (0x00D0) declared on page 0x85 (non-standard - normally 0x84).
-     * Large rid=0x30 Input report (~24 bytes) - requires buffer > MPS fix.
-     * 230V European model. */
+     * Large rid=0x30 Input report (~24 bytes) - fixed by INT-IN buffer fix v0.30.
+     * 230V European model. 2x12V 9Ah battery cells in series = 24V nominal. */
     {
         .vid         = 0x0665,
         .pid         = 0x5161,
