@@ -18,7 +18,7 @@ public
 main
 
 ## Version
-v0.31
+v0.32
 
 ## Status
 pending
@@ -35,14 +35,13 @@ Tag: v0.29
 Message: v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
 
 ## Commit Message
-- ups_hid_parser.c / .h: Added ups_hid_parser_get_input_rids() API
-- ups_get_report.c: DECODE_STANDARD Feature report decode support (XCHK + recurring poll), CTRL_PAYLOAD_MAX 24->64, buffer 16->64, dynamic RID polling from descriptor
+v0.32 - Feature-fallback field cache; PowerWalker GET_REPORT quirk
+- ups_hid_parser.c (R18): two-pass field cache - Input first, Feature (type=2) as fallback for NULL slots. Fixes battery.runtime on PowerWalker 0665:5161 (Feature-only declaration, sent on interrupt-IN).
+- ups_db_standard.c: add QUIRK_NEEDS_GET_REPORT to PowerWalker VI 3000 SCL. Enables periodic GET_REPORT polling for rid=0x30 status flags (ac_present, charging, discharging).
 
 ## Files Staged
 - src/current/main/ups_hid_parser.c
-- src/current/main/ups_hid_parser.h
-- src/current/main/ups_get_report.c
+- src/current/main/ups_db_standard.c
 - docs/github_push.md
 - docs/project_state.md
 - docs/next_steps.md
-- docs/session_log.md

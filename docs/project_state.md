@@ -16,13 +16,11 @@ Message: v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT po
 Result: Success
 
 ## Status
-v0.30 - INT-IN buffer fix + PowerWalker support. Pushed to GitHub.
-- Fix: ups_usb_hid.c (R16): INT-IN buffer now max(MPS, largest_input_report) capped at 64.
-  PowerWalker VI 3000 SCL rid=0x30 is 24 bytes; MPS=8 was truncating Charging/Discharging.
-- Add: ups_hid_parser.c (R17): ups_hid_parser_max_input_bytes() API
-- Add: ups_db_standard.c: PowerWalker VI 3000 SCL (0665:5161, 230V, line-interactive)
-- Fix (v0.29): ups_hid_parser.c (R16): goto finalize unconditional for all Eaton rids
-- Fix (v0.29): ups_get_report.c (R7): add rid=0x06 to Eaton periodic GET_REPORT polling
+v0.32 - Feature-fallback field cache + PowerWalker GET_REPORT quirk. Built clean.
+- Fix: ups_hid_parser.c (R18): two-pass field cache - Input first, Feature as fallback.
+  PowerWalker battery.runtime on rid=0x35 declared only as Feature, now decoded from INT-IN.
+- Fix: ups_db_standard.c: add QUIRK_NEEDS_GET_REPORT to PowerWalker 0665:5161.
+  Enables periodic GET_REPORT for rid=0x30 (ac_present/charging/discharging flags).
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -58,24 +56,23 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last CLI Run
-Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-10
+Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-11
 Result: SUCCESS
-Output summary: Build clean. Zero errors, zero warnings. Binary: 0xee7f0 bytes (7% free in app partition). Bootloader: 0x5260 bytes (36% free).
-Next step: Flash v0.30 when ready.
+Output summary: Build clean. Zero errors, zero warnings. Binary: 0xeead0 bytes (7% free in app partition). Bootloader: 0x5260 bytes (36% free).
+Next step: Push v0.32 to GitHub.
 
 ## Last Action
-2026-04-09 - v0.30: Fix INT-IN buffer truncation; add PowerWalker VI 3000 SCL support.
-Root cause: MPS=8 for PowerWalker caused INT-IN buffer to allocate only 8 bytes.
-rid=0x30 is 24 bytes, so Charging/Discharging bits were truncated and never decoded.
-Fix: buffer = max(MPS, largest_input_report_size) capped at 64.
-New API: ups_hid_parser_max_input_bytes() exposes the pre-computed max to usb_hid.
-Also includes v0.29 changes (never independently pushed): Eaton rid=0x06 polling fix.
-Push: 3dc222e tagged v0.30.
+2026-04-11 - v0.32: Feature-fallback field cache + PowerWalker QUIRK_NEEDS_GET_REPORT.
+Root cause (submission b4c432): PowerWalker VI 3000 SCL battery.runtime on rid=0x35
+declared only as Feature (type=2). Field cache skipped type!=0, so runtime was NULL.
+Device sends rid=0x35 on interrupt-IN. Fix: two-pass cache scan (Input first, Feature
+fallback). Also: QUIRK_NEEDS_GET_REPORT enables periodic polling for rid=0x30 status flags.
 
 ## Next Step
-- Flash v0.30 and test with PowerWalker VI 3000 SCL
-- Eaton user (MyDisplayName): re-submit on v0.30 to confirm data refresh fix
-- Request Eaton discharge log (unplug from mains for 10s) to capture OB event
+- Push v0.32 to GitHub
+- MyDisplayName (PowerWalker VI 3000 SCL): flash v0.32, confirm battery.runtime
+- MyDisplayName: discharge test (unplug mains 10s) to confirm OB transition
+- If GET_REPORT rid=0x30 returns only 2 bytes: decode rid=0x32 INT-IN for status
 
 Candidate next tasks:
 - CyberPower 3000R ups.status: decode rid=0x0B bits to extract ac_present

@@ -311,10 +311,42 @@ Fix applied in v0.30:
 - [x] Pushed to GitHub (commit 3dc222e, tag v0.30)
 - [ ] PowerWalker user: flash v0.30, confirm OL/OB now works (discharge test: unplug wall)
 
+## PowerWalker VI 3000 SCL (0665:5161) Feature-fallback + GET_REPORT - v0.32 (2026-04-11)
+
+Root cause from submission b4c432 (MyDisplayName, v0.30, IDF v5.5.3):
+- 0 RIDs seen in XCHK 30s settle window - interrupt-IN data started late (~53s)
+- battery.runtime (uid=0x0068) declared only as Feature (type=2) on rid=0x35
+- Field cache scanned type=0 (Input) only, so battery_runtime was NULL
+- Device sends rid=0x35 on interrupt-IN with runtime data at bytes 1-2
+- Feature report polling was disabled (quirks=0, no QUIRK_NEEDS_GET_REPORT)
+- ac_present on rid=0x30: declared as 24-byte Input but never sent on interrupt-IN
+  GET_REPORT probe returned only 2 bytes (30 FF) - ac_present at byte 16 unreachable
+- ups.status stuck on OL because ac_present never populated
+
+Fixes applied in v0.32:
+- ups_hid_parser.c (R18): two-pass field cache build - Input (type=0) first,
+  then Feature (type=2) as fallback for any NULL cache slots. Fixes battery.runtime
+  decode from interrupt-IN data on devices with Feature-only declarations.
+- ups_db_standard.c: add QUIRK_NEEDS_GET_REPORT to PowerWalker 0665:5161.
+  Enables periodic GET_REPORT polling for rid=0x30 (ac_present/charging/discharging).
+
+- [x] Root cause identified from submission b4c432
+- [x] Feature-fallback field cache applied - ups_hid_parser.c R18
+- [x] QUIRK_NEEDS_GET_REPORT added to PowerWalker DB entry
+- [x] Build clean (v0.32)
+- [ ] MyDisplayName: flash v0.32, confirm battery.runtime now shows
+- [ ] MyDisplayName: run discharge test (unplug mains 10s) to confirm OB transition
+- [ ] Confirm GET_REPORT polling for rid=0x30 returns status flags
+
+Remaining status issue:
+  rid=0x30 GET_REPORT only returned 2 bytes in XCHK probe (vs 24 declared).
+  If recurring polling also gets only 2 bytes, ac_present at byte 16 is still
+  unreachable. May need to decode from rid=0x32 interrupt-IN data instead
+  (undeclared rid, sends 10 bytes - status bits TBD from discharge event).
+
 ## Pending Follow-Up
 
-- [ ] MyDisplayName (PowerWalker VI 3000 SCL): flash v0.30, run discharge test (unplug mains)
-      - Confirm OL -> OB DISCHRG transition now works with larger INT-IN buffer
+- [ ] MyDisplayName (PowerWalker VI 3000 SCL): flash v0.32, confirm runtime + discharge test
 - [ ] MyDisplayName (Eaton 3S): flash v0.30, re-run discharge test (unplug mains 10s)
       - CRITICAL: rebuild with INFO log level (CONFIG_LOG_DEFAULT_LEVEL_INFO) - every submission
         has been truncated by DEBUG output filling the 32KB diag buffer before operational data

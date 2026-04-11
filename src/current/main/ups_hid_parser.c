@@ -36,6 +36,10 @@
         for NUT/HA integration at this time.
  R17 v0.31 Add ups_hid_parser_get_input_rids(): returns Input report RIDs
         from the parsed descriptor for dynamic GET_REPORT polling.
+ R18 v0.32 Feature-fallback field cache: two-pass scan picks up Feature
+        (type=2) fields when no Input (type=0) field exists for a usage.
+        Fixes battery.runtime on PowerWalker VI 3000 SCL (0665:5161) where
+        rid=0x35 is declared only as Feature but arrives on interrupt-IN.
 
  DESIGN
   1. At enumeration: ups_usb_hid calls ups_hid_parser_set_descriptor().
@@ -333,10 +337,17 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
     /* (s_device->decode_mode is const — store separately) */
     /* Simple: just check use_direct via a static flag below */
 
-    /* ---- Build field cache ---- */
+    /* ---- Build field cache ----
+     * Two passes: first Input fields (type=0), then Feature fields (type=2)
+     * as fallback for any cache slots still NULL. Some devices (PowerWalker
+     * VI 3000 SCL, 0665:5161) declare usages only as Feature reports but
+     * send the data on interrupt-IN with matching rids. The Feature-fallback
+     * allows the standard path to decode these rids from interrupt-IN data. */
+    for (int pass = 0; pass < 2; pass++) {
+    const uint8_t target_type = (pass == 0) ? 0u : 2u;
     for (uint16_t i = 0; i < s_desc.field_count; i++) {
         const hid_field_t *f = &s_desc.fields[i];
-        if (f->report_type != 0) continue;
+        if (f->report_type != target_type) continue;
 
         uint8_t  pg  = f->usage_page;
         uint16_t uid = f->usage_id;
@@ -407,6 +418,7 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
             }
         }
     }
+    } /* end pass loop */
 
     s_cache.valid = true;
 

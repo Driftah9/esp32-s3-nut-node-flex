@@ -98,14 +98,20 @@ static const ups_device_entry_t s_standard_entries[] = {
      * 0x84/0x85. Charging (0x44) and Discharging (0x45) on page 0x85.
      * ACPresent (0x00D0) declared on page 0x85 (non-standard - normally 0x84).
      * Large rid=0x30 Input report (~24 bytes) - fixed by INT-IN buffer fix v0.30.
-     * 230V European model. 2x12V 9Ah battery cells in series = 24V nominal. */
+     * 230V European model. 2x12V 9Ah battery cells in series = 24V nominal.
+     *
+     * QUIRK_NEEDS_GET_REPORT: rid=0x30 never arrives on interrupt-IN (0 seen
+     * in XCHK). ACPresent/Charging/Discharging flags are at byte offsets
+     * 16-21 of rid=0x30 (24B report). Only accessible via GET_REPORT Feature.
+     * Without this quirk, ups.status is stuck on OL and never transitions
+     * to OB on mains loss. (Submission b4c432, 2026-04-11.) */
     {
         .vid         = 0x0665,
         .pid         = 0x5161,
         .vendor_name = "PowerWalker",
         .model_hint  = "VI 3000 SCL",
         .decode_mode = DECODE_STANDARD,
-        .quirks      = 0,
+        .quirks      = QUIRK_NEEDS_GET_REPORT,
         .known_good  = false,
         .battery_voltage_nominal_mv = 24000,
         .battery_runtime_low_s      = 120,
