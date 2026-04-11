@@ -9,6 +9,8 @@
             Replaced model-hint approach with hid_desc_t field map.
             New API: ups_hid_parser_set_descriptor() must be called after
             USB enumeration before decode_report() will produce data.
+ R5  v0.31  Add ups_hid_parser_get_input_rids() - returns list of report IDs
+            that have Input reports, for dynamic GET_REPORT polling.
  R4  v0.18  Add ups_hid_parser_get_rid_interval() - exposes per-RID EMA
             inter-report interval learned from live interrupt-IN traffic.
 
@@ -110,6 +112,18 @@ uint32_t ups_hid_parser_get_rid_interval(uint8_t rid, uint8_t *samples_out);
  * for the largest HID Input report. Returns 0 if no descriptor has been set.
  */
 uint16_t ups_hid_parser_max_input_bytes(void);
+
+/**
+ * @brief Copy the list of report IDs that have Input reports into caller buffer.
+ *
+ * Used by the periodic GET_REPORT polling path to dynamically determine which
+ * RIDs to poll for DECODE_STANDARD devices (instead of hardcoded vendor lists).
+ *
+ * @param out_rids  Caller buffer to receive report IDs
+ * @param max_rids  Size of caller buffer
+ * @return          Number of RIDs written (0 if no descriptor loaded)
+ */
+uint8_t ups_hid_parser_get_input_rids(uint8_t *out_rids, uint8_t max_rids);
 
 #ifdef __cplusplus
 }

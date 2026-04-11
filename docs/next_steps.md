@@ -294,9 +294,28 @@ Need discharge event log to find which bytes carry AC state.
 - [ ] Eaton user: re-submit on v0.29 to confirm data refreshes every ~30s
 - [ ] Eaton user: discharge test (unplug mains 10s) for OB event capture
 
+## INT-IN buffer truncation fix - v0.30 (2026-04-09)
+
+Root cause: interrupt-IN transfer buffer was allocated at s_ep_in_mps (8 bytes).
+Devices whose HID Input reports exceed MPS (e.g. PowerWalker rid=0x30 = 24 bytes)
+had status fields physically truncated. Battery charge worked because it landed in
+the first few bytes; Charging/Discharging/ACPresent at byte 16-21 were never received.
+
+Fix applied in v0.30:
+- ups_hid_parser.c (R17): ups_hid_parser_max_input_bytes() API
+- ups_usb_hid.c (R16): buffer = max(MPS, largest_input_report), capped at 64
+- ups_db_standard.c: PowerWalker VI 3000 SCL (0665:5161, 230V, line-interactive)
+
+- [x] Root cause identified from descriptor analysis (bit=160 > 8 byte buffer)
+- [x] Fix applied and built clean (v0.30)
+- [x] Pushed to GitHub (commit 3dc222e, tag v0.30)
+- [ ] PowerWalker user: flash v0.30, confirm OL/OB now works (discharge test: unplug wall)
+
 ## Pending Follow-Up
 
-- [ ] MyDisplayName (Eaton 3S): flash v0.29, re-run discharge test (unplug mains 10s)
+- [ ] MyDisplayName (PowerWalker VI 3000 SCL): flash v0.30, run discharge test (unplug mains)
+      - Confirm OL -> OB DISCHRG transition now works with larger INT-IN buffer
+- [ ] MyDisplayName (Eaton 3S): flash v0.30, re-run discharge test (unplug mains 10s)
       - CRITICAL: rebuild with INFO log level (CONFIG_LOG_DEFAULT_LEVEL_INFO) - every submission
         has been truncated by DEBUG output filling the 32KB diag buffer before operational data
       - Confirm data_age resets every ~30s on AC (GET_REPORT rid=0x06 polling)
@@ -305,9 +324,9 @@ Need discharge event log to find which bytes carry AC state.
 - [ ] sollandk/redandblue (CyberPower 3000R): DWC crash confirmed fixed (871496, v0.27).
       Battery.charge=99% correct. Missing: battery.runtime/voltage/input/output voltage.
       - In bridge mode with fallback to standalone: Feature report polling not active
-      - Re-submit on v0.29 standalone mode to get clean comparison
+      - Re-submit on v0.30 standalone mode to get clean comparison
 - [ ] MyDisplayName (9543fe M5Stack Atom S3 Lite): submit 90s+ log with INFO log level (not DEBUG)
-- [ ] Flash v0.29 to APC test device and confirm clean boot
+- [ ] Flash v0.30 to APC test device and confirm clean boot
 
 ## Possible Future Additions
 

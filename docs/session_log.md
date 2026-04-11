@@ -694,3 +694,56 @@ Files changed:
 
 Status at end: All three submissions analyzed. No code changes this sub-session.
 Next session: Monitor for v0.29 re-submission from MyDisplayName (Eaton discharge test).
+
+---
+
+## Session 010 - 2026-04-09
+
+Tags: powerwalker-vi3000-scl, 0665-5161, intr-in-buffer-fix, v0.30, MyDisplayName
+
+Work completed:
+
+**Eaton stale-data regression (v0.25b vs v0.27+) - CLOSED**
+- Investigated why MyDisplayName reported "better luck with v0.25b" for Eaton 3S.
+- Conclusion: v0.25b "working" was the ESP crash-restarting every 2-3 min (WDT from DEBUG
+  log level). Each restart provided fresh rid=0x06 boot-burst data. Appeared as live updates.
+- v0.27+ stabilized the ESP. Crash-restarts stopped. Stale data became visible.
+- v0.29 already has the correct fix: GET_REPORT polling of rid=0x06 every 30s.
+- No additional code changes needed for Eaton v0.25b regression.
+
+**PowerWalker VI 3000 SCL (0665:5161) - new submission 2026-04-09T15:45**
+- Submitter: MyDisplayName (same user as Eaton). Device: Powercom HID UPS, VID:PID=0665:5161.
+- User reports: battery.charge updating (<1s old), but "always OL" - OL/OB detection not working.
+- Log analyzed: 777-byte HID descriptor with standard fields on pages 0x84/0x85.
+  - Charging (uid=0x0044, pg=0x85) at bit=160 (byte 20) - field cache OK
+  - Discharging (uid=0x0045, pg=0x85) at bit=168 (byte 21) - field cache OK
+  - ACPresent (uid=0x00D0, pg=0x85) at bit=128 (byte 16) - field cache OK (BS_ACPRESENT case)
+- ROOT CAUSE: interrupt-IN transfer buffer allocated as s_ep_in_mps = 8 bytes.
+  rid=0x30 Input report is 24 bytes. Status flags at bytes 16-21 were NEVER received.
+  extract_if_matches() returned false (bounds check: last_bit/8 >= data_len).
+  Battery charge is in the first few bytes so it worked correctly; status did not.
+
+**v0.30 fixes:**
+1. ups_usb_hid.c (R16): start_interrupt_in_reader() now allocates max(MPS, largest_input_report)
+   capped at 64 bytes. Uses new ups_hid_parser_max_input_bytes() API.
+2. ups_hid_parser.c (R17): add ups_hid_parser_max_input_bytes() - scans s_desc.reports[].input_bytes
+3. ups_hid_parser.h: declare ups_hid_parser_max_input_bytes()
+4. ups_db_standard.c: add PowerWalker VI 3000 SCL (0665:5161, 230V, line-interactive, DECODE_STANDARD)
+
+Build: clean (0 errors, 0 warnings). Binary 974,832 bytes (7% free).
+Push: commit 3dc222e, tag v0.30 on main.
+
+Files changed:
+- src/current/main/ups_usb_hid.c (R16: INT-IN buffer size fix)
+- src/current/main/ups_hid_parser.c (R17: max_input_bytes API)
+- src/current/main/ups_hid_parser.h (declaration)
+- src/current/main/ups_db_standard.c (PowerWalker VI 3000 SCL entry)
+- docs/github_push.md (v0.30)
+- docs/project_state.md (v0.30)
+- docs/next_steps.md (updated)
+- docs/session_log.md (this entry)
+
+Status at end: v0.30 build clean, pushed to GitHub (commit 3dc222e, tag v0.30).
+Next session: Flash v0.30 to PowerWalker user. Ask for discharge test (unplug wall) to verify
+OB detection now works with the larger interrupt-IN buffer.
+Also: still waiting on Eaton user (MyDisplayName) to re-submit on v0.29/v0.30 with INFO log level.

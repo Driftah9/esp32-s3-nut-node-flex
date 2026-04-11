@@ -18,33 +18,31 @@ public
 main
 
 ## Version
-v0.29
+v0.31
 
 ## Status
-pending push
+pending
 
 ## Last Push
-Commit: d4fba70
-Message: docs: correct Linux paths in CLAUDE.md, add v0.27 push record to project_state
-Tag: none (docs-only commit, no version bump)
-Date: 2026-04-06
+Commit: 3dc222e
+Tag: v0.30
+Message: v0.30 - Fix INT-IN buffer truncation; add PowerWalker; Eaton rid=0x06 polling
+Date: 2026-04-09
 
 ## Previous Push
-Commit: a354858
-Tag: v0.27
-Message: v0.27 - Eaton OL/OB fix: vendor page 0xFFFF, pre-seed OL, OB-only flags
+Commit: 5ca71cd
+Tag: v0.29
+Message: v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
 
 ## Commit Message
-v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
-
-- ups_get_report.c (R7): add rid=0x06 to s_eaton_rids[] periodic polling list - Eaton 3S only sends rid=0x06 on mains events, not periodically - data went stale after boot burst
-- ups_hid_parser.c (R16): make goto finalize unconditional for rid=0x06/0x21 Eaton blocks - was conditional on `changed`, edge case could fall through to standard path
-- Root cause: GET_REPORT polled rids 0x20/0xFD/0x85 but none applied data. decode_eaton_feature case 0x06 already handles and applies charge/runtime/flags
-- Source: Eaton 3S submissions 30b6f9 (v0.27) + 713d7c (v0.28) from MyDisplayName
+- ups_hid_parser.c / .h: Added ups_hid_parser_get_input_rids() API
+- ups_get_report.c: DECODE_STANDARD Feature report decode support (XCHK + recurring poll), CTRL_PAYLOAD_MAX 24->64, buffer 16->64, dynamic RID polling from descriptor
 
 ## Files Staged
-- src/current/main/ups_get_report.c (R7: add 0x06 to s_eaton_rids[])
-- src/current/main/ups_hid_parser.c (R16: unconditional goto finalize)
-- docs/github_push.md (version bump)
-- docs/project_state.md (v0.29 status)
-- docs/next_steps.md (v0.29 section)
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_hid_parser.h
+- src/current/main/ups_get_report.c
+- docs/github_push.md
+- docs/project_state.md
+- docs/next_steps.md
+- docs/session_log.md

@@ -34,6 +34,8 @@
         APC voltages are Feature-only (GET_REPORT, M-series future task),
         CyberPower rids 0x23 were direct-decoded but data is not needed
         for NUT/HA integration at this time.
+ R17 v0.31 Add ups_hid_parser_get_input_rids(): returns Input report RIDs
+        from the parsed descriptor for dynamic GET_REPORT polling.
 
  DESIGN
   1. At enumeration: ups_usb_hid calls ups_hid_parser_set_descriptor().
@@ -925,6 +927,17 @@ uint16_t ups_hid_parser_max_input_bytes(void)
         }
     }
     return max_bytes;
+}
+
+uint8_t ups_hid_parser_get_input_rids(uint8_t *out_rids, uint8_t max_rids)
+{
+    uint8_t count = 0;
+    for (uint8_t i = 0; i < s_desc.report_count && count < max_rids; i++) {
+        if (s_desc.reports[i].input_bytes > 0) {
+            out_rids[count++] = s_desc.reports[i].report_id;
+        }
+    }
+    return count;
 }
 
 /* ---- Main decode entry point ----------------------------------------- */

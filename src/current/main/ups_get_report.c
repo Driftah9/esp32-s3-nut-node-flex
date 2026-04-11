@@ -39,6 +39,20 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R8  v0.31  DECODE_STANDARD Feature report support:
+            - service_probe_queue(): route XCHK probe responses through
+              ups_hid_parser_decode_report() for DECODE_STANDARD devices.
+              Previously only DECODE_EATON_MGE probes were decoded.
+            - Recurring poll: add DECODE_STANDARD decode branch using
+              ups_hid_parser_decode_report() + ups_state_apply_update().
+            - Recurring poll buffer increased from 16 to 64 bytes; wLength
+              set from ups_hid_parser_max_input_bytes() for DECODE_STANDARD.
+            - Timer task: DECODE_STANDARD now polls all Input RIDs from
+              parsed descriptor via ups_hid_parser_get_input_rids(), instead
+              of falling through to hardcoded Tripp Lite RIDs.
+            Fixes PowerWalker VI 3000 SCL (0665:5161) OB not detected and
+            battery.runtime missing: GET_REPORT on rid=0x30 now decoded
+            through the standard field cache (Charging/Discharging/ACPresent).
  R7  v0.29   Add rid=0x06 to s_eaton_rids[] periodic polling list.
             Eaton 3S sends rid=0x06 as interrupt-IN only on mains events,
             not periodically. After initial boot burst data goes stale.
@@ -70,7 +84,7 @@
             Fix: alloc = 8 + buf_sz + 64 so transfer->num_bytes allows up to
             buf_sz + 64 bytes of response. wLength in setup packet unchanged
             (device is still told to send buf_sz bytes). ctrl_cb already
-            clips payload to CTRL_PAYLOAD_MAX=24 so callers are unaffected.
+            clips payload to CTRL_PAYLOAD_MAX=64 so callers are unaffected.
 
 ============================================================================*/
 
@@ -135,7 +149,7 @@ static void decode_apc_smartups_feature(uint8_t rid, const uint8_t *data, size_t
  * If non-NULL when stop() is called, the next DEV_GONE will cancel it
  * and ctrl_cb will free it safely. stop() must not free it directly.
  */
-#define CTRL_PAYLOAD_MAX 24u
+#define CTRL_PAYLOAD_MAX 64u
 static volatile usb_transfer_t *s_inflight      = NULL;
 static volatile bool            s_ctrl_done     = false;
 static volatile esp_err_t       s_ctrl_status   = ESP_FAIL;
@@ -605,6 +619,12 @@ static void get_report_timer_task(void *arg)
     const uint8_t *rids   = NULL;
     size_t         rids_n = 0;
 
+    /* DECODE_STANDARD: dynamically poll all Input RIDs from the parsed
+     * HID descriptor. This covers PowerWalker (rid=0x30, 24 bytes) and
+     * any other standard-decode device without hardcoded RID lists. */
+    uint8_t dyn_rids[16];
+    uint8_t dyn_count = 0;
+
     if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
         rids   = s_apc_rids;
         rids_n = s_apc_rids_n;
@@ -614,6 +634,10 @@ static void get_report_timer_task(void *arg)
     } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
         rids   = s_eaton_rids;
         rids_n = s_eaton_rids_n;
+    } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
+        dyn_count = ups_hid_parser_get_input_rids(dyn_rids, sizeof(dyn_rids));
+        rids   = dyn_rids;
+        rids_n = dyn_count;
     } else {
         rids   = s_tripplite_rids;
         rids_n = s_tripplite_rids_n;
@@ -686,14 +710,26 @@ static void service_probe_queue(void)
                  (unsigned)req.rid, (unsigned)got, hexbuf);
     }
 
-    /* For Eaton/MGE devices, run probe responses through the feature decoder
-     * instead of just logging.  This gives the bootstrap GET_REPORT probes
-     * (queued at enumeration in ups_usb_hid Step 7b) a chance to actually
-     * update state — specifically rid=0x06 if this Eaton firmware supports it
-     * as a Feature GET_REPORT.  Non-Eaton devices are unaffected. */
-    if (err == ESP_OK && got >= 2u &&
-        s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
-        decode_eaton_feature(req.rid, buf, got);
+    /* Route probe responses through the appropriate decoder so bootstrap
+     * GET_REPORT probes (queued at enumeration in ups_usb_hid Step 7b)
+     * actually update state instead of just logging.
+     *
+     * Eaton/MGE: vendor-specific decode_eaton_feature().
+     * DECODE_STANDARD: generic parser - Feature response has same format
+     *   as Input report (buf[0]=rid, buf[1..]=payload). The field cache
+     *   built from the HID descriptor will extract matching fields.
+     * APC: handled by their own decode paths (not probed here). */
+    if (err == ESP_OK && got >= 2u && s_entry) {
+        if (s_entry->decode_mode == DECODE_EATON_MGE) {
+            decode_eaton_feature(req.rid, buf, got);
+        } else if (s_entry->decode_mode == DECODE_STANDARD) {
+            ups_state_update_t upd;
+            if (ups_hid_parser_decode_report(buf, got, &upd)) {
+                ups_state_apply_update(&upd);
+                ESP_LOGI(TAG, "[XCHK Probe] rid=0x%02X: standard decode applied to state",
+                         (unsigned)req.rid);
+            }
+        }
     }
 
     /* Annotate each field in the descriptor for this RID with its NUT var name.
@@ -777,11 +813,18 @@ void ups_get_report_service_queue(void)
              *
              * Eaton/MGE: rid=0x20 is 1 byte payload + 1 rid echo = 2 total.
              * Requesting 16 causes STALL/timeout on Eaton devices.
+             * DECODE_STANDARD: use largest Input report size from descriptor
+             *   (e.g. PowerWalker rid=0x30 = 24 bytes).
              * APC/others: 16 bytes is safe. */
-            uint8_t buf[16];
-            size_t  buf_sz = sizeof(buf);
+            uint8_t buf[64];
+            size_t  buf_sz;
             if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
                 buf_sz = 2u;
+            } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
+                uint16_t max_in = ups_hid_parser_max_input_bytes();
+                buf_sz = (max_in > 0 && max_in <= 64u) ? (size_t)max_in : 16u;
+            } else {
+                buf_sz = 16u;
             }
             ESP_LOGI(TAG, "[GR] rid=0x%02X mode=%d intf=%d wlen=%u",
                      req.rid,
@@ -798,8 +841,13 @@ void ups_get_report_service_queue(void)
                     decode_apc_smartups_feature(req.rid, buf, got);
                 } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
                     decode_eaton_feature(req.rid, buf, got);
+                } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
+                    ups_state_update_t upd;
+                    if (ups_hid_parser_decode_report(buf, got, &upd)) {
+                        ups_state_apply_update(&upd);
+                        ESP_LOGI(TAG, "[GR] rid=0x%02X: standard decode applied", (unsigned)req.rid);
+                    }
                 }
-                /* Future: add Tripp Lite decode branch here */
             }
         }
     }

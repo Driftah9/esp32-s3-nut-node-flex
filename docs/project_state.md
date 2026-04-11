@@ -1,29 +1,28 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-08 -->
+<!-- Updated: 2026-04-09 -->
 
 ## Last GitHub Push
+Version: v0.30
+Tag: v0.30
+Commit: 3dc222e
+Message: v0.30 - Fix INT-IN buffer truncation; add PowerWalker; Eaton rid=0x06 polling
+Result: Success
+
+## Previous Push
 Version: v0.29
 Tag: v0.29
 Commit: 5ca71cd
 Message: v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
 Result: Success
 
-## Previous Push
-Version: v0.28
-Tag: v0.28
-Commit: 6e2dc96
-Message: v0.28 - Fix Eaton stale-data regression: add goto finalize after direct-decode
-Result: Success
-
 ## Status
-v0.29 - Eaton 3S periodic data refresh fix. Pushed to GitHub.
-- Fix: ups_get_report.c add rid=0x06 to s_eaton_rids[] for periodic GET_REPORT polling
-- Fix: ups_hid_parser.c make goto finalize unconditional for rid=0x06/0x21 Eaton blocks
-- Root cause: Eaton 3S only sends rid=0x06 on mains events. After boot burst, data went stale.
-  GET_REPORT polling ran every 30s on rids 0x20/0xFD/0x85 but none applied data to state.
-  decode_eaton_feature case 0x06 already applies charge/runtime/flags - just needed polling.
-- OL/OB still unresolved: Eaton vendor UIDs (0x0074/0x0075/0x006B) don't match standard
-  ACPresent/Charging/Discharging. Need discharge event data from user.
+v0.30 - INT-IN buffer fix + PowerWalker support. Pushed to GitHub.
+- Fix: ups_usb_hid.c (R16): INT-IN buffer now max(MPS, largest_input_report) capped at 64.
+  PowerWalker VI 3000 SCL rid=0x30 is 24 bytes; MPS=8 was truncating Charging/Discharging.
+- Add: ups_hid_parser.c (R17): ups_hid_parser_max_input_bytes() API
+- Add: ups_db_standard.c: PowerWalker VI 3000 SCL (0665:5161, 230V, line-interactive)
+- Fix (v0.29): ups_hid_parser.c (R16): goto finalize unconditional for all Eaton rids
+- Fix (v0.29): ups_get_report.c (R7): add rid=0x06 to Eaton periodic GET_REPORT polling
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -59,32 +58,24 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - SSH: nut-test-lxc key
 
 ## Last CLI Run
-Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-09
+Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-10
 Result: SUCCESS
 Output summary: Build clean. Zero errors, zero warnings. Binary: 0xee7f0 bytes (7% free in app partition). Bootloader: 0x5260 bytes (36% free).
-Next step: Flash v0.29 when ready, or request re-submission from Eaton user.
+Next step: Flash v0.30 when ready.
 
 ## Last Action
-2026-04-08 - v0.29: Fix Eaton 3S stale data (periodic GET_REPORT refresh).
-Analyzed submissions 30b6f9 (v0.27, 2026-04-07) and 713d7c (v0.28, 2026-04-08) from
-MyDisplayName. Both logs truncated during descriptor parse (DEBUG level + 32KB buffer).
-Root cause identified from code analysis: Eaton 3S sends rid=0x06 as interrupt-IN only
-on mains events - after boot burst data goes stale because the 30s GET_REPORT polling
-cycle only polled rids 0x20/0xFD/0x85, none of which apply data.
-Fix: add 0x06 to s_eaton_rids[] so periodic GET_REPORT refreshes charge/runtime.
-Also made goto finalize unconditional for Eaton rid=0x06/0x21 blocks.
-OL/OB issue remains: vendor UIDs don't match standard ACPresent - need discharge log.
-Build: clean. Push: 5ca71cd tagged v0.29.
+2026-04-09 - v0.30: Fix INT-IN buffer truncation; add PowerWalker VI 3000 SCL support.
+Root cause: MPS=8 for PowerWalker caused INT-IN buffer to allocate only 8 bytes.
+rid=0x30 is 24 bytes, so Charging/Discharging bits were truncated and never decoded.
+Fix: buffer = max(MPS, largest_input_report_size) capped at 64.
+New API: ups_hid_parser_max_input_bytes() exposes the pre-computed max to usb_hid.
+Also includes v0.29 changes (never independently pushed): Eaton rid=0x06 polling fix.
+Push: 3dc222e tagged v0.30.
 
 ## Next Step
-Eaton user (MyDisplayName): re-submit on v0.29 to confirm:
-1. Data refreshes periodically (data_age resets every 30s instead of climbing)
-2. battery.charge and battery.runtime update over time
-3. OL/OB still won't work (known limitation - need discharge event data)
-
-Request: ask user to unplug UPS from mains for 10s and submit that log.
-This will capture the rid=0x06 payload during an actual OB event and reveal
-whether non-zero flags or a different rid carries the AC status.
+- Flash v0.30 and test with PowerWalker VI 3000 SCL
+- Eaton user (MyDisplayName): re-submit on v0.30 to confirm data refresh fix
+- Request Eaton discharge log (unplug from mains for 10s) to capture OB event
 
 Candidate next tasks:
 - CyberPower 3000R ups.status: decode rid=0x0B bits to extract ac_present
