@@ -137,7 +137,7 @@ static bool qs_send_command(const char *cmd, char *resp_out, size_t resp_sz)
         rxfer->timeout_ms       = 300;
 
         s_ctrl_done = false;
-        err = usb_host_transfer_submit(s_client, rxfer);
+        err = usb_host_transfer_submit(rxfer);
         if (err != ESP_OK) {
             usb_host_transfer_free(rxfer);
             break;
