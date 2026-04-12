@@ -8,6 +8,8 @@
  R3  v0.1-flex  add op_mode, upstream_host, upstream_port, upstream_fallback
  R4  v0.11-flex OP_MODE constants renumbered 1/2/3 (was 0/1/2). NVS with old value 0
                 falls to default case in switch = STANDALONE. No migration needed.
+ R5  v0.34-flex Add ups_protocol field for dual-protocol devices (Voltronic/Phoenixtec).
+                0=HID (default), 1=QS Serial. Toggle via portal on supported devices.
 
 ============================================================================*/
 
@@ -24,6 +26,10 @@ extern "C" {
 #define OP_MODE_STANDALONE  1   /* decode HID, serve NUT locally (default) */
 #define OP_MODE_NUT_CLIENT  2   /* decode HID, push to upstream upsd */
 #define OP_MODE_BRIDGE      3   /* forward raw HID stream to upstream host */
+
+/* UPS protocol for dual-protocol devices (Voltronic/Phoenixtec) */
+#define UPS_PROTO_HID       0   /* HID Power Device on Interface 1 (default) */
+#define UPS_PROTO_QS        1   /* Voltronic-QS serial on Interface 0 */
 
 typedef struct {
     char sta_ssid[33];
@@ -43,6 +49,9 @@ typedef struct {
     uint8_t  upstream_fallback;   /* 1 = fall back to STANDALONE if upstream unreachable */
     char     upstream_host[64];   /* upstream NUT server or bridge target host */
     uint16_t upstream_port;       /* target port (default 3493 for NUT_CLIENT) */
+
+    /* UPS protocol selection for dual-protocol devices */
+    uint8_t  ups_protocol;        /* UPS_PROTO_HID (default) / UPS_PROTO_QS */
 } app_cfg_t;
 
 void      cfg_store_load_or_defaults(app_cfg_t *cfg);

@@ -20,5 +20,6 @@
     "ups_db_standard.c"
     "ups_get_report.c"
     "ups_hid_map.c"
+    "voltronic_qs.c"
     "diag_capture.c"
     INCLUDE_DIRS ".")

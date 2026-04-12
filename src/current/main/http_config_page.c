@@ -14,6 +14,7 @@
  R2  v0.2-flex  Two-column layout: mode description panel on the right
                 Mode cards update live when selector changes
  R3  v0.11-flex Renumber modes 1/2/3 (was 0/1/2) to match status page and log output
+ R4  v0.34-flex Add UPS Protocol selector (HID / QS Serial) for dual-protocol devices
 
 ============================================================================*/
 
@@ -86,6 +87,10 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
     const char *up_disp = (cfg->op_mode != OP_MODE_STANDALONE) ? "" : "none";
     uint16_t    up_port = cfg->upstream_port ? cfg->upstream_port : 3493;
 
+    /* Protocol selector state */
+    const char *sel_hid = (cfg->ups_protocol == UPS_PROTO_HID) ? "selected" : "";
+    const char *sel_qs  = (cfg->ups_protocol == UPS_PROTO_QS)  ? "selected" : "";
+
     snprintf(out, outsz,
         "<!doctype html><html><head>"
         "<meta charset='utf-8'>"
@@ -134,6 +139,20 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
             "<option value='2' %s>Mode 2 - NUT Client - push to upstream upsd</option>"
             "<option value='3' %s>Mode 3 - Bridge - forward raw HID stream</option>"
             "</select></div>"
+
+        /* ---- UPS Protocol (dual-protocol devices only) ---- */
+        "<div class='form-section'>UPS Protocol</div>"
+        "<div class='form-row'><span class='form-label'>Protocol</span>"
+            "<select name='ups_protocol'>"
+            "<option value='0' %s>HID (default)</option>"
+            "<option value='1' %s>QS Serial (Voltronic/Megatec)</option>"
+            "</select></div>"
+        "<div style='color:#777;font-size:0.79em;margin:4px 0 12px 0;"
+             "font-family:Arial,sans-serif'>"
+          "HID: standard USB Power Device protocol (most UPS models).<br>"
+          "QS Serial: Voltronic/Megatec ASCII protocol (PowerWalker, Phoenixtec).<br>"
+          "Only change this if your device supports dual protocols. Requires reboot."
+        "</div>"
 
         /* ---- Wi-Fi STA ---- */
         "<div class='form-section'>Wi-Fi (STA)</div>"
@@ -270,6 +289,7 @@ void render_config(app_cfg_t *cfg, char *out, size_t outsz,
 
         pw_warn, note_html,
         sel_sa, sel_nc, sel_br,
+        sel_hid, sel_qs,
         cfg->sta_ssid, cfg->sta_pass,
         ap_up ? "Active" : "Off",
         cfg->ap_ssid, cfg->ap_pass,
@@ -308,6 +328,10 @@ void parse_form_kv(app_cfg_t *cfg_inout, const char *body,
         else if (!strcmp(k, "op_mode")) {
             int m = atoi(v);
             cfg_inout->op_mode = (m >= 1 && m <= 3) ? (uint8_t)m : OP_MODE_STANDALONE;
+        }
+        else if (!strcmp(k, "ups_protocol")) {
+            int p = atoi(v);
+            cfg_inout->ups_protocol = (p == UPS_PROTO_QS) ? UPS_PROTO_QS : UPS_PROTO_HID;
         }
         else if (!strcmp(k, "upstream_host"))
             strlcpy0(cfg_inout->upstream_host, v, sizeof(cfg_inout->upstream_host));

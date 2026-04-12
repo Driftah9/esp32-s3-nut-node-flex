@@ -69,6 +69,7 @@ void cfg_store_load_or_defaults(app_cfg_t *cfg) {
     cfg->upstream_fallback = 1;
     cfg->upstream_port     = 3493;
     cfg->upstream_host[0]  = 0;
+    cfg->ups_protocol      = UPS_PROTO_HID;
 
     esp_err_t err = cfg_load_raw(cfg);
     if (err != ESP_OK) {

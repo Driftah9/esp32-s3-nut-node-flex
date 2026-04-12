@@ -85,6 +85,8 @@
 #include "ups_state.h"
 #include "ups_device_db.h"
 #include "ups_get_report.h"
+#include "voltronic_qs.h"
+#include "cfg_store.h"
 
 static const char *TAG = "ups_usb_hid";
 
@@ -234,9 +236,10 @@ static void cleanup_device(void)
     s_cleanup_pending = false;
     s_new_dev_addr    = 0;
 
-    /* Stop GET_REPORT polling and clear XCHK probe state before resetting */
+    /* Stop GET_REPORT polling, QS polling, and clear XCHK probe state */
     ups_get_report_stop();
     ups_get_report_probe_clear();
+    voltronic_qs_stop();
     ups_hid_parser_set_xchk_probe_cb(NULL);
 
     reset_session();
@@ -839,6 +842,9 @@ static void usb_client_task(void *arg)
         /* Service any pending Feature Report GET_REPORT requests */
         ups_get_report_service_queue();
 
+        /* Service Voltronic QS serial commands if active */
+        voltronic_qs_service();
+
         if (s_dev_connected) {
             s_dev_connected = false;
             s_dev_gone      = false;
@@ -870,6 +876,29 @@ static void usb_client_task(void *arg)
             err = parse_active_config(s_dev);
             if (err != ESP_OK) {
                 ESP_LOGW(TAG, "parse_active_config: %s", esp_err_to_name(err));
+            }
+
+            /* Step 3b: Check for QS serial protocol override.
+             * If ups_protocol=QS and device is DECODE_VOLTRONIC, skip HID
+             * path entirely and start Voltronic-QS serial poller on IF0. */
+            {
+                const ups_device_entry_t *entry_chk = ups_device_db_lookup(s_vid, s_pid);
+                app_cfg_t qs_cfg;
+                cfg_store_load_or_defaults(&qs_cfg);
+                if (qs_cfg.ups_protocol == UPS_PROTO_QS &&
+                    entry_chk && entry_chk->decode_mode == DECODE_VOLTRONIC) {
+                    ESP_LOGI(TAG, "UPS Protocol: QS Serial (user selected)");
+                    ESP_LOGI(TAG, "Skipping HID path - starting Voltronic-QS on Interface 0");
+                    esp_err_t qs_err = voltronic_qs_start(s_client, s_dev);
+                    if (qs_err != ESP_OK) {
+                        ESP_LOGE(TAG, "voltronic_qs_start failed: %s - falling back to HID",
+                                 esp_err_to_name(qs_err));
+                    } else {
+                        goto enumeration_done;  /* skip HID steps 4-7 */
+                    }
+                } else if (qs_cfg.ups_protocol == UPS_PROTO_QS) {
+                    ESP_LOGW(TAG, "UPS Protocol QS selected but device is not DECODE_VOLTRONIC - using HID");
+                }
             }
 
             /* Step 4: Claim HID interface */
@@ -973,6 +1002,9 @@ static void usb_client_task(void *arg)
                     ups_get_report_probe_rid(0x85, 8);
                 }
             }
+
+enumeration_done:
+            (void)0;  /* label needs a statement */
         }
 
         if (s_dev_gone) {

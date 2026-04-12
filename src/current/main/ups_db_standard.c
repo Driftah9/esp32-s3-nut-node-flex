@@ -123,6 +123,30 @@ static const ups_device_entry_t s_standard_entries[] = {
         .ups_type                   = "line-interactive",
     },
 
+    /* ---- Phoenixtec (VID 0x06DA) --------------------------------------- */
+    /* Taiwanese OEM, closely related to Voltronic Power. Same Cypress USB
+     * bridge chip, same Megatec Q* serial protocol on Interface 0.
+     * Sold under: Masterguard, Mustek Powermust, Online Yunto/Zinto,
+     * AEG PROTECT NAS, Phoenixtec Innova.
+     * NUT uses nutdrv_qx with cypress/phoenixtec/ippon subdrivers.
+     * HID interface likely same dual-protocol layout as Voltronic (0665).
+     * NOT YET CONFIRMED - no user submissions. Will validate when one arrives. */
+    {
+        .vid         = 0x06DA,
+        .pid         = 0,
+        .vendor_name = "Phoenixtec",
+        .model_hint  = "Innova/Masterguard/Mustek",
+        .decode_mode = DECODE_VOLTRONIC,
+        .quirks      = QUIRK_NEEDS_GET_REPORT,
+        .known_good  = false,
+        .battery_voltage_nominal_mv = 24000,
+        .battery_runtime_low_s      = 120,
+        .battery_charge_low         = 10,
+        .battery_charge_warning     = 50,
+        .input_voltage_nominal_v    = 230,
+        .ups_type                   = "line-interactive",
+    },
+
     /* ---- Dell (VID 0x047C) ------------------------------------------ */
     {
         .vid         = 0x047C,
