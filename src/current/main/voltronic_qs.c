@@ -266,6 +266,36 @@ static void parse_qs_response(const char *resp)
         upd.battery_voltage_mv    = (uint32_t)(battV * 1000.0f);
     }
 
+    /* Battery charge - estimated from voltage relative to nominal.
+     * QS protocol doesn't report charge% directly. Use linear approximation:
+     * 100% at nominal voltage, 0% at 80% of nominal (typical lead-acid cutoff).
+     * More accurate than no reading at all. */
+    if (battV > 0 && s_nom_batt_volt > 0) {
+        float cutoff = s_nom_batt_volt * 0.83f;  /* ~10V for 12V, ~20V for 24V */
+        float range  = s_nom_batt_volt - cutoff;
+        if (range > 0.1f) {
+            int pct = (int)((battV - cutoff) / range * 100.0f);
+            if (pct < 0) pct = 0;
+            if (pct > 100) pct = 100;
+            upd.battery_charge_valid = true;
+            upd.battery_charge       = (uint8_t)pct;
+        }
+    }
+
+    /* Battery runtime - rough estimate from capacity and load.
+     * Lead-acid: ~15 min at full load for typical 1000VA UPS.
+     * Scale inversely with load, linearly with charge. */
+    if (upd.battery_charge_valid && load > 0 && upd.battery_charge > 0) {
+        /* Base: 15 min at 100% load, scale up for lower load */
+        uint32_t base_min = 15;
+        uint32_t est_s = (uint32_t)(base_min * 60 * (100.0f / (float)load)
+                                    * ((float)upd.battery_charge / 100.0f));
+        if (est_s > 0 && est_s < 36000) {
+            upd.battery_runtime_valid = true;
+            upd.battery_runtime_s     = est_s;
+        }
+    }
+
     /* AC status */
     upd.input_utility_present_valid = true;
     upd.input_utility_present       = !util_fail;
@@ -299,12 +329,33 @@ static void parse_qs_response(const char *resp)
 /* ---- Parse F (ratings) response ---- */
 static void parse_ratings(const char *resp)
 {
-    /* Format: #nomV nomA nomBattV nomHz\r */
+    /* Format: #nomV nomA nomBattV nomHz\r
+     * Example: #230.0 13.0 24.0 50.0
+     * USB chunk reads may lose the leading '#' and first field.
+     * Sanity check: nomV should be > 50 (mains voltage). If not,
+     * fields are shifted and we need to adjust. */
     const char *s = resp;
-    if (*s == '#') s++;
+    while (*s == '#' || *s == ' ') s++;
 
     float nomV = 0, nomA = 0, nomBattV = 0, nomHz = 0;
     int parsed = sscanf(s, "%f %f %f %f", &nomV, &nomA, &nomBattV, &nomHz);
+
+    /* If nomV < 50, the first field was lost in USB chunking.
+     * What we got is: nomA nomBattV nomHz (missing nomV).
+     * nomA is typically 1-20A, nomBattV is 12/24/36/48V, nomHz is 50/60. */
+    if (parsed >= 3 && nomV < 50.0f) {
+        ESP_LOGW(TAG, "[F] Ratings response truncated (nomV=%.1f too low). "
+                 "Shifting: nomA=%.1f->nomV, nomBattV=%.1f->nomA, nomHz=%.1f->nomBattV",
+                 nomV, nomA, nomBattV, nomHz);
+        /* What we parsed as nomV/nomA/nomBattV is actually nomA/nomBattV/nomHz */
+        float actual_nomA     = nomV;
+        float actual_nomBattV = nomA;
+        float actual_nomHz    = nomBattV;
+        nomV     = 0;  /* unknown - use DB nominal */
+        nomA     = actual_nomA;
+        nomBattV = actual_nomBattV;
+        nomHz    = actual_nomHz;
+    }
 
     if (parsed >= 3) {
         s_nom_voltage   = nomV;

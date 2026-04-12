@@ -584,8 +584,34 @@ static void decode_voltronic_feature(uint8_t rid, const uint8_t *buf, size_t len
         }
         return;
 
+    case 0x36:
+        /* Battery voltage: device returns raw=0x64 (100) which does not map
+         * to a real voltage (QS shows ~26.9V for this device). The standard
+         * descriptor decode produces 100000 mV (100V) which fails the
+         * mv < 100000 check, then falls back to raw=100 -> 0.1V. Both wrong.
+         * Skip this report - battery.voltage comes from QS mode instead. */
+        ESP_LOGD(TAG, "[VOLT] Feature 0x36 skipped (unreliable on this device)");
+        return;
+
+    case 0x18:
+    case 0x1B:
+        /* Input/output voltage: standard decode may work for these.
+         * But on PowerWalker, 0x18 returns 18 FF 18 and 0x1B returns 1B FF 1B
+         * which are likely rid echo patterns, not real data. Skip if payload
+         * looks like a rid echo (byte[1] == 0xFF and byte[2] == rid). */
+        if (plen >= 2 && p[0] == 0xFFu && p[1] == rid) {
+            ESP_LOGD(TAG, "[VOLT] Feature 0x%02X skipped (rid echo pattern)", rid);
+            return;
+        }
+        /* Fall through to standard decode if it looks real */
+        if (ups_hid_parser_decode_report(buf, len, &upd)) {
+            ups_state_apply_update(&upd);
+            ESP_LOGI(TAG, "[VOLT] Feature 0x%02X: standard decode applied", rid);
+        }
+        return;
+
     default:
-        /* 0x18, 0x1B, 0x36, 0x34: route through standard descriptor decode */
+        /* 0x34 and others: route through standard descriptor decode */
         if (ups_hid_parser_decode_report(buf, len, &upd)) {
             ups_state_apply_update(&upd);
             ESP_LOGI(TAG, "[VOLT] Feature 0x%02X: standard decode applied", rid);

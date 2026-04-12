@@ -41,11 +41,15 @@
         Fixes battery.runtime on PowerWalker VI 3000 SCL (0665:5161) where
         rid=0x35 is declared only as Feature but arrives on interrupt-IN.
  R19 v0.33 DECODE_VOLTRONIC: dedicated decode path for PowerWalker/Voltronic
-        (VID 0665). Direct decode for rid=0x32 (status: byte[3] bit4=AC) and
-        rid=0x35 (input voltage: uint16/10 V). GET_REPORT polling for Feature
-        reports 0x22 (PresentStatus), 0x21 (load%), 0x18 (input V), 0x1B
-        (output V), 0x36 (battery V). Confirmed via user Linux testing
-        (ups7.py, working.py). Option B (Voltronic-QS serial on IF0) deferred.
+        (VID 0665). Direct decode for rid=0x32 (status: byte[3] bit4=AC).
+        GET_REPORT polling for Feature reports 0x22 (PresentStatus), 0x21
+        (load%), 0x18 (input V), 0x1B (output V), 0x36 (battery V).
+ R20 v0.36 Fix rid=0x35: confirmed as battery.runtime (uint16 LE seconds),
+        NOT input voltage. Removed erroneous direct decode - standard path
+        handles it correctly. Confirmed from log analysis: payload[0:1]=2630
+        matches dashboard runtime 43m50s exactly. Also: skip Feature 0x36
+        (battery.voltage returns raw=100, unusable) and Feature 0x18/0x1B
+        (return rid echo patterns FF xx, not real data).
 
  DESIGN
   1. At enumeration: ups_usb_hid calls ups_hid_parser_set_descriptor().
@@ -871,9 +875,10 @@ static bool decode_apc_smartups_direct(uint8_t rid,
  *     0x01 = SWITCHING (AC just lost)
  *     0x00 = ON BATTERY
  *
- *   rid=0x35  Input voltage (NOT battery.runtime as descriptor says).
- *     (data[1] | data[2] << 8) / 10.0 = Volts AC
- *     Descriptor maps uid=0x0068 (RunTimeToEmpty) but actual data is voltage.
+ *   rid=0x35  Battery runtime (uid=0x0068 RunTimeToEmpty).
+ *     payload[0:1] = uint16 LE seconds. Standard path decodes correctly.
+ *     Originally misidentified as input voltage from working.py script.
+ *     Confirmed: 2630s = 43m50s matches dashboard runtime exactly.
  *
  *   rid=0x34  Battery charge (standard path handles this correctly).
  *     byte[1] = charge percentage.
@@ -901,36 +906,33 @@ static bool decode_voltronic_direct(uint8_t rid,
 
     switch (rid) {
     case 0x32:
-        /* Status: byte[3] bit4 = ACPresent (confirmed from Linux testing).
+        /* Status: original data[3] bit4 = ACPresent (confirmed from Linux testing).
+         * p is payload (rid byte already stripped), so data[3] = p[2].
          * This rid is undeclared in the HID descriptor but arrives on
          * interrupt-IN as 10 bytes. The standard field cache has ac_present
-         * on rid=0x30 (which never arrives), so we decode 0x32 directly. */
-        if (plen >= 4) {
-            uint8_t status_byte = p[3];
+         * on rid=0x30 (which never arrives), so we decode 0x32 directly.
+         *
+         * From working.py (data includes rid byte at [0]):
+         *   data[3] & 0x10: 0x11=ONLINE, 0x01=SWITCHING, 0x00=ON_BATTERY */
+        if (plen >= 3) {
+            uint8_t status_byte = p[2];
             bool ac = (status_byte & 0x10u) != 0u;
             upd->input_utility_present_valid = true;
             upd->input_utility_present       = ac;
             changed = true;
-            ESP_LOGI(TAG, "[VOLT] rid=0x32 byte[3]=0x%02X -> %s",
+            ESP_LOGI(TAG, "[VOLT] rid=0x32 status=0x%02X -> %s",
                      status_byte, ac ? "ONLINE (OL)" : "ON BATTERY (OB)");
         }
         break;
 
     case 0x35:
-        /* Input voltage: (byte[1] | byte[2]<<8) / 10.0 = Volts AC.
-         * The HID descriptor maps this rid to uid=0x0068 (RunTimeToEmpty)
-         * but actual interrupt-IN data is input voltage. Override here. */
-        if (plen >= 3) {
-            uint16_t raw_v = (uint16_t)(p[1] | ((uint16_t)p[2] << 8));
-            uint32_t mv    = (uint32_t)raw_v * 100u;  /* raw/10 V = raw*100 mV */
-            if (mv > 0 && mv < 300000u) {
-                upd->input_voltage_valid = true;
-                upd->input_voltage_mv    = mv;
-                changed = true;
-                ESP_LOGI(TAG, "[VOLT] rid=0x35 input.voltage=%u.%uV",
-                         (unsigned)(mv / 1000u), (unsigned)((mv / 100u) % 10u));
-            }
-        }
+        /* rid=0x35 is battery.runtime (uid=0x0068 RunTimeToEmpty), NOT input
+         * voltage. The standard field cache correctly decodes this as uint16
+         * LE seconds. Do NOT override here - fall through to standard path.
+         *
+         * Originally misidentified as input voltage from working.py script,
+         * but confirmed from log analysis: payload[0:1] = 2630 = 43m50s
+         * which matches the dashboard battery.runtime reading exactly. */
         break;
 
     default:
