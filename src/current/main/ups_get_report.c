@@ -445,6 +445,17 @@ static const size_t  s_eaton_rids_n        = sizeof(s_eaton_rids) / sizeof(s_eat
 static const uint8_t s_tripplite_rids[]    = { 0x01, 0x0C };
 static const size_t  s_tripplite_rids_n    = sizeof(s_tripplite_rids) / sizeof(s_tripplite_rids[0]);
 
+/* Voltronic/PowerWalker Feature reports for periodic polling.
+ * 0x22 = PresentStatus (ac_present, charging, discharging, low_batt)
+ * 0x21 = Percent load
+ * 0x18 = Input voltage AC
+ * 0x1B = Output voltage AC
+ * 0x36 = Battery voltage
+ * 0x34 = Battery charge (same as interrupt-IN rid, but Feature type)
+ */
+static const uint8_t s_voltronic_rids[]    = { 0x22, 0x21, 0x18, 0x1B, 0x36, 0x34 };
+static const size_t  s_voltronic_rids_n    = sizeof(s_voltronic_rids) / sizeof(s_voltronic_rids[0]);
+
 /* ---- Decode APC Smart-UPS Feature reports ----------------------------- */
 static void decode_apc_smartups_feature(uint8_t rid, const uint8_t *data, size_t len)
 {
@@ -500,6 +511,75 @@ static void decode_apc_smartups_feature(uint8_t rid, const uint8_t *data, size_t
     }
     default:
         break;
+    }
+}
+
+/* ---- Decode Voltronic/PowerWalker Feature reports -------------------- */
+/*
+ * Confirmed Feature report IDs from Linux testing (ups7.py, working.py):
+ *   0x22 = PresentStatus (bit0=AC, bit1=Chrg, bit2=Dischrg, bit3=LB, bit4=RB)
+ *   0x21 = Percent load (0-100)
+ *   0x18 = Input voltage AC
+ *   0x1B = Output voltage AC
+ *   0x36 = Battery voltage
+ *   0x34 = Battery charge
+ * For 0x18, 0x1B, 0x36, 0x34: route through standard descriptor decode.
+ * For 0x22, 0x21: custom decode (not in descriptor's field cache correctly).
+ */
+static void decode_voltronic_feature(uint8_t rid, const uint8_t *buf, size_t len)
+{
+    if (len < 2) return;
+    const uint8_t *p    = buf + 1;
+    size_t         plen = len - 1;
+
+    ups_state_update_t upd;
+    memset(&upd, 0, sizeof(upd));
+    upd.valid = true;
+
+    switch (rid) {
+    case 0x22:
+        /* PresentStatus: bit0=ACPresent, bit1=Charging, bit2=Discharging,
+         * bit3=LowBatt, bit4=NeedReplace */
+        if (plen >= 1) {
+            uint8_t flags = p[0];
+            upd.input_utility_present_valid = true;
+            upd.input_utility_present       = (flags & 0x01u) != 0u;
+
+            uint32_t uflags = 0;
+            if (flags & 0x02u) uflags |= 0x01u;  /* charging */
+            if (flags & 0x04u) uflags |= 0x02u;  /* discharging */
+            if (flags & 0x08u) uflags |= 0x04u;  /* low battery */
+            if (flags & 0x10u) uflags |= 0x10u;  /* need replacement */
+            upd.ups_flags_valid = true;
+            upd.ups_flags       = uflags;
+
+            ESP_LOGI(TAG, "[VOLT] Feature 0x22 status=0x%02X ac=%u chrg=%u dischrg=%u lb=%u",
+                     flags,
+                     (unsigned)(flags & 0x01u),
+                     (unsigned)((flags >> 1) & 1u),
+                     (unsigned)((flags >> 2) & 1u),
+                     (unsigned)((flags >> 3) & 1u));
+            ups_state_apply_update(&upd);
+        }
+        return;
+
+    case 0x21:
+        /* Percent load */
+        if (plen >= 1 && p[0] <= 100u) {
+            upd.ups_load_valid = true;
+            upd.ups_load_pct   = p[0];
+            ESP_LOGI(TAG, "[VOLT] Feature 0x21 ups.load=%u%%", p[0]);
+            ups_state_apply_update(&upd);
+        }
+        return;
+
+    default:
+        /* 0x18, 0x1B, 0x36, 0x34: route through standard descriptor decode */
+        if (ups_hid_parser_decode_report(buf, len, &upd)) {
+            ups_state_apply_update(&upd);
+            ESP_LOGI(TAG, "[VOLT] Feature 0x%02X: standard decode applied", rid);
+        }
+        return;
     }
 }
 
@@ -634,6 +714,9 @@ static void get_report_timer_task(void *arg)
     } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
         rids   = s_eaton_rids;
         rids_n = s_eaton_rids_n;
+    } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
+        rids   = s_voltronic_rids;
+        rids_n = s_voltronic_rids_n;
     } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
         dyn_count = ups_hid_parser_get_input_rids(dyn_rids, sizeof(dyn_rids));
         rids   = dyn_rids;
@@ -820,6 +903,8 @@ void ups_get_report_service_queue(void)
             size_t  buf_sz;
             if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
                 buf_sz = 2u;
+            } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
+                buf_sz = 16u;  /* Voltronic Feature reports are small (1-4 bytes) */
             } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
                 uint16_t max_in = ups_hid_parser_max_input_bytes();
                 buf_sz = (max_in > 0 && max_in <= 64u) ? (size_t)max_in : 16u;
@@ -841,6 +926,8 @@ void ups_get_report_service_queue(void)
                     decode_apc_smartups_feature(req.rid, buf, got);
                 } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
                     decode_eaton_feature(req.rid, buf, got);
+                } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
+                    decode_voltronic_feature(req.rid, buf, got);
                 } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
                     ups_state_update_t upd;
                     if (ups_hid_parser_decode_report(buf, got, &upd)) {

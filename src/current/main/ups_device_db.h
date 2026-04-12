@@ -58,6 +58,7 @@ typedef enum {
     DECODE_APC_BACKUPS  = 2,  /* APC Back-UPS (PID 0002) direct-decode bypass  */
     DECODE_APC_SMARTUPS = 3,  /* APC Smart-UPS (PID 0003) direct-decode bypass */
     DECODE_EATON_MGE    = 4,  /* Eaton/MGE (PID FFFF) - GET_REPORT + undocumented INT-IN rids */
+    DECODE_VOLTRONIC    = 5,  /* Voltronic/PowerWalker (VID 0665) - HID + QS dual-protocol  */
 } ups_decode_mode_t;
 
 /* ---- Database entry -------------------------------------------------- */

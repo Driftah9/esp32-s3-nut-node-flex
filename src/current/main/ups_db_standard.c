@@ -92,8 +92,10 @@ static const ups_device_entry_t s_standard_entries[] = {
     },
 
     /* ---- PowerWalker / BlueWalker (VID 0x0665) ----------------------- */
-    /* VID 0665 = WayTech/INNO TECH USB controller OEM used by BlueWalker.
-     * NOT Powercom (Powercom = VID 0x0d9f). Confirmed from USB ID databases.
+    /* VID 0665 = Cypress Semiconductor USB-to-serial bridge chip.
+     * Used inside Voltronic Power OEM UPSes (PowerWalker, Belkin F6C, etc).
+     * NOT Powercom (Powercom = VID 0x0d9f). NUT uses nutdrv_qx/cypress for
+     * serial-protocol models; HID-capable models work with usbhid-ups.
      * PowerWalker VI 3000 SCL (PID 0x5161). Standard HID fields on pages
      * 0x84/0x85. Charging (0x44) and Discharging (0x45) on page 0x85.
      * ACPresent (0x00D0) declared on page 0x85 (non-standard - normally 0x84).
@@ -110,7 +112,7 @@ static const ups_device_entry_t s_standard_entries[] = {
         .pid         = 0x5161,
         .vendor_name = "PowerWalker",
         .model_hint  = "VI 3000 SCL",
-        .decode_mode = DECODE_STANDARD,
+        .decode_mode = DECODE_VOLTRONIC,
         .quirks      = QUIRK_NEEDS_GET_REPORT,
         .known_good  = false,
         .battery_voltage_nominal_mv = 24000,

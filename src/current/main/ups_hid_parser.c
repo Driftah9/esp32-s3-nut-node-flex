@@ -40,6 +40,12 @@
         (type=2) fields when no Input (type=0) field exists for a usage.
         Fixes battery.runtime on PowerWalker VI 3000 SCL (0665:5161) where
         rid=0x35 is declared only as Feature but arrives on interrupt-IN.
+ R19 v0.33 DECODE_VOLTRONIC: dedicated decode path for PowerWalker/Voltronic
+        (VID 0665). Direct decode for rid=0x32 (status: byte[3] bit4=AC) and
+        rid=0x35 (input voltage: uint16/10 V). GET_REPORT polling for Feature
+        reports 0x22 (PresentStatus), 0x21 (load%), 0x18 (input V), 0x1B
+        (output V), 0x36 (battery V). Confirmed via user Linux testing
+        (ups7.py, working.py). Option B (Voltronic-QS serial on IF0) deferred.
 
  DESIGN
   1. At enumeration: ups_usb_hid calls ups_hid_parser_set_descriptor().
@@ -851,6 +857,90 @@ static bool decode_apc_smartups_direct(uint8_t rid,
     return changed;
 }
 
+/* ---- Voltronic/PowerWalker direct-decode ----------------------------- */
+/*
+ * VID 0x0665 PID 0x5161 (Cypress USB bridge, Voltronic Power OEM).
+ * Dual-protocol device: Interface 0 = Voltronic-QS serial (primary for NUT),
+ * Interface 1 = HID Power Device (what the ESP claims).
+ *
+ * Confirmed interrupt-IN rids from user testing (ups7.py, working.py):
+ *
+ *   rid=0x32  Status report (undeclared - not in HID descriptor as Input).
+ *     Sends 10 bytes on interrupt-IN. byte[3] bit4 = ACPresent.
+ *     0x11 = ONLINE (bit4=AC, bit0=stable)
+ *     0x01 = SWITCHING (AC just lost)
+ *     0x00 = ON BATTERY
+ *
+ *   rid=0x35  Input voltage (NOT battery.runtime as descriptor says).
+ *     (data[1] | data[2] << 8) / 10.0 = Volts AC
+ *     Descriptor maps uid=0x0068 (RunTimeToEmpty) but actual data is voltage.
+ *
+ *   rid=0x34  Battery charge (standard path handles this correctly).
+ *     byte[1] = charge percentage.
+ *
+ * GET_REPORT Feature reports (Interface 1, confirmed from Linux testing):
+ *   0x18 = Input voltage AC
+ *   0x19 = Input frequency AC
+ *   0x1B = Output voltage AC
+ *   0x1C = Output frequency AC
+ *   0x21 = Percent load
+ *   0x22 = PresentStatus (bit0=ACPresent, bit1=Charging, bit2=Discharging,
+ *          bit3=LowBatt, bit4=NeedReplace)
+ *   0x36 = Battery voltage
+ *
+ * Option B (future): Voltronic-QS serial protocol on Interface 0.
+ *   Send "QS\r" via SET_REPORT, read response from EP 0x81.
+ *   Returns all data in one ASCII string. Requires claiming Interface 0
+ *   which the ESP currently does not do (only Interface 1 is claimed).
+ */
+static bool decode_voltronic_direct(uint8_t rid,
+                                     const uint8_t *p, size_t plen,
+                                     ups_state_update_t *upd)
+{
+    bool changed = false;
+
+    switch (rid) {
+    case 0x32:
+        /* Status: byte[3] bit4 = ACPresent (confirmed from Linux testing).
+         * This rid is undeclared in the HID descriptor but arrives on
+         * interrupt-IN as 10 bytes. The standard field cache has ac_present
+         * on rid=0x30 (which never arrives), so we decode 0x32 directly. */
+        if (plen >= 4) {
+            uint8_t status_byte = p[3];
+            bool ac = (status_byte & 0x10u) != 0u;
+            upd->input_utility_present_valid = true;
+            upd->input_utility_present       = ac;
+            changed = true;
+            ESP_LOGI(TAG, "[VOLT] rid=0x32 byte[3]=0x%02X -> %s",
+                     status_byte, ac ? "ONLINE (OL)" : "ON BATTERY (OB)");
+        }
+        break;
+
+    case 0x35:
+        /* Input voltage: (byte[1] | byte[2]<<8) / 10.0 = Volts AC.
+         * The HID descriptor maps this rid to uid=0x0068 (RunTimeToEmpty)
+         * but actual interrupt-IN data is input voltage. Override here. */
+        if (plen >= 3) {
+            uint16_t raw_v = (uint16_t)(p[1] | ((uint16_t)p[2] << 8));
+            uint32_t mv    = (uint32_t)raw_v * 100u;  /* raw/10 V = raw*100 mV */
+            if (mv > 0 && mv < 300000u) {
+                upd->input_voltage_valid = true;
+                upd->input_voltage_mv    = mv;
+                changed = true;
+                ESP_LOGI(TAG, "[VOLT] rid=0x35 input.voltage=%u.%uV",
+                         (unsigned)(mv / 1000u), (unsigned)((mv / 100u) % 10u));
+            }
+        }
+        break;
+
+    default:
+        /* rid=0x34 (charge) handled by standard path - fall through */
+        break;
+    }
+
+    return changed;
+}
+
 /* ---- derive_status --------------------------------------------------- */
 /*
  * Builds NUT compound status string into upd->ups_status.
@@ -1162,6 +1252,15 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
          * fields in the field cache cause descriptor bit-extraction to run on
          * vendor-format payloads, corrupting correctly decoded values. */
         goto finalize;
+    } else if (mode == DECODE_VOLTRONIC) {
+        /* Voltronic/PowerWalker: direct decode for rids with confirmed
+         * protocol data (0x32 status, 0x35 input voltage). Fall through
+         * to standard path for rid=0x34 (charge) which works correctly. */
+        if (decode_voltronic_direct(rid, payload, payload_len, upd)) {
+            changed = true;
+            goto finalize;  /* direct decode consumed this RID */
+        }
+        /* Unrecognized rid (e.g. 0x34) - fall through to standard path */
     }
 
     /* ---- Standard descriptor path ---- */
