@@ -539,9 +539,20 @@ static void decode_voltronic_feature(uint8_t rid, const uint8_t *buf, size_t len
     switch (rid) {
     case 0x22:
         /* PresentStatus: bit0=ACPresent, bit1=Charging, bit2=Discharging,
-         * bit3=LowBatt, bit4=NeedReplace */
+         * bit3=LowBatt, bit4=NeedReplace.
+         *
+         * NOTE: PowerWalker VI 3000 SCL returns 0xFF for this report,
+         * meaning ALL flags set (including contradictory charging+discharging).
+         * 0xFF is treated as invalid - skip status extraction. The interrupt-IN
+         * rid=0x32 (byte[3] bit4) is the reliable ACPresent source. */
         if (plen >= 1) {
             uint8_t flags = p[0];
+
+            if (flags == 0xFFu) {
+                ESP_LOGW(TAG, "[VOLT] Feature 0x22 status=0xFF (invalid, all bits set) - ignoring");
+                return;
+            }
+
             upd.input_utility_present_valid = true;
             upd.input_utility_present       = (flags & 0x01u) != 0u;
 

@@ -176,29 +176,67 @@ static bool qs_send_command(const char *cmd, char *resp_out, size_t resp_sz)
 static void parse_qs_response(const char *resp)
 {
     /* Format: (inV inVfault outV load% Hz battV temp flags\r
-     * Example: (230.0 230.0 230.0 019 50.0 13.5 25.0 00001001 */
+     * Example: (230.0 230.0 230.0 019 50.0 13.5 25.0 00001001
+     *
+     * Complications from real device (PowerWalker VI 3000 SCL):
+     * - Temperature can be "--.-" (not a valid float)
+     * - Interrupt reads sometimes lose the leading '(' and first field
+     * - Response may arrive across multiple 8-byte USB chunks
+     *
+     * Strategy: tokenize by space, parse positionally, skip bad fields. */
     const char *s = resp;
-    if (*s == '(') s++;
+    while (*s == '(' || *s == ' ') s++;  /* skip leading ( and spaces */
 
-    float inV = 0, outV = 0, freq = 0, battV = 0, temp = 0;
-    int load = 0;
-    char flags[16] = {0};
+    /* Tokenize into fields */
+    char buf[QS_RESP_MAX];
+    strlcpy(buf, s, sizeof(buf));
 
-    /* Skip inVfault (second field) */
-    float inVfault = 0;
-    int parsed = sscanf(s, "%f %f %f %d %f %f %f %15s",
-                        &inV, &inVfault, &outV, &load, &freq, &battV, &temp, flags);
+    /* Strip trailing \r \n \0 */
+    size_t blen = strlen(buf);
+    while (blen > 0 && (buf[blen-1] == '\r' || buf[blen-1] == '\n' || buf[blen-1] == '\0')) {
+        buf[--blen] = '\0';
+    }
 
-    if (parsed < 8) {
-        ESP_LOGW(TAG, "QS parse failed (got %d fields): %s", parsed, resp);
+    char *fields[10] = {0};
+    int nfields = 0;
+    char *saveptr = NULL;
+    for (char *tok = strtok_r(buf, " ", &saveptr); tok && nfields < 10; tok = strtok_r(NULL, " ", &saveptr)) {
+        fields[nfields++] = tok;
+    }
+
+    /* Need at least 8 fields: inV inVfault outV load Hz battV temp flags */
+    if (nfields < 8) {
+        ESP_LOGW(TAG, "QS parse: only %d fields (need 8): %s", nfields, resp);
+        return;
+    }
+
+    float inV   = strtof(fields[0], NULL);
+    /* fields[1] = inVfault (not used) */
+    float outV  = strtof(fields[2], NULL);
+    int   load  = atoi(fields[3]);
+    float freq  = strtof(fields[4], NULL);
+    float battV = strtof(fields[5], NULL);
+
+    /* Temperature: may be "--.-" which means sensor unavailable */
+    float temp  = 0;
+    bool  temp_valid = false;
+    if (fields[6][0] != '-' || fields[6][1] != '-') {
+        temp = strtof(fields[6], NULL);
+        temp_valid = (temp > -40 && temp < 80);
+    }
+
+    const char *flags = fields[7];
+
+    /* Sanity: input voltage should be > 50V for mains. If not, response
+     * was likely truncated/shifted and we got battery voltage in field[0]. */
+    if (inV < 50.0f && nfields >= 8) {
+        ESP_LOGW(TAG, "QS parse: inV=%.1f too low (truncated response?) - skipping", inV);
         return;
     }
 
     /* Decode status flags (8 chars, leftmost = bit7) */
     bool util_fail   = (strlen(flags) >= 1 && flags[0] == '1');
     bool low_battery = (strlen(flags) >= 2 && flags[1] == '1');
-    /* bit5=boost/buck, bit4=fault, bit3=line-interactive - not mapped to NUT */
-    /* bit2=self-test, bit1=shutdown, bit0=beeper - not mapped */
 
     ups_state_update_t upd;
     memset(&upd, 0, sizeof(upd));
@@ -252,8 +290,10 @@ static void parse_qs_response(const char *resp)
 
     ups_state_apply_update(&upd);
 
-    ESP_LOGI(TAG, "[QS] inV=%.1f outV=%.1f load=%d%% battV=%.1f temp=%.1f flags=%s -> %s",
-             inV, outV, load, battV, temp, flags, status);
+    ESP_LOGI(TAG, "[QS] inV=%.1f outV=%.1f load=%d%% battV=%.1f temp=%s flags=%s -> %s",
+             inV, outV, load, battV,
+             temp_valid ? "valid" : "n/a",
+             flags, status);
 }
 
 /* ---- Parse F (ratings) response ---- */
