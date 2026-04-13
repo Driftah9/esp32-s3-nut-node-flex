@@ -227,16 +227,19 @@ static void parse_qs_response(const char *resp)
 
     const char *flags = fields[7];
 
-    /* Sanity: input voltage should be > 50V for mains. If not, response
-     * was likely truncated/shifted and we got battery voltage in field[0]. */
-    if (inV < 50.0f && nfields >= 8) {
-        ESP_LOGW(TAG, "QS parse: inV=%.1f too low (truncated response?) - skipping", inV);
-        return;
-    }
-
-    /* Decode status flags (8 chars, leftmost = bit7) */
+    /* Decode status flags FIRST - needed for the inV sanity check below.
+     * 8 chars, leftmost = bit7. */
     bool util_fail   = (strlen(flags) >= 1 && flags[0] == '1');
     bool low_battery = (strlen(flags) >= 2 && flags[1] == '1');
+
+    /* Sanity: input voltage should be > 50V for mains. If not, response
+     * was likely truncated/shifted and we got battery voltage in field[0].
+     * EXCEPTION: when on battery (util_fail=true), inV=0 is correct -
+     * the UPS legitimately reports 0V input when mains is disconnected. */
+    if (inV < 50.0f && !util_fail) {
+        ESP_LOGW(TAG, "QS parse: inV=%.1f too low and not on battery - skipping", inV);
+        return;
+    }
 
     ups_state_update_t upd;
     memset(&upd, 0, sizeof(upd));

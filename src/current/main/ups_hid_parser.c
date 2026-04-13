@@ -990,9 +990,12 @@ static void derive_status(ups_state_update_t *upd)
             /* Charge data only — conservatively assume on-line.
              * EXCEPTION: DECODE_APC_SMARTUPS has rid=0x07 as authoritative
              * status source. Charge-only reports (rid=0x0C, rid=0x0D) must
-             * not overwrite OB DISCHRG with OL. Leave empty — no opinion. */
+             * not overwrite OB DISCHRG with OL. Leave empty — no opinion.
+             * EXCEPTION: DECODE_VOLTRONIC has rid=0x32 as authoritative
+             * status source. Charge-only reports (rid=0x34) must not
+             * overwrite OB set by rid=0x32. Same class of bug. */
             ups_decode_mode_t mode = s_device ? s_device->decode_mode : DECODE_STANDARD;
-            if (mode != DECODE_APC_SMARTUPS) {
+            if (mode != DECODE_APC_SMARTUPS && mode != DECODE_VOLTRONIC) {
                 strlcpy(upd->ups_status, "OL", sizeof(upd->ups_status));
             }
         }
