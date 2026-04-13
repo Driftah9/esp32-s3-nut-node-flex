@@ -51,6 +51,7 @@
 
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_timer.h"
 #include "esp_system.h"
 #include "nvs.h"
 
@@ -291,6 +292,7 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
         const ups_device_entry_t *db = ups_device_db_lookup(ups.vid, ups.pid);
 
         const char *fw_ver = esp_app_get_description()->version;
+        uint32_t uptime_s = (uint32_t)(esp_timer_get_time() / 1000000ULL);
         char json[1100];
         char bvolt_s[20], load_s[12], runtime_s[12], ivolt_s[20], ovolt_s[20];
         char bvolt_nom_s[20], runtime_low_s[12], ivolt_nom_s[12];
@@ -360,7 +362,8 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             "\"ups_productid\":\"%s\","
             "\"ups_valid\":%s,"
             "\"ap_active\":%s,"
-            "\"data_age_ms\":%"PRIu32
+            "\"data_age_ms\":%"PRIu32","
+            "\"uptime_s\":%"PRIu32
             "}",
             cfg->ap_ssid, cfg->sta_ssid, sta_ip, cfg->ups_name,
             ups.ups_status[0] ? ups.ups_status : "UNKNOWN",
@@ -381,7 +384,8 @@ static void handle_http_client(app_cfg_t *cfg, int fd) {
             vid_s, pid_s,
             ups.valid               ? "true" : "false",
             wifi_mgr_ap_is_active() ? "true" : "false",
-            ups.data_age_ms);
+            ups.data_age_ms,
+            uptime_s);
 
         http_send_json(fd, json);
 

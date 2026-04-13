@@ -218,6 +218,11 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
         "<tr><td class='nk'>ups.vendorid</td>"
             "<td class='nv' id='v_uvid'>...</td></tr>"
 
+        /* system */
+        "<tr class='ng'><td colspan='2'>system</td></tr>"
+        "<tr><td class='nk'>system.uptime</td>"
+            "<td class='nv' id='v_uptime'>...</td></tr>"
+
         "</table>"
 
         "<div class='poll' id='td_poll'></div>"
@@ -329,6 +334,15 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
               "}"
               "sv('v_utp', naRaw(d.ups_type));"
               "sv('v_uvid',na(d.ups_vendorid));"
+              /* uptime */
+              "if(d.uptime_s!=null){"
+                "var ut=d.uptime_s,ud=Math.floor(ut/86400),uh=Math.floor((ut%86400)/3600),"
+                "um=Math.floor((ut%3600)/60),us=ut%60;"
+                "var uts='';"
+                "if(ud>0)uts+=ud+'d ';"
+                "uts+=('0'+uh).slice(-2)+':'+('0'+um).slice(-2)+':'+('0'+us).slice(-2);"
+                "sv('v_uptime',uts);"
+              "}else{sv('v_uptime','n/a');}"
               /* device */
               "sv('v_dmfr',naRaw(d.device_mfr));"
               "sv('v_dmdl',naRaw(d.device_model));"
