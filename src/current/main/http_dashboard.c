@@ -336,8 +336,8 @@ void render_dashboard(app_cfg_t *cfg, char *out, size_t outsz)
               "sv('v_uvid',na(d.ups_vendorid));"
               /* uptime */
               "if(d.uptime_s!=null){"
-                "var ut=d.uptime_s,ud=Math.floor(ut/86400),uh=Math.floor((ut%86400)/3600),"
-                "um=Math.floor((ut%3600)/60),us=ut%60;"
+                "var ut=d.uptime_s,ud=Math.floor(ut/86400),uh=Math.floor((ut%%86400)/3600),"
+                "um=Math.floor((ut%%3600)/60),us=ut%%60;"
                 "var uts='';"
                 "if(ud>0)uts+=ud+'d ';"
                 "uts+=('0'+uh).slice(-2)+':'+('0'+um).slice(-2)+':'+('0'+us).slice(-2);"
