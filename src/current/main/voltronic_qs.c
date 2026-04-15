@@ -50,9 +50,15 @@ static usb_device_handle_t      s_dev       = NULL;
 static QueueHandle_t            s_cmd_queue = NULL;
 static TaskHandle_t             s_timer_task = NULL;
 
-/* Ratings (from F command, read once) */
+/* Ratings (from F command, read once).
+ * s_nom_batt_volt is used for battery charge estimation in parse_qs_response.
+ * If the F command never succeeds (device not ready at startup, truncated
+ * response, etc.) s_nom_batt_volt stays 0 - blocking ALL charge estimation.
+ * Fix: default 12.0V covers virtually all small/medium UPS units using a
+ * single 12V lead-acid cell. Overwritten by a real F command response. */
 static float s_nom_voltage   = 0;
-static float s_nom_batt_volt = 0;
+static float s_nom_batt_volt = 12.0f;  /* safe default; overwritten by F cmd */
+static bool  s_ratings_valid = false;  /* true once real F response applied   */
 
 /* ---- Control transfer callback ---- */
 static volatile bool s_ctrl_done = false;
@@ -269,31 +275,53 @@ static void parse_qs_response(const char *resp)
         upd.battery_voltage_mv    = (uint32_t)(battV * 1000.0f);
     }
 
-    /* Battery charge - estimated from voltage relative to nominal.
-     * QS protocol doesn't report charge% directly. Use linear approximation:
-     * 100% at nominal voltage, 0% at 80% of nominal (typical lead-acid cutoff).
-     * More accurate than no reading at all. */
-    if (battV > 0 && s_nom_batt_volt > 0) {
-        float cutoff = s_nom_batt_volt * 0.83f;  /* ~10V for 12V, ~20V for 24V */
-        float range  = s_nom_batt_volt - cutoff;
-        if (range > 0.1f) {
-            int pct = (int)((battV - cutoff) / range * 100.0f);
-            if (pct < 0) pct = 0;
+    /* Battery charge % - estimated from battery voltage vs nominal.
+     * Voltage range per cell for sealed lead-acid:
+     *   Float charge:  ~2.27V/cell  -> x12 cells = 27.2V for 24V pack
+     *   Full (resting):~2.12V/cell  -> 25.4V
+     *   Empty/cutoff:  ~1.75V/cell  -> 21.0V
+     *
+     * On mains: battery is being float-charged, voltage > full resting.
+     *   Report 100% when battV >= float threshold.
+     * On battery: linear interpolation between cutoff and full resting. */
+    if (battV > 0.0f && s_nom_batt_volt > 0.0f) {
+        float cutoff  = s_nom_batt_volt * 0.875f;   /* 21.0V for 24V */
+        float full    = s_nom_batt_volt * 1.058f;   /* 25.4V for 24V, open-circuit full */
+        float float_v = s_nom_batt_volt * 1.133f;   /* 27.2V for 24V, float charge */
+        int   pct;
+
+        if (!util_fail) {
+            /* On mains - always report 100% (float charging) */
+            pct = 100;
+        } else if (battV >= float_v) {
+            /* Just disconnected, still at float voltage */
+            pct = 100;
+        } else if (battV <= cutoff) {
+            pct = 0;
+        } else {
+            /* Linear between cutoff and float voltage for on-battery */
+            pct = (int)((battV - cutoff) / (float_v - cutoff) * 100.0f);
+            if (pct < 0)   pct = 0;
             if (pct > 100) pct = 100;
-            upd.battery_charge_valid = true;
-            upd.battery_charge       = (uint8_t)pct;
         }
+
+        upd.battery_charge_valid = true;
+        upd.battery_charge       = (uint8_t)pct;
+        ESP_LOGD(TAG, "[QS] battV=%.2f nomV=%.1f -> charge=%d%%",
+                 battV, s_nom_batt_volt, pct);
     }
 
-    /* Battery runtime - rough estimate from capacity and load.
-     * Lead-acid: ~15 min at full load for typical 1000VA UPS.
-     * Scale inversely with load, linearly with charge. */
-    if (upd.battery_charge_valid && load > 0 && upd.battery_charge > 0) {
-        /* Base: 15 min at 100% load, scale up for lower load */
-        uint32_t base_min = 15;
-        uint32_t est_s = (uint32_t)(base_min * 60 * (100.0f / (float)load)
-                                    * ((float)upd.battery_charge / 100.0f));
-        if (est_s > 0 && est_s < 36000) {
+    /* Battery runtime - voltage-based estimate, only meaningful on battery.
+     * On mains the float voltage does not reflect capacity. */
+    if (util_fail && battV > 0.0f && s_nom_batt_volt > 0.0f &&
+        upd.battery_charge_valid && upd.battery_charge > 0) {
+        int effective_load = (load > 1) ? load : 10;
+        /* Base: 15 min at 100% load for a typical small UPS.
+         * Scale linearly with charge%, inversely with load. */
+        uint32_t est_s = (uint32_t)(900.0f
+                          * (100.0f / (float)effective_load)
+                          * ((float)upd.battery_charge / 100.0f));
+        if (est_s > 0u && est_s < 36000u) {
             upd.battery_runtime_valid = true;
             upd.battery_runtime_s     = est_s;
         }
@@ -363,6 +391,7 @@ static void parse_ratings(const char *resp)
     if (parsed >= 3) {
         s_nom_voltage   = nomV;
         s_nom_batt_volt = nomBattV;
+        s_ratings_valid = true;
         ESP_LOGI(TAG, "[F] Ratings: nomV=%.1f nomA=%.1f nomBattV=%.1f nomHz=%.1f",
                  nomV, nomA, nomBattV, nomHz);
     } else {
@@ -389,6 +418,16 @@ static void qs_timer_task(void *arg)
     while (s_active) {
         cmd = QS_CMD_QUERY;
         xQueueSend(s_cmd_queue, &cmd, pdMS_TO_TICKS(500));
+
+        /* Retry F command every ~60s if ratings never confirmed */
+        static uint32_t s_qs_count = 0;
+        s_qs_count++;
+        if (!s_ratings_valid && (s_qs_count % 30) == 0) {
+            cmd = QS_CMD_RATINGS;
+            xQueueSend(s_cmd_queue, &cmd, pdMS_TO_TICKS(500));
+            ESP_LOGI(TAG, "Retrying F command (ratings not yet confirmed)");
+        }
+
         for (int ms = 0; ms < QS_POLL_MS && s_active; ms += 100) {
             vTaskDelay(pdMS_TO_TICKS(100));
         }

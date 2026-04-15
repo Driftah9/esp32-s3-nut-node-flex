@@ -926,13 +926,25 @@ static bool decode_voltronic_direct(uint8_t rid,
         break;
 
     case 0x35:
-        /* rid=0x35 is battery.runtime (uid=0x0068 RunTimeToEmpty), NOT input
-         * voltage. The standard field cache correctly decodes this as uint16
-         * LE seconds. Do NOT override here - fall through to standard path.
+        /* rid=0x35 on this device is NOT battery runtime. The UPS firmware
+         * uses this field for two different purposes depending on AC state:
+         *   On mains:   input voltage x 10  (e.g. 2629 = 262.9V AC)
+         *   On battery: battery voltage x 10 (e.g. 120 = 12.0V DC)
          *
-         * Originally misidentified as input voltage from working.py script,
-         * but confirmed from log analysis: payload[0:1] = 2630 = 43m50s
-         * which matches the dashboard battery.runtime reading exactly. */
+         * The R20 note "2630 = 43m50s runtime" was a coincidence - the value
+         * 2630 numerically matches both 263.0V x 10 and 2630 seconds.
+         * Voltage interpretation is confirmed: the value fluctuates with mains
+         * voltage variation (2625-2630 over seconds on stable AC) which is
+         * inconsistent with a slowly-changing runtime counter.
+         *
+         * On battery, battery voltage x 10 = 120 gets misinterpreted by the
+         * standard path as 120 seconds runtime. Because ups_state won't allow
+         * runtime to increase, it then stays stuck at 120s when mains returns
+         * (2629 would be a large upward jump - physically impossible runtime).
+         *
+         * Fix: consume this RID here to block the standard battery_runtime
+         * path. Runtime is provided by the QS command estimate instead. */
+        changed = true;  /* consume - skip standard path */
         break;
 
     default:
@@ -1259,13 +1271,15 @@ bool ups_hid_parser_decode_report(const uint8_t *data, size_t len,
         goto finalize;
     } else if (mode == DECODE_VOLTRONIC) {
         /* Voltronic/PowerWalker: direct decode for rids with confirmed
-         * protocol data (0x32 status, 0x35 input voltage). Fall through
-         * to standard path for rid=0x34 (charge) which works correctly. */
+         * protocol data (0x32 status, 0x35 consumed). Always skip standard
+         * path for ALL Voltronic rids - the standard field cache has
+         * ac_present/charging/discharging hits that overwrite the rid=0x32
+         * status, causing OL/OB toggling every ~1 min (Feature 0x22 cycle).
+         * (fast OL/OB status - 512ms vs 2s QS poll interval). */
         if (decode_voltronic_direct(rid, payload, payload_len, upd)) {
             changed = true;
-            goto finalize;  /* direct decode consumed this RID */
         }
-        /* Unrecognized rid (e.g. 0x34) - fall through to standard path */
+        goto finalize;  /* always skip standard path for Voltronic */
     }
 
     /* ---- Standard descriptor path ---- */
