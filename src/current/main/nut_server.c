@@ -67,13 +67,13 @@
 
 static const char *TAG = "nut_server";
 static const char *DRIVER_NAME    = "esp32-nut-hid";
-static const char *DRIVER_VERSION = "15.18";
+static const char *DRIVER_VERSION = "15.19";
 static const char *DEVICE_TYPE    = "ups";              /* standard NUT device.type value */
 static const char *BATTERY_TYPE   = "PbAc";          /* sealed lead-acid — all APC Back-UPS */
 static const char *UPS_TYPE       = "line-interactive"; /* all Back-UPS series */
 
 #define NUT_TCP_PORT        3493
-#define NUT_RECV_TIMEOUT_S  5
+#define NUT_RECV_TIMEOUT_S  30   /* increased from 5 - HA sends multiple commands per session */
 #define NUT_SEND_TIMEOUT_S  5
 
 typedef struct {
@@ -252,6 +252,17 @@ static void nut_handle_line(app_cfg_t *cfg, int fd, nut_session_t *sess, char *l
         nut_sendf(fd, "OK\n");
         return;
     }
+    if (strcasecmp(argv[0], "LOGIN") == 0) {
+        /* NUT clients including Home Assistant send LOGIN after auth.
+         * Must return OK or HA marks the device unavailable immediately. */
+        nut_sendf(fd, "OK\n");
+        return;
+    }
+    if (strcasecmp(argv[0], "LOGOUT") == 0) {
+        nut_sendf(fd, "OK Goodbye\n");
+        sess->close_after = true;
+        return;
+    }
 
     if (strcasecmp(argv[0], "LIST") == 0 && argc >= 2 && strcasecmp(argv[1], "UPS") == 0) {
         nut_sendf(fd, "BEGIN LIST UPS\n");
@@ -269,8 +280,9 @@ static void nut_handle_line(app_cfg_t *cfg, int fd, nut_session_t *sess, char *l
         nut_sendf(fd, "BEGIN LIST VAR %s\n", ups);
         emit_var_list(fd, ups, &st);
         nut_sendf(fd, "END LIST VAR %s\n", ups);
-        nut_sendf(fd, "OK Goodbye\n");
-        sess->close_after = true;
+        /* Do NOT close here - NUT protocol keeps connection open after LIST VAR.
+         * HA sends LOGOUT when done. Closing here causes brief unavailability
+         * on every 60s poll cycle as HA reconnects. */
         return;
     }
 
