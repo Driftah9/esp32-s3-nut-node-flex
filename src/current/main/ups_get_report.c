@@ -575,11 +575,17 @@ static void decode_voltronic_feature(uint8_t rid, const uint8_t *buf, size_t len
         return;
 
     case 0x21:
-        /* Percent load */
-        if (plen >= 1 && p[0] <= 100u) {
-            upd.ups_load_valid = true;
-            upd.ups_load_pct   = p[0];
-            ESP_LOGI(TAG, "[VOLT] Feature 0x21 ups.load=%u%%", p[0]);
+        /* Battery charge - NOT load%.
+         * Descriptor: usage 0x66 (AbsoluteStateOfCharge / RemainingCapacity)
+         * on Battery System page 0x85.
+         *
+         * NOTE: This register is static and does not update in real time.
+         * Kept as a last-resort fallback. QS command is the authoritative
+         * source for battery.charge on this device. */
+        if (plen >= 1 && p[0] != 0xFFu && p[0] <= 100u) {
+            upd.battery_charge_valid = true;
+            upd.battery_charge       = p[0];
+            ESP_LOGD(TAG, "[VOLT] Feature 0x21 battery.charge=%u%% (static fallback)", p[0]);
             ups_state_apply_update(&upd);
         }
         return;

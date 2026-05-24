@@ -780,9 +780,11 @@ static esp_err_t start_interrupt_in_reader(void)
 
     /* Buffer must hold the largest declared Input report, not just one MPS
      * packet. Reports larger than MPS span multiple USB transactions which
-     * IDF assembles if the buffer is big enough. Floor at MPS, cap at 64. */
+     * IDF assembles if the buffer is big enough. Floor at MPS, cap at 64.
+     * IDF 5.4+ requires num_bytes to be an integer multiple of MPS - round up. */
     uint16_t max_input = ups_hid_parser_max_input_bytes();
     size_t buf_sz = (max_input > s_ep_in_mps) ? max_input : s_ep_in_mps;
+    buf_sz = ((buf_sz + s_ep_in_mps - 1) / s_ep_in_mps) * s_ep_in_mps;
     if (buf_sz > 64u) buf_sz = 64u;
 
     usb_transfer_t *t = NULL;

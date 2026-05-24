@@ -1,5 +1,8 @@
-build/
-.cache/
-dependencies.lock
-sdkconfig.old
+src/current/build/
+src/current/.cache/
+src/current/dependencies.lock
+src/current/sdkconfig.old
+src/current/*.log
+docs/monitor.log
 *.log
+.claude/

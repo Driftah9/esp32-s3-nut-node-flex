@@ -108,6 +108,12 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R21 v0.40   Var store pass: after existing typed decode, walk all fields for
+                the current RID and call ups_hid_map_lookup_ctx() + extract
+                to populate ups_var_store slot 0. Runs for all decode modes.
+                Additive - does not replace the typed ups_state_t path.
+                ups_var_store_reset(0) added to ups_hid_parser_reset().
+                ups_var_store_activate(0) added after s_cache.valid = true.
  R17 v0.30   Add ups_hid_parser_max_input_bytes() API. Returns the largest
                 Input report payload size from the parsed descriptor. Used by
                 ups_usb_hid to size the interrupt-IN transfer buffer correctly
@@ -177,6 +183,8 @@
 
 #include "ups_hid_parser.h"
 #include "ups_hid_desc.h"
+#include "ups_hid_map.h"
+#include "ups_var_store.h"
 #include "ups_state.h"
 #include "ups_device_db.h"
 
@@ -260,6 +268,7 @@ void ups_hid_parser_reset(void)
     /* Note: s_xchk_probe_cb is NOT cleared on reset.
      * The callback is registered once at enumeration and stays valid
      * until ups_hid_parser_set_xchk_probe_cb(NULL) is called on disconnect. */
+    ups_var_store_reset(0);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -431,6 +440,7 @@ void ups_hid_parser_set_descriptor(const hid_desc_t *desc)
     } /* end pass loop */
 
     s_cache.valid = true;
+    ups_var_store_activate(0, NULL);
 
     /* Log field cache */
     ESP_LOGI(TAG, "Field cache:");
@@ -1377,6 +1387,44 @@ finalize:
         }
 
         derive_status(upd);
+    }
+
+    /* ---- Var store pass: populate ups_var_store from all mapped fields in this RID ----
+     * Runs for all decode modes. Additive - does not replace the typed ups_state_t path.
+     * Extracts any field whose usage maps to a NUT variable name, applying unit_exponent
+     * scaling where present. Skips implausible zero values for ranged numeric metrics. */
+    if (s_cache.valid) {
+        for (uint16_t fi = 0; fi < s_desc.field_count; fi++) {
+            const hid_field_t *f = &s_desc.fields[fi];
+            if (f->report_id != rid)  continue;
+            if (f->report_type != 0u) continue;  /* Input reports only */
+            if (f->bit_size == 0u)    continue;
+
+            const char *nut_var = ups_hid_map_lookup_ctx(f->usage_page,
+                                                          f->usage_id,
+                                                          f->collection_ctx);
+            if (!nut_var) continue;
+
+            int32_t raw = 0;
+            if (!ups_hid_desc_extract_field(payload, payload_len, f, &raw)) continue;
+
+            /* Skip implausible zero values for numeric metrics with a meaningful range */
+            if (raw == 0 && f->logical_min == 0 && f->logical_max > 100) continue;
+
+            char val_str[24];
+            if (f->unit_exponent != 0) {
+                int32_t milli = 0;
+                if (ups_hid_desc_to_milli(raw, f->unit_exponent, &milli)) {
+                    snprintf(val_str, sizeof(val_str), "%.2f",
+                             (float)milli / 1000.0f);
+                } else {
+                    snprintf(val_str, sizeof(val_str), "%"PRId32, raw);
+                }
+            } else {
+                snprintf(val_str, sizeof(val_str), "%"PRId32, raw);
+            }
+            ups_var_store_set(0, nut_var, val_str);
+        }
     }
 
     return changed;

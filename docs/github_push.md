@@ -18,34 +18,57 @@ public
 main
 
 ## Version
-v0.33
+v0.40
 
 ## Status
 pending
 
 ## Last Push
-Commit: 53f078a
-Tag: v0.32
-Message: v0.32 - Feature-fallback field cache; PowerWalker GET_REPORT quirk
-Date: 2026-04-11
-
-## Previous Push
-Commit: 3dc222e
-Tag: v0.30
-Message: v0.30 - Fix INT-IN buffer truncation; add PowerWalker; Eaton rid=0x06 polling
+Commit: 3cff4c8
+Tag: v0.39
+Message: v0.39 - Fix HA NUT integration availability (from confirmed working files)
+Date: 2026-04-15
 
 ## Commit Message
-v0.33 - DECODE_VOLTRONIC: dedicated decode path for PowerWalker/Voltronic
-- ups_device_db.h: add DECODE_VOLTRONIC (mode 5) for dual-protocol HID+QS devices
-- ups_hid_parser.c (R19): decode_voltronic_direct() - rid=0x32 status (byte[3] bit4=ACPresent), rid=0x35 input voltage (uint16/10 V AC). Confirmed from user Linux testing.
-- ups_get_report.c: decode_voltronic_feature() for Feature reports 0x22 (PresentStatus), 0x21 (load%), plus standard decode for 0x18/0x1B/0x36/0x34. Polling RID list and decode routing added.
-- ups_db_standard.c: PowerWalker entry switched from DECODE_STANDARD to DECODE_VOLTRONIC. VID comment corrected (Cypress Semiconductor, not WayTech).
+v0.40 - Fix INT-IN buffer MPS alignment for IDF 5.4.1; 4MB partition table; Linux native build
 
-## Files Staged
-- src/current/main/ups_device_db.h
-- src/current/main/ups_hid_parser.c
-- src/current/main/ups_db_standard.c
+## Changes Summary
+- ups_usb_hid.c: Round interrupt-IN buffer size up to MPS multiple
+  Fixes ESP_ERR_INVALID_ARG / "num_bytes not integer multiple of MPS" in IDF 5.4.1
+  MPS=8, buf=50 was rejected; now rounds to 56 - restores battery data flow
+  
+- partitions.csv (new): Custom 4MB app partition (replaces 1MB default)
+  Reduces utilization from 95% to 24%, leaves 12MB for OTA/future storage
+  
+- sdkconfig: CONFIG_PARTITION_TABLE_CUSTOM enabled, points to partitions.csv
+
+- CLAUDE.md: Linux native build as primary workflow
+  source ~/.espressif/esp-idf/export.sh + idf.py build/flash/monitor
+  Windows MCP retained as deferred fallback (board on Proxmox USB passthrough)
+
+- docs/project_state.md: Updated to v0.40 status
+- docs/next_steps.md: Added Phase 5 - XCHK logging suppression for confirmed devices
+- docs/confirmed-ups.md: APC Back-UPS 1500/XS 1500M re-confirmed on v0.29
+
+## Files to Stage
+- src/current/main/ups_usb_hid.c
+- src/current/partitions.csv
+- src/current/sdkconfig
+- src/current/CLAUDE.md
+- src/current/docs/project_state.md
+- src/current/docs/next_steps.md
+- src/current/docs/confirmed-ups.md
+- src/current/main/CMakeLists.txt
+- src/current/main/http_config_page.h
+- src/current/main/main.c
 - src/current/main/ups_get_report.c
+- src/current/main/ups_hid_desc.c
+- src/current/main/ups_hid_desc.h
+- src/current/main/ups_hid_map.c
+- src/current/main/ups_hid_map.h
+- src/current/main/ups_hid_parser.c
+- src/current/main/ups_var_store.c
+- src/current/main/ups_var_store.h
+- src/current/.gitignore
+- CLAUDE.md
 - docs/github_push.md
-- docs/project_state.md
-- docs/next_steps.md

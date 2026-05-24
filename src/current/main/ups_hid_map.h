@@ -16,6 +16,7 @@
 
  USAGE
  - ups_hid_map_lookup(): returns NUT var name for a usage or NULL
+ - ups_hid_map_lookup_ctx(): context-aware lookup using collection_ctx
  - ups_hid_map_annotate_report(): logs each field in a RID with its
    extracted value and NUT var name - used in probe and dump paths
 
@@ -28,6 +29,10 @@
 
  VERSION HISTORY
  R0  v0.7-flex  Initial implementation.
+ R1  v0.40      Context-aware lookup: NUT_MAP_CTX_* constants added.
+                ups_hid_map_lookup_ctx() resolves ambiguous usages
+                (e.g. Voltage 0x0030 -> input/output/battery.voltage)
+                using the collection_ctx field from hid_field_t.
 
 ============================================================================*/
 #pragma once
@@ -40,6 +45,13 @@
 extern "C" {
 #endif
 
+/* Context values matching HID collection usage IDs on page 0x84 */
+#define NUT_MAP_CTX_ANY           0x0000u  /* fallback: matches any context */
+#define NUT_MAP_CTX_BATTERY       0x0010u  /* inside Battery System collection */
+#define NUT_MAP_CTX_INPUT         0x001Au  /* inside Input collection */
+#define NUT_MAP_CTX_OUTPUT        0x001Cu  /* inside Output collection */
+#define NUT_MAP_CTX_POWER_SUMMARY 0x0024u  /* inside PowerSummary collection */
+
 /**
  * Look up the NUT variable name for a HID usage.
  *
@@ -49,6 +61,18 @@ extern "C" {
  *                    or NULL if not in the standard mapping table
  */
 const char *ups_hid_map_lookup(uint8_t usage_page, uint16_t usage_id);
+
+/**
+ * Context-aware NUT variable lookup.
+ * Matches page+usage with collection context; falls back to CTX_ANY on no match.
+ *
+ * @param usage_page     HID usage page
+ * @param usage_id       HID usage ID
+ * @param collection_ctx Innermost collection usage ID from hid_field_t.collection_ctx
+ * @return               NUT variable name, or NULL if not in table
+ */
+const char *ups_hid_map_lookup_ctx(uint8_t usage_page, uint16_t usage_id,
+                                    uint16_t collection_ctx);
 
 /**
  * Annotate a raw HID report by walking its descriptor fields.

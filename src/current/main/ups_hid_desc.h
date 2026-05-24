@@ -12,7 +12,10 @@
  Class specification (usage pages 0x84 Power Device, 0x85 Battery System).
 
  REVERT HISTORY
- R0  v15.0  Initial — replaces APC-only ups_hid_parser model-hint approach
+ R0  v15.0  Initial -- replaces APC-only ups_hid_parser model-hint approach
+ R1  v0.40  Add collection_ctx to hid_field_t: deepest page-0x84 collection
+            usage ID recorded per field. Enables context-aware NUT mapping
+            (input.voltage vs output.voltage vs battery.voltage).
 
  USAGE PAGES
    0x84  Power Device (Input, Output, Flow, PowerConverter ...)
@@ -145,8 +148,11 @@ typedef struct {
     uint16_t  usage_id;        /* Usage within that page */
     int32_t   logical_min;     /* Logical minimum from descriptor */
     int32_t   logical_max;     /* Logical maximum from descriptor */
-    int8_t    unit_exponent;   /* Decoded unit exponent (signed: e.g. -2 means ×10^-2) */
+    int8_t    unit_exponent;   /* Decoded unit exponent (signed: e.g. -2 means x10^-2) */
     bool      is_signed;       /* true if logical_min < 0 */
+    uint16_t  collection_ctx;  /* usage ID of the deepest named collection on page 0x84.
+                                * 0x001A=Input, 0x001C=Output, 0x0010=Battery,
+                                * 0x0024=PowerSummary, 0=unknown/top-level */
 } hid_field_t;
 
 /*---------------------------------------------------------------------------

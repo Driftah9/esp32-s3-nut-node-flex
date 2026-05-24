@@ -43,6 +43,7 @@
 #include "nut_bridge.h"
 #include "ups_state.h"
 #include "ups_usb_hid.h"
+#include "ups_var_store.h"
 #include "diag_capture.h"
 
 static const char *TAG = "UPS_USB_M15";
@@ -74,6 +75,7 @@ void app_main(void) {
     /* UPS state — starts fully zeroed. Populated by HID reports after
      * USB enumeration (~1s). No demo defaults. */
     ups_state_init(&g_ups);
+    ups_var_store_init();
 
     wifi_mgr_start_apsta(&g_cfg);
     ups_usb_hid_start(&g_cfg);

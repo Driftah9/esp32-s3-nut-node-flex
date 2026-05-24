@@ -8,6 +8,10 @@
  REVERT HISTORY
  R0  v15.0  Initial
  R1  v15.2  Added verbose debug logging at ESP_LOG_DEBUG level.
+ R4  v0.40  Collection usage stack: track deepest page-0x84 collection usage
+            per field for context-aware NUT mapping. Populates
+            hid_field_t.collection_ctx with the innermost collection usage ID
+            on page 0x84 (or vendor-equivalent 0xFF84).
             Every item parsed, every field skipped (with reason), every
             usage expansion, and a final per-report-ID summary are logged
             so we can see exactly what the CyberPower descriptor contains
@@ -239,6 +243,13 @@ bool ups_hid_desc_parse(const uint8_t *desc_bytes, size_t desc_len, hid_desc_t *
     uint32_t total_skipped  = 0;   /* debug counter */
     uint8_t  coll_depth     = 0;   /* debug: collection nesting depth */
 
+    /* Collection usage stack -- tracks the HID usage of each opened collection.
+     * Used to determine collection_ctx for each emitted field. */
+#define COLL_STACK_DEPTH 16
+    uint32_t coll_usage_stack[COLL_STACK_DEPTH];
+    uint8_t  coll_usage_top = 0;
+    memset(coll_usage_stack, 0, sizeof(coll_usage_stack));
+
     size_t pos = 0;
     uint32_t item_num = 0;
 
@@ -405,12 +416,20 @@ bool ups_hid_desc_parse(const uint8_t *desc_bytes, size_t desc_len, hid_desc_t *
                          " depth=%u page=0x%04"PRIx32")",
                          item_num, (uint32_t)val, coll_depth,
                          global_state.usage_page);
-                /* Reset local state — collections don't produce fields */
+                /* Push collection usage onto stack before resetting local state */
+                {
+                    uint32_t coll_key = (local.usage_count > 0) ? local.usages[0] : 0;
+                    if (coll_usage_top < COLL_STACK_DEPTH) {
+                        coll_usage_stack[coll_usage_top++] = coll_key;
+                    }
+                }
+                /* Reset local state -- collections don't produce fields */
                 memset(&local, 0, sizeof(local));
                 break;
             }
             if (bTag == HID_TAG_END_COLLECTION) {
                 if (coll_depth > 0) coll_depth--;
+                if (coll_usage_top > 0) coll_usage_top--;
                 ESP_LOGD(TAG, "[COLL #%"PRIu32"] End Collection (depth now %u)",
                          item_num, coll_depth);
                 break;
@@ -553,6 +572,21 @@ bool ups_hid_desc_parse(const uint8_t *desc_bytes, size_t desc_len, hid_desc_t *
                     f->logical_max   = global_state.logical_max;
                     f->unit_exponent = global_state.unit_exponent;
                     f->is_signed     = (global_state.logical_min < 0);
+
+                    /* Find deepest collection on page 0x84 for context-aware NUT mapping */
+                    {
+                        uint16_t ctx = 0;
+                        for (int ci = (int)coll_usage_top - 1; ci >= 0; ci--) {
+                            uint8_t cpage = (uint8_t)((coll_usage_stack[ci] >> 16) & 0xFFu);
+                            /* Normalise vendor page 0xFF84 -> 0x84 */
+                            if ((coll_usage_stack[ci] >> 16) == 0xFF84u) cpage = 0x84u;
+                            if (cpage == 0x84u) {
+                                ctx = (uint16_t)(coll_usage_stack[ci] & 0xFFFFu);
+                                break;
+                            }
+                        }
+                        f->collection_ctx = ctx;
+                    }
 
                     if (report_type == 0) rpt->input_field_count++;
 

@@ -1,7 +1,20 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-06 -->
+<!-- Updated: 2026-05-24 -->
 
 ## Status
+v0.29 - IDF 5.4.1 USB host MPS alignment + partition table expansion. Build clean.
+- ups_usb_hid.c: INT-IN buffer size rounded up to MPS multiple (IDF 5.4.1 stricter validation)
+  Fixes interrupt-IN reader init failure on APC (MPS=8, buffer=50 -> 56)
+  Result: battery.charge, battery.voltage now flowing (were showing MISSING before)
+- partitions.csv: custom table with 4MB app partition + 12MB free for OTA/future
+  Replaces default 1MB partition table (96->24% utilization)
+- Build environment: Linux native (claude-brain VM) on ESP-IDF 5.4.1
+  Previous: Windows SMB + PowerShell build. Now: idf.py direct, cleaner workflow
+- APC Back-UPS 1500/XS 1500M (FW:947.d10, PID:0002) re-confirmed on v0.29
+- XCHK dynamic scanning: consistent vendor extension pattern (5 undeclared RIDs)
+  Logged as WARN for investigation. Plan: suppress for confirmed VID:PIDs (Phase 5)
+
+## Previous Status
 v0.27 - Eaton OL/OB fix: vendor page 0xFFFF support. Build clean. Pushed.
 - ups_hid_parser.c: include vendor page 0xFFFF in field cache scan (Eaton 3S)
 - ups_usb_hid.c: pre-seed OL status at enumeration before rid=0x21 arrives

@@ -2,7 +2,7 @@
 # Type: ESP32 / IDF Firmware (Fork)
 
 > This file is read by Claude Code CLI when opening this project.
-> Read after the global CLAUDE.md at /home/claude/.claude/CLAUDE.md
+> Read after the global CLAUDE.md at /home/claude\.claude\CLAUDE.md
 
 ---
 
@@ -15,7 +15,7 @@
 | Forked From | esp32-s3-nut-node v15.18 |
 | Target Device | ESP32-S3 (Hosyond ESP32-S3-WROOM-1 N16R8 -- 16MB flash, 8MB PSRAM) |
 | IDF Version | v5.4.1 |
-| Serial Port | /dev/esp32_flash (udev symlink -- auto-follows board swaps) |
+| Serial Port | /dev/esp32_flash (udev symlink, Linux primary) |
 | Flash Size | 16MB |
 | GitHub Repo | https://github.com/Driftah9/esp32-s3-nut-node-flex |
 
@@ -61,49 +61,59 @@ Active source lives at:
 ```
 All IDF commands must be run from this directory.
 
-> NOTE: v15.18 baseline has been copied into src/current/. Initial commit pending.
-
 ---
 
 ## Build / Flash / Monitor Workflow
 
-> All operations run natively on claude-brain VM (10.0.0.7).
-> USB board is passed through from Proxmox directly to this VM.
-> Port auto-detected via /dev/esp32_flash udev symlink -- survives board swaps.
+### PRIMARY -- Linux native on claude-brain VM (10.0.0.7)
 
-### Environment activation (required once per shell session)
+Board passes through via Proxmox USB passthrough to this VM.
+Port: /dev/esp32_flash (udev symlink, auto-follows board swaps)
+
+Activate environment (required once per shell session):
 ```bash
-source /home/claude/scripts/idf-activate.sh
+source /home/claude/.espressif/esp-idf/export.sh
 ```
 
-### Build
+Build:
 ```bash
 cd /home/claude/projects/esp32-s3-nut-node-flex/src/current
 idf.py build 2>&1 | tee ../../docs/build.log
 ```
 
-### Flash
+Flash:
 ```bash
 idf.py -p /dev/esp32_flash flash 2>&1 | tee ../../docs/flash.log
 ```
 
-### Monitor
+Monitor (requires interactive TTY):
 ```bash
-idf.py -p /dev/esp32_flash monitor 2>&1 | tee ../../docs/monitor.log
+idf.py -p /dev/esp32_flash monitor
 ```
 
-### All-in-one wrapper (from project root)
+All-in-one wrapper (from project root):
 ```bash
 /home/claude/projects/esp32-s3-nut-node-flex/build.sh build flash monitor
 ```
 
-### Port detection
-- /dev/esp32_flash is a udev symlink that auto-updates on board swap
-- If it goes missing: run /home/claude/scripts/find-esp32-port.sh to diagnose
-- udev rules: /etc/udev/rules.d/99-esp32-flash.rules (covers CH910x, CH340, CP2102, FTDI, native USB)
+### DEFERRED FALLBACK -- Windows MCP via windows-build (10.0.0.2)
 
-### After build/flash/monitor
-Update docs/project_state.md to reflect current firmware state.
+Use only when board is plugged into Windows machine instead of Proxmox.
+
+Build via PowerShell on windows-build:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target build
+```
+
+Flash via PowerShell on windows-build:
+```
+idf.py flash -p COM3
+```
+
+Monitor: Stryder saves output to docs\monitor.log, Claude reads after.
+
+### Update State
+After build/flash/monitor confirmed, update docs/project_state.md.
 
 ---
 
@@ -112,9 +122,9 @@ Update docs/project_state.md to reflect current firmware state.
 When Claude CLI opens this project, do these steps in order:
 
 1. Read this file (done)
-2. Read docs/project_state.md
-3. Read docs/DECISIONS.md
-4. Read docs/next_steps.md
+2. Read docs\project_state.md
+3. Read docs\DECISIONS.md
+4. Read docs\next_steps.md
 5. Note current baseline version and which modules have been modified
 6. Proceed with next_steps.md priorities
 
@@ -133,7 +143,7 @@ Never write to, modify, or delete anything in that path.
 
 **When Stryder says "sync from main" or "merge upstream changes":**
 
-1. Read the changed files in esp32-s3-nut-node/src/current/
+1. Read the changed files in esp32-s3-nut-node\src\current\
 2. For each changed module, classify it:
    - UNMODIFIED BASELINE: module in flex is identical to original v15.18 baseline
      - Safe to merge upstream changes directly
@@ -167,14 +177,13 @@ Example: change "esp32-s3-nut-node v15.18" to "esp32-s3-nut-node v15.22" after s
 - This fork starts at v0.1 (scaffold)
 - Version format: v0.x during investigation phase, v1.x when first mode is stable
 - Every source file gets a version comment block at top
-- docs/github_push.md is the single source of truth for every push
+- docs\github_push.md is the single source of truth for every push
 
 ---
 
 ## Git
 
-- Use /home/claude/scripts/git-push.sh for all GitHub pushes (shared script, all projects)
-- Or push manually: git push origin main && git push origin vX.Y + curl webhook
+- Use /home/claude/scripts/git-push.sh for all GitHub pushes
 - Before pushing, ensure docs/github_push.md is current
 - Claude updates docs/github_push.md automatically whenever code changes
 - Repo: https://github.com/Driftah9/esp32-s3-nut-node-flex
@@ -198,10 +207,10 @@ Example: change "esp32-s3-nut-node v15.18" to "esp32-s3-nut-node v15.22" after s
 Em dashes corrupt to garbage in PowerShell. Use plain hyphen - or space-hyphen-space instead.
 This rule applies to: commit messages, .md files, source comments, config files.
 
-**Shell -- All commands run in bash on claude-brain VM (10.0.0.7). Linux native.**
-- IDF activation: source /home/claude/scripts/idf-activate.sh
+**Shell -- Primary: bash on claude-brain VM (10.0.0.7). Forward slashes for paths.**
+- IDF activation: source /home/claude/.espressif/esp-idf/export.sh
 - Port: always use /dev/esp32_flash (udev symlink, not hardcoded ttyACM0)
-- Path separators: forward slash
+- Deferred: PowerShell on windows-build only when board is connected to Windows machine
 
 **Never backport experimental changes to esp32-s3-nut-node.**
 That project stays on known-good static decode paths.
