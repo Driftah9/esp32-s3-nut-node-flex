@@ -39,6 +39,13 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R9  v0.43  Add rid=0x50 to APC Back-UPS polling list (ups.load).
+            ups.load for APC Back-UPS PID 0x0002 is exposed only as a Feature
+            report on rid=0x50 (PowerConverter.PercentLoad, page=0x84 uid=0x35,
+            1 byte 0-100%). It never arrives on interrupt-IN. Confirmed from NUT
+            apc-hid.c and debug dump of APC XS 1400U (same firmware family).
+            rid=0x21 byte[1] is Battery.Test status, not load - already silently
+            ignored in decode_apc_backups_direct().
  R8  v0.31  DECODE_STANDARD Feature report support:
             - service_probe_queue(): route XCHK probe responses through
               ups_hid_parser_decode_report() for DECODE_STANDARD devices.
@@ -349,6 +356,30 @@ static void decode_apc_feature(uint8_t rid, const uint8_t *data, size_t len)
     }
 
     switch (rid) {
+    case 0x50: {
+        /* rid=0x50: PowerConverter.PercentLoad (page=0x84 uid=0x35)
+         * Feature-only - never arrives on interrupt-IN for APC Back-UPS PID 0x0002.
+         * response: [0x50, load_pct]  1 data byte, 0-100% load.
+         * Confirmed from NUT apc-hid.c + XS 1400U debug dump (same firmware family).
+         */
+        if (len < 2u) {
+            ESP_LOGW(TAG, "[APC Feature] rid=0x50: short read %u bytes", (unsigned)len);
+            break;
+        }
+        uint8_t load = data[1];
+        if (load <= 100u) {
+            ups_state_update_t upd;
+            memset(&upd, 0, sizeof(upd));
+            upd.valid          = true;
+            upd.ups_load_valid = true;
+            upd.ups_load_pct   = load;
+            ups_state_apply_update(&upd);
+            ESP_LOGI(TAG, "[APC Feature] rid=0x50 ups.load=%u%%", load);
+        } else {
+            ESP_LOGW(TAG, "[APC Feature] rid=0x50 load=%u - outside 0-100%%, ignoring", load);
+        }
+        break;
+    }
     case 0x17: {
         /* rid=0x17: AC line voltage
          * descriptor: page=85 uid=002A size=16 (ConfigVoltage/LineVoltage)
@@ -418,10 +449,13 @@ static void decode_apc_feature(uint8_t rid, const uint8_t *data, size_t len)
  * rids seen in interrupt-IN but not in descriptor:
  *   0x20, 0x21, 0x22, 0x23, 0x25, 0x28, 0x29, 0x82, 0x85-0x88
  * We probe a representative set here. */
-/* Production: rid=0x17 only (confirmed = AC line voltage, 120V US / 230V EU)
- * Battery voltage is not available via GET_REPORT on APC Back-UPS (0002)
- * firmware — all high rids (0x82-0x88) STALL on this device. */
-static const uint8_t s_apc_rids[]          = { 0x17 };
+/* APC Back-UPS (PID 0x0002) Feature report polling list:
+ *   0x17 = AC line voltage (confirmed = 120V US / 230V EU)
+ *   0x50 = PowerConverter.PercentLoad (ups.load, 1 byte 0-100%)
+ *          Feature-only - never on interrupt-IN. Confirmed from NUT apc-hid.c.
+ * Battery voltage is not available via GET_REPORT on this firmware -
+ * all high rids (0x82-0x88) STALL. */
+static const uint8_t s_apc_rids[]          = { 0x17, 0x50 };
 static const size_t  s_apc_rids_n          = sizeof(s_apc_rids) / sizeof(s_apc_rids[0]);
 /* APC Smart-UPS (PID 0003) Feature rids:
  *   rid=0x06  charging flag (byte[1]) + discharging flag (byte[2])
