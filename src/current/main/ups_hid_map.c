@@ -40,6 +40,11 @@
                 ups_hid_map_lookup_ctx() with two-pass exact/fallback logic.
                 ups_hid_map_lookup() delegates to lookup_ctx with CTX_ANY.
                 ups_hid_map_annotate_report() uses lookup_ctx with collection_ctx.
+ R2  v0.42      annotate_report(): demote "payload too short" from WARN to DEBUG
+                when field bit range exceeds actual received payload. APC rid=0x07
+                declares 50 bytes but returns 3; fields beyond byte 2 spammed WARN
+                on every XCHK probe cycle. Genuine extraction failures (within
+                payload bounds) remain at WARN.
 
 ============================================================================*/
 
@@ -222,14 +227,28 @@ void ups_hid_map_annotate_report(const hid_desc_t *desc,
                      raw,
                      nut ? nut : "unmapped");
         } else {
-            ESP_LOGW(log_tag,
-                     "  [MAP] rid=%02X bit_off=%3u size=%2u page=%02X uid=%04X ctx=%04X"
-                     " extract FAILED (payload too short?) -> %s",
-                     (unsigned)rid,
-                     (unsigned)f->bit_offset, (unsigned)f->bit_size,
-                     (unsigned)f->usage_page, (unsigned)f->usage_id,
-                     (unsigned)f->collection_ctx,
-                     nut ? nut : "unmapped");
+            uint32_t field_end_bits  = (uint32_t)f->bit_offset + (uint32_t)f->bit_size;
+            uint32_t payload_bits    = (uint32_t)plen * 8u;
+            if (field_end_bits > payload_bits) {
+                /* Field is beyond the actual received payload - device returned a
+                 * shorter response than its descriptor declares. Silent at DEBUG. */
+                ESP_LOGD(log_tag,
+                         "  [MAP] rid=%02X bit_off=%3u size=%2u -> %s"
+                         " (beyond %u-byte payload, skip)",
+                         (unsigned)rid,
+                         (unsigned)f->bit_offset, (unsigned)f->bit_size,
+                         nut ? nut : "unmapped",
+                         (unsigned)plen);
+            } else {
+                ESP_LOGW(log_tag,
+                         "  [MAP] rid=%02X bit_off=%3u size=%2u page=%02X uid=%04X ctx=%04X"
+                         " extract FAILED -> %s",
+                         (unsigned)rid,
+                         (unsigned)f->bit_offset, (unsigned)f->bit_size,
+                         (unsigned)f->usage_page, (unsigned)f->usage_id,
+                         (unsigned)f->collection_ctx,
+                         nut ? nut : "unmapped");
+            }
         }
     }
 
