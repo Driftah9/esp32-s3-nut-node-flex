@@ -1,5 +1,5 @@
 # Next Steps - esp32-s3-nut-node-flex
-<!-- Updated: 2026-05-24 -->
+<!-- Updated: 2026-04-03 -->
 
 ## Immediate
 - [x] Push v0.4 to GitHub
@@ -78,17 +78,6 @@
   - Mode 2 NUT CLIENT: authenticated as esppush, battery.charge=100 pushed - confirmed
   - Mode 1 STANDALONE: NUT server on 3493, upsc returns live data - confirmed
 
-## Phase 5 - Logging & Diagnostics
-
-- [ ] XCHK vendor extension warning suppression for confirmed devices
-      For devices with known VID:PID (APC 051D:0002, CyberPower 0764:0501, etc),
-      suppress XCHK "seen but not declared as Input" warnings at DEBUG level instead of WARN.
-      Keep WARN for unknown/new devices so investigation flagging remains visible.
-      Implementation: add device_is_confirmed(vid, pid) check in xchk_report().
-      Rationale: XCHK patterns for confirmed devices are stable and documented in confirmed-ups.md;
-      noisy warnings don't add value on known hardware but are valuable for discovery of new devices.
-      Expected result: cleaner logs, investigation focus preserved for unknowns.
-
 ---
 
 ## Staging Submission Findings (2026-04-03, read-only inspection)
@@ -119,7 +108,7 @@ Root cause (from staging submission e88c29, flex repo, IDF v5.5.4):
 - IDF v5.5.4 added stricter DWC assert: hcd_dwc.c:2388 rem_len check fires
 - Device crash-loops every ~34s (XCHK fires -> probe -> assert -> reboot -> repeat)
 - battery.charge=0 is a symptom of the crash-loop, not a decode bug
-- User was running IDF v5.5.4 but project targets v5.3.1 - assert is v5.5.4 addition
+- User was running IDF v5.5.4 but project targets v5.4.1 - assert is v5.5.4 addition
 
 Fix applied in v0.14 (ups_get_report.c R2):
 - Cap raised from 16 to 64 bytes: `if (sz == 0u || sz > 64u) sz = 8u;`
@@ -132,7 +121,7 @@ The crash-loop was flex-only, caused by XCHK probe firing on rid=0x28.
 
 - [x] Root cause identified from staging submissions
 - [x] Fix applied - v0.14 ups_get_report.c
-- [ ] User should rebuild with IDF v5.3.1 (project target) or v0.14 flex repo
+- [ ] User should rebuild with IDF v5.4.1 (project target) or v0.14 flex repo
 - [ ] Confirm with user after they update that charge reads correctly
 
 ---
@@ -287,7 +276,7 @@ Add !battery_runtime_valid guard to standard path runtime extraction.
       - battery.charge should still read correctly (96% confirmed in a0043f)
 - [ ] MyDisplayName (9543fe M5Stack Atom S3 Lite): submit 90s+ log without DEBUG log level
 - [ ] MyDisplayName (bc8a09 bridge mode user): switch to Mode 1 or configure upstream_host
-      - Also check IDF version: using v5.5.3, project target is v5.3.1 (PSRAM init may differ)
+      - Also check IDF version: using v5.5.3, project target is v5.4.1 (PSRAM init may differ)
 - [ ] Flash v0.24 to APC test device and confirm clean boot (v0.19 abort fix still unverified on device)
 
 ## Possible Future Additions
