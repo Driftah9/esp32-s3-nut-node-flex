@@ -80,6 +80,18 @@ If you already have a different IDF version installed, install v5.4.1 alongside 
 
 ---
 
+## First Boot
+
+After flashing, the device boots into WiFi setup mode. Connect to the `ESP32-UPS` access point, complete the WiFi configuration, then open the device IP in a browser.
+
+**Default portal login:**
+- Username: `admin`
+- Password: `upsmon`
+
+Change the password on the Config page after first login. The dashboard will show a warning banner until the default password is replaced.
+
+---
+
 ## Project Structure
 
 ```
