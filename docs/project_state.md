@@ -19,21 +19,21 @@ Output summary:
 Next step: v0.44 table-driven Feature report decode implementation (APC decode funcs)
 
 ## Last GitHub Push
+Version: v0.44
+Tag: v0.44
+Commit: 63b8ebe
+Message: v0.44 - Table-driven Feature report architecture (validated on hardware)
+Result: Success
+
+## Previous Push
 Version: v0.43
 Tag: v0.43
 Commit: cdb6d98
 Message: v0.43 - Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS
 Result: Success
 
-## Previous Push
-Version: v0.42
-Tag: v0.42
-Commit: 1fccf39
-Message: v0.42 - Silence annotate_report payload-too-short spam for truncated GET_REPORT responses
-Result: Success
-
 ## Status
-v0.43 - rid=0x50 (PowerConverter.PercentLoad) added to APC Back-UPS periodic GET_REPORT polling. ups.load now sourced from Feature report for PID 0x0002 (XS 1400U). Decode confirmed from NUT apc-hid.c and live debug dump.
+v0.44 - Table-driven Feature report architecture. hid_get_report_info_t structure added to device DB. APC decode funcs moved to ups_db_apc.c. Feature polling tables built for APC Back-UPS and Smart-UPS matching NUT apc-hid.c hid2nut[] pattern. Hardware validated on APC Back-UPS XS 1500M.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -65,7 +65,7 @@ idf.py direct (after source /home/claude/scripts/idf-activate.sh):
 - [x] Version string fix in CMakeLists.txt; parser/get_report sync confirmed - v0.41
 - [x] Silence annotate_report payload-too-short WARN spam for truncated GET_REPORT responses - v0.42
 - [x] Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS PID 0x0002 - v0.43
-- [x] v0.44-alpha: Table-driven Feature report architecture (database + APC decode funcs) - In progress
+- [x] Table-driven Feature report architecture (database + APC decode funcs, hardware validated) - v0.44
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working
