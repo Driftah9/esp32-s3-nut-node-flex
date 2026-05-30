@@ -21,15 +21,15 @@ main
 1489730620337684570
 
 ## Version
-v0.44
+v0.45
 
 ## Status
 pushed
 
 ## Last Push
-Commit: 63b8ebe
-Tag: v0.44
-Message: v0.44 - Table-driven Feature report architecture (validated on hardware)
+Commit: 249ee2e
+Tag: v0.45
+Message: v0.45 - Table-driven Feature report polling (generic walker replaces hardcoded dispatch)
 Date: 2026-05-30
 
 ## Commit Message
