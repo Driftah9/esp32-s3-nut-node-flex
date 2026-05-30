@@ -3,14 +3,20 @@
 
 ## Last CLI Run
 <!-- Updated: 2026-05-30 -->
-Command: idf.py build (v0.44-alpha architecture foundation)
+Command: idf.py build + flash + monitor (v0.44-alpha)
 Result: Success
 Output summary:
-- Version: v0.44-alpha (table-driven Feature report architecture)
-- Binary size: 0xf3d40 bytes (1003840 bytes), 76% of 4MB partition free
-- Bootloader: 0x5220 bytes, 36% free
-- Device: ESP32-S3 (QFN56) rev v0.2, 8MB PSRAM, MAC 10:20:ba:4a:e4:9c
-Status: Architecture refactoring in progress. Device database extended with Feature report polling tables.
+- Build: CLEAN - binary 0xf3d40 bytes (1003840 bytes), 76% of 4MB partition free, bootloader 0x5220 bytes 36% free
+- Flash: All 3 segments verified (Hash of data verified x3), MAC 10:20:ba:4a:e4:9c
+- Monitor (30s, from t=18s post-boot):
+  - APC Back-UPS enumerated and decoding interrupt-IN correctly
+  - battery.charge=100%, battery.runtime active (ranging 969s-1104s)
+  - XCHK fired at t=31.5s: 6 RIDs seen, 5 undeclared vendor ext, 2 declared-but-silent
+  - XCHK probes: rid=0x07 (battery.runtime 3-byte truncated response), rid=0x52 (2-byte response)
+  - Feature polling at t=33.7s: rid=0x17 -> input.voltage=120V, rid=0x50 -> ups.load=30%
+  - NUT server connection from 10.0.0.10:44554 at t=32s (HA polling confirmed working)
+  - No panics, no assert fails, no WDT events
+Next step: v0.44 table-driven Feature report decode implementation (APC decode funcs)
 
 ## Last GitHub Push
 Version: v0.43
