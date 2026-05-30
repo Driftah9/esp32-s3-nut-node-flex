@@ -3,14 +3,14 @@
 
 ## Last CLI Run
 <!-- Updated: 2026-05-30 -->
-Command: idf.py build (v0.45 version string verification)
+Command: idf.py build (v0.46 build)
 Result: Success
 Output summary:
-- Build: CLEAN - binary 0xf3f20 bytes, 76% of 4MB partition free
-- Recompile scope: main.c + app metadata only (version string bump CMakeLists.txt v0.43->v0.45, main.c banner updated)
-- App version string confirmed v0.45 in binary via strings inspection
+- Build: CLEAN - binary 0xf3fc0 bytes, 76% of 4MB partition free
+- Recompile scope: ups_hid_parser.c + main.c + app metadata (CMakeLists.txt v0.45->v0.46)
+- App version string confirmed v0.46 in CMake output
 - No errors, no warnings from changed files
-Next step: Push v0.45 to GitHub
+Next step: Flash v0.46 or push to GitHub
 
 ## Last GitHub Push
 Version: v0.45
@@ -27,7 +27,7 @@ Message: v0.44 - Table-driven Feature report architecture (validated on hardware
 Result: Success
 
 ## Status
-v0.45 - Table-driven Feature report polling hardware validated on APC Back-UPS RS 1000MS (FW:950.e3). Timer task confirmed active, rid=0x17 input.voltage=120V and rid=0x50 ups.load=26-31% both decoded via ups_db_apc.c [APC Back-UPS Feature] path. Second poll cycle confirmed at 30s interval. No panics, no WDT. Version strings updated to v0.45 in CMakeLists.txt and main.c - build verified clean.
+v0.46 - CyberPower 0601 ups.load fix: rid=0x1D interrupt-IN byte[0] decoded as tentative ups.load (field cache MISSING for this device - descriptor puts PercentLoad on non-standard page filtered by our parser). rid=0x19 silently consumed (candidates: output.current, ups.power - needs load-test confirmation). Build verified clean, no regressions.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -61,6 +61,7 @@ idf.py direct (after source /home/claude/scripts/idf-activate.sh):
 - [x] Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS PID 0x0002 - v0.43
 - [x] Table-driven Feature report architecture (database + APC decode funcs, hardware validated) - v0.44
 - [x] Table-driven Feature report polling (generic walker replaces hardcoded dispatch) - v0.45
+- [x] CyberPower 0601 ups.load fix: rid=0x1D interrupt-IN decode (tentative, needs load-test) - v0.46
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working

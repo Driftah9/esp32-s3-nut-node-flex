@@ -108,6 +108,14 @@
                 Add rid=0x0B diagnostic log (3000R sends 1 byte here, value
                 0x13=19 observed - meaning TBD, need discharge event).
                 Source: CyberPower 3000R submission 2026-04-04.
+ R10 v0.46      CyberPower 0601 ups.load fix: field cache reports MISSING
+                (descriptor uses a non-standard page for PercentLoad that
+                our filter skips). rid=0x1D arrives on interrupt-IN every
+                2.7s with byte[0]=0x00 at no load - consistent with 0%
+                ups.load. Decoding as tentative ups.load (byte[0], 0-100).
+                rid=0x19 also arrives (2 bytes, both 0x00 at no load) -
+                silently consumed pending load-test identification.
+                Source: CyberPower CST150UC (0764:0601) submission 2026-05-30.
  R21 v0.40   Var store pass: after existing typed decode, walk all fields for
                 the current RID and call ups_hid_map_lookup_ctx() + extract
                 to populate ups_var_store slot 0. Runs for all decode modes.
@@ -716,6 +724,29 @@ static bool decode_cyberpower_direct(uint8_t rid,
             ESP_LOGI(TAG, "[CP] rid=0x0B raw=0x%02X (%u) - diagnostic only",
                      (unsigned)p[0], (unsigned)p[0]);
         }
+        break;
+    case 0x1D:
+        /*
+         * rid=0x1D - CyberPower OR/PR/RT/UT rackmount (0764:0601).
+         * 2 bytes. At no-load: 00 00. Tentative: byte[0] = ups.load (0-100%).
+         * Field cache reports ups.load MISSING (descriptor uses non-standard
+         * page for PercentLoad, skipped by our page filter). This interrupt-IN
+         * decode is the workaround. NUT maps ups.load to UPS.Output.PercentLoad.
+         * Needs confirmation via a load-test log (submit when UPS is under load).
+         */
+        if (plen >= 1 && p[0] <= 100u) {
+            upd->ups_load_valid = true;
+            upd->ups_load_pct   = p[0];
+            changed = true;
+            ESP_LOGI(TAG, "[CP] ups.load=%u%% (rid=0x1D, tentative)", (unsigned)p[0]);
+        }
+        break;
+    case 0x19:
+        /*
+         * rid=0x19 - CyberPower 0601 only. 2 bytes, 00 00 at no load.
+         * Possible candidates: output.current, ups.realpower, ups.power.
+         * Silently consumed pending load-test identification.
+         */
         break;
     /* Unresolved reports - silently ignore */
     case 0x22: case 0x25: case 0x28:
