@@ -1,33 +1,34 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-05-30 -->
+<!-- Updated: 2026-05-30 v0.47 -->
 
 ## Last CLI Run
 <!-- Updated: 2026-05-30 -->
-Command: idf.py build (v0.46 build)
-Result: Success
+Command: idf.py build (v0.47 - /compat page update, version bump)
+Result: Pending build
 Output summary:
-- Build: CLEAN - binary 0xf3fc0 bytes, 76% of 4MB partition free
-- Recompile scope: ups_hid_parser.c + main.c + app metadata (CMakeLists.txt v0.45->v0.46)
-- App version string confirmed v0.46 in CMake output
-- No errors, no warnings from changed files
-Next step: Flash v0.46 or push to GitHub
+- Version bump: v0.46 -> v0.47
+- Changed files: http_compat.c, CMakeLists.txt, main.c
+- No errors expected (content-only + version string)
+Next step: Push to GitHub
 
 ## Last GitHub Push
-Version: v0.45
-Tag: v0.45
-Commit: 249ee2e
-Message: v0.45 - Table-driven Feature report polling (generic walker replaces hardcoded dispatch)
-Result: Success
+Version: v0.47
+Tag: v0.47
+Commit: pending
+Message: v0.47 - Update /compat page: 6 confirmed devices (APC + CyberPower)
+Result: Pending
 
 ## Previous Push
-Version: v0.44
-Tag: v0.44
-Commit: 63b8ebe
-Message: v0.44 - Table-driven Feature report architecture (validated on hardware)
+Version: v0.46
+Tag: v0.46
+Commit: b8c1ba2
+Message: v0.46 - CyberPower 0601 ups.load fix via rid=0x1D interrupt-IN decode
 Result: Success
 
 ## Status
-v0.46 - CyberPower 0601 ups.load fix: rid=0x1D interrupt-IN byte[0] decoded as tentative ups.load (field cache MISSING for this device - descriptor puts PercentLoad on non-standard page filtered by our parser). rid=0x19 silently consumed (candidates: output.current, ups.power - needs load-test confirmation). Build verified clean, no regressions.
+v0.47 - /compat page updated: 6 confirmed devices listed (APC Back-UPS XS 1300G, XS 1500M, Pro 1000/1000S, Smart-UPS C 1500, CyberPower CP550HG/SX550G, CST150UC). 0601 rackmount series other models promoted to ST_EX. Version bump only - no firmware logic changes from v0.46.
+
+v0.46 baseline: CyberPower 0601 ups.load fix: rid=0x1D interrupt-IN byte[0] decoded as tentative ups.load (field cache MISSING for this device - descriptor puts PercentLoad on non-standard page filtered by our parser). rid=0x19 silently consumed. Needs load-test confirmation.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -62,6 +63,7 @@ idf.py direct (after source /home/claude/scripts/idf-activate.sh):
 - [x] Table-driven Feature report architecture (database + APC decode funcs, hardware validated) - v0.44
 - [x] Table-driven Feature report polling (generic walker replaces hardcoded dispatch) - v0.45
 - [x] CyberPower 0601 ups.load fix: rid=0x1D interrupt-IN decode (tentative, needs load-test) - v0.46
+- [x] /compat page update: 6 confirmed devices, 0601 series ST_EX promotion - v0.47
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working

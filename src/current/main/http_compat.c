@@ -172,17 +172,21 @@ void render_compat(char *out, size_t outsz)
 
     /* ═══ APC / Schneider ══════════════════════════════════════════════ */
     VOPEN(outsz, out, "APC / Schneider Electric", "051D:xxxx",
-          "&#10003; 2 confirmed", COL_OK, "21 models");
+          "&#10003; 6 confirmed", COL_OK, "21 models");
 
       SOPEN(outsz, out, "Back-UPS (Consumer / SOHO)", "051D:0002",
-            "&#10003; 2 confirmed", COL_OK, "15 models");
+            "&#10003; 5 confirmed", COL_OK, "15 models");
         MROW(outsz, out, "Back-UPS XS 1500M", "051D:0002", "INT-IN + GET_REPORT",
-             "Charge/runtime/status via INT IN. Voltages via rid=0x17.", ST_OK);
+             "Charge/runtime/status via INT IN. Voltages via rid=0x17. ups.load via rid=0x50.", ST_OK);
+        MROW(outsz, out, "Back-UPS XS 1300G", "051D:0002", "INT-IN + GET_REPORT",
+             "Same decode path as XS 1500M. Confirmed v0.43.", ST_OK);
         MROW(outsz, out, "Back-UPS BR1000G", "051D:0002", "INT-IN + GET_REPORT",
-             "Same VID:PID as XS 1500M. Decode path confirmed working.", ST_OK);
+             "Same VID:PID as XS series. Decode path confirmed working.", ST_OK);
+        MROW(outsz, out, "Back-UPS Pro 1000 / Pro 1000S", "051D:0002", "INT-IN + GET_REPORT",
+             "Confirmed working. Same PID=0002 firmware family.", ST_OK);
         MROW(outsz, out, "Back-UPS BR700G / BR1500G / BR1500MS2", "051D:0002",
              "INT-IN + GET_REPORT", "Same PID=0002 firmware family.", ST_EX);
-        MROW(outsz, out, "Back-UPS Pro USB", "051D:0002",
+        MROW(outsz, out, "Back-UPS Pro USB (other models)", "051D:0002",
              "INT-IN + GET_REPORT", "NUT-listed. PID=0002 family.", ST_EX);
         MROW(outsz, out, "Back-UPS BX600M / BX850M / BX1500M / BX****MI", "051D:0002",
              "INT-IN + GET_REPORT", "BX series. NUT-listed. PID=0002.", ST_EX);
@@ -209,7 +213,9 @@ void render_compat(char *out, size_t outsz)
       SCLOSE(outsz, out);
 
       SOPEN(outsz, out, "Smart-UPS (SMT / SMX / SMC)", "051D:0003+",
-            "&#9711; Unconfirmed", COL_UN, "6 models");
+            "&#10003; 1 confirmed", COL_OK, "6 models");
+        MROW(outsz, out, "Smart-UPS C 1500", "051D:0003", "Standard HID",
+             "Confirmed working. Feature polling active.", ST_OK);
         MROW(outsz, out, "Smart-UPS SMT750I / SMT750", "051D:0003", "Standard HID",
              "NUT-listed. Different PID from Back-UPS. Vendor page remap applied.", ST_UN);
         MROW(outsz, out, "Smart-UPS SMT1500I / SMT1000 / SMT2200 / SMT3000", "051D:0003",
@@ -227,12 +233,12 @@ void render_compat(char *out, size_t outsz)
 
     /* ═══ CyberPower ════════════════════════════════════════════════════ */
     VOPEN(outsz, out, "CyberPower", "0764:xxxx",
-          "&#10003; 1 confirmed", COL_OK, "34 models");
+          "&#10003; 2 confirmed", COL_OK, "34 models");
 
       SOPEN(outsz, out, "AVR / Consumer (PID 0x0501)", "0764:0501",
             "&#10003; 1 confirmed", COL_OK, "22 models");
         MROW(outsz, out, "CP550HG / SX550G", "0764:0501", "Direct bypass INT-IN",
-             "All values via rids 0x20-0x88. Descriptor LogMax bug patched.", ST_OK);
+             "Confirmed. All values via vendor rids 0x20-0x88. Descriptor LogMax bug patched.", ST_OK);
         MROW(outsz, out, "CP1200AVR", "0764:0501", "Direct bypass INT-IN",
              "Same PID=0501 decode path. NUT-listed.", ST_EX);
         MROW(outsz, out, "CP825AVR-G / LE825G", "0764:0501", "Direct bypass INT-IN",
@@ -259,17 +265,19 @@ void render_compat(char *out, size_t outsz)
              "NUT-listed. PID=0501.", ST_EX);
       SCLOSE(outsz, out);
 
-      SOPEN(outsz, out, "OR / PR Rackmount (PID 0x0601)", "0764:0601",
-            "&#9711; Unconfirmed", COL_UN, "9 models");
+      SOPEN(outsz, out, "OR / PR / RT / UT Rackmount (PID 0x0601)", "0764:0601",
+            "&#10003; 1 confirmed", COL_OK, "9 models");
+        MROW(outsz, out, "CST150UC", "0764:0601", "INT-IN direct decode (v0.46+)",
+             "Confirmed v0.46. ups.load via rid=0x1D INT-IN. Charge/runtime/status working.", ST_OK);
         MROW(outsz, out, "OR2200LCDRM2U / OR700LCDRM1U / OR500LCDRM1U / OR1500ERM1U",
-             "0764:0601", "Direct bypass INT-IN",
-             "Same direct decode as 0x0501. Active power LogMax fix applied.", ST_UN);
+             "0764:0601", "INT-IN direct decode",
+             "Same PID=0601. Active power LogMax fix applied. Expect same path as CST150UC.", ST_EX);
         MROW(outsz, out, "PR1500RT2U / PR6000LCDRTXL5U", "0764:0601",
-             "Direct bypass INT-IN", "NUT-listed. PID=0601.", ST_UN);
-        MROW(outsz, out, "RT650EI / UT2200E", "0764:0601", "Direct bypass INT-IN",
-             "NUT-listed. PID=0601.", ST_UN);
+             "INT-IN direct decode", "NUT-listed. PID=0601.", ST_EX);
+        MROW(outsz, out, "RT650EI / UT2200E", "0764:0601", "INT-IN direct decode",
+             "NUT-listed. PID=0601.", ST_EX);
         MROW(outsz, out, "CP1350EPFCLCD (0601 variant)", "0764:0601",
-             "Direct bypass INT-IN", "NUT-listed under PID=0601.", ST_UN);
+             "INT-IN direct decode", "NUT-listed under PID=0601.", ST_EX);
       SCLOSE(outsz, out);
 
       SOPEN(outsz, out, "Legacy (PID 0x0005)", "0764:0005",

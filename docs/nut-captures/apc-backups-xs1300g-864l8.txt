@@ -1,0 +1,406 @@
+I (0) app_init: Project name:     esp32-s3-nut-node-flex
+I (0) app_init: App version:      v0.43
+I (0) app_init: ESP-IDF:          v5.4.4
+[0;32mI (498) diag_cap: armed - 120s capture, buffer 32KB (heap)[0m
+[0;32mI (498) UPS_USB_M15: op_mode=1 upstream=:3493[0m
+[0;32mI (498) ups_var_store: Initialized 4 slots[0m
+[0;32mI (498) pp: pp rom version: e7ae62f[0m
+[0;32mI (508) net80211: net80211 rom version: e7ae62f[0m
+I (518) wifi:wifi driver task: 3fcc2868, prio:23, stack:6656, core=0
+I (528) wifi:wifi firmware version: 8896d66
+I (528) wifi:wifi certification version: v7.0
+I (528) wifi:config NVS flash: enabled
+I (528) wifi:config nano formatting: disabled
+I (528) wifi:Init data frame dynamic rx buffer num: 32
+I (538) wifi:Init static rx mgmt buffer num: 5
+I (538) wifi:Init management short buffer num: 32
+I (548) wifi:Init dynamic tx buffer num: 32
+I (548) wifi:Init static tx FG buffer num: 2
+I (558) wifi:Init static rx buffer size: 1600
+I (558) wifi:Init static rx buffer num: 10
+I (558) wifi:Init dynamic rx buffer num: 32
+[0;32mI (568) wifi_init: rx ba win: 6[0m
+[0;32mI (568) wifi_init: accept mbox: 6[0m
+[0;32mI (578) wifi_init: tcpip mbox: 32[0m
+[0;32mI (578) wifi_init: udp mbox: 6[0m
+[0;32mI (578) wifi_init: tcp mbox: 6[0m
+[0;32mI (588) wifi_init: tcp tx win: 5760[0m
+[0;32mI (588) wifi_init: tcp rx win: 5760[0m
+[0;32mI (598) wifi_init: tcp mss: 1440[0m
+[0;32mI (598) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (598) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (618) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10[0m
+I (718) wifi:mode : sta (14:c1:9f:2d:d8:a0) + softAP (14:c1:9f:2d:d8:a1)
+I (718) wifi:enable tsf
+I (718) wifi:Total power save buffer number: 16
+I (718) wifi:Init max length of beacon: 752/752
+I (728) wifi:Init max length of beacon: 752/752
+[0;32mI (728) wifi_mgr: SoftAP ready: SSID '**********************' -> http://192.168.4.1/config[0m
+[0;32mI (728) wifi_mgr: STA start[0m
+[0;32mI (738) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1[0m
+I (738) wifi:new:<6,1>, old:<6,1>, ap:<6,1>, sta:<6,0>, prof:6, snd_ch_cfg:0x0[0;32mI (748) ups_usb_hid: ups_usb_hid module started[0m
+
+I (758) wifi:state: init -> auth (0xb0)
+[0;32mI (758) wifi_mgr: SoftAP started — portal: http://192.168.4.1/config[0m
+[0;32mI (798) ups_usb_hid: usb_host_install OK[0m
+[0;32mI (808) ups_usb_hid: USB scan ready. Plug UPS into OTG port (VBUS must be powered).[0m
+[0;32mI (838) http_portal: HTTP portal on :80  / = dashboard  /config = settings[0m
+[0;32mI (1168) UPS_USB_M15: Mode 1: STANDALONE - serving NUT on tcp/3493[0m
+[0;32mI (1168) nut_server: NUT server listening on tcp/3493 (plaintext, recv_timeout=30s, no-banner)[0m
+[0;32mI (1168) UPS_USB_M15: Ready. Portal: http://192.168.4.1/config (SoftAP) or http:///config[0m
+[0;32mI (1508) main_task: Returned from app_main()[0m
+I (1518) wifi:state: auth -> assoc (0x0)
+I (1548) wifi:state: assoc -> run (0x10)
+I (1568) wifi:connected with **********, aid = 10, channel 6, BW20, bssid = 3c:78:95:42:3c:9c
+I (1568) wifi:security: WPA3-SAE H2E, phy: bgn, rssi: -24, cipher(pairwise:0x3, group:0x3), pmf:1
+I (1578) wifi:pm start, type: 1
+
+I (1578) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+I (1588) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+I (1638) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+[0;32mI (1738) ups_usb_hid: Device opened (addr=1)[0m
+[0;32mI (1738) ups_usb_hid: USB Device: VID:PID=051D:0002 bcdUSB=0200 class=00 sub=00 proto=00[0m
+[0;32mI (1738) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='UNKNOWN' serial='UNKNOWN' fw='unknown'[0m
+[0;32mI (1748) ups_usb_hid: USB strings: mfr='American Power Conversion' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  '[0m
+[0;32mI (1768) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  ' fw='864.L8'[0m
+[0;32mI (1778) ups_usb_hid: Active config wTotalLength=34 bNumInterfaces=1[0m
+[0;32mI (1788) ups_usb_hid: HID interface: intf=0 alt=0 sub=00 proto=00[0m
+[0;32mI (1788) ups_usb_hid: HID Report Descriptor length = 1134 bytes[0m
+[0;32mI (1798) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  ' fw='864.L8'[0m
+[0;32mI (1808) ups_usb_hid: Interrupt IN EP=0x81 MPS=8 interval=100[0m
+[0;32mI (1818) ups_usb_hid: Interface claimed (intf=0 alt=0)[0m
+[0;32mI (1848) ups_usb_hid: SET_IDLE not accepted (done=1 status=ESP_FAIL) - event-driven mode only[0m
+[0;32mI (1868) ups_usb_hid: HID Report Descriptor received: 1134 bytes (iter=2)[0m
+[0;32mI (1868) ups_hid_desc: Parsed HID descriptor: 29 fields, 20 report IDs, report_ids=yes (items=166 skipped=46)[0m
+[0;32mI (1868) ups_hid_desc: [DUMP] 29 fields, 20 reports[0m
+[0;32mI (1878) ups_device_db: VID:PID=051D:0002 - APC Back-UPS (PID 0002) [known-good, direct-decode (APC Back-UPS) path, quirks=0x0050][0m
+[0;32mI (1888) ups_hid_parser: QUIRK_VENDOR_PAGE_REMAP active (APC vendor pages already normalised by descriptor parser)[0m
+[0;32mI (1898) ups_hid_parser: Decode mode: APC Back-UPS (direct + standard combined)[0m
+[0;32mI (1908) ups_hid_parser: Field cache:[0m
+[0;32mI (1908) ups_hid_parser:   battery.charge  : MISSING (rid=FF)[0m
+[0;32mI (1918) ups_hid_parser:   battery.runtime : found (rid=07)[0m
+[0;32mI (1928) ups_hid_parser:   battery.voltage : MISSING (rid=FF)[0m
+[0;32mI (1928) ups_hid_parser:   ups.load        : found[0m
+[0;32mI (1938) ups_hid_parser:   ac_present      : MISSING[0m
+[0;32mI (1938) ups_hid_parser:   charging_flag   : found[0m
+[0;32mI (1948) ups_hid_parser:   discharging_flag: found[0m
+[0;32mI (1948) ups_hid_parser:   low_battery_flag: MISSING[0m
+[0;32mI (1958) ups_hid_parser: [XCHK] dynamic RID cross-check scheduled in 30s[0m
+[0;32mI (1968) ups_usb_hid: HID report descriptor parsed and loaded OK[0m
+[0;32mI (1968) ups_usb_hid: Starting interrupt IN reader: EP=0x81 MPS=8 buf=56[0m
+[0;32mI (1978) ups_usb_hid: Device has QUIRK_NEEDS_GET_REPORT - starting Feature report polling[0m
+[0;32mI (1988) ups_get_report: Starting for APC (quirks=0x0050, mode=2)[0m
+[0;32mI (1998) ups_get_report: [XCHK Probe] probe queue ready - will fire after XCHK settle[0m
+[0;32mI (2008) ups_usb_hid: XCHK probe queue initialised - will fire after settle timer[0m
+[0;32mI (2008) ups_usb_hid: HID IN changed (10): 06 00 00 08 74 F3 CA 3F 9F 2D[0m
+[0;32mI (2018) ups_get_report: Timer task started (2 RIDs, interval=30000ms)[0m
+[0;32mI (2048) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 74 F3 CA 3F 9F 2D[0m
+[0;32mI (2048) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (2048) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (2058) ups_state: status immediate: '' -> 'OL' (rid=0x0C, warmup)[0m
+[0;32mI (2078) ups_usb_hid: HID IN changed (8): 13 01 B6 3A 74 F3 CA 3F[0m
+[0;32mI (2118) ups_usb_hid: HID IN changed (9): 14 00 00 3A 74 F3 CA 3F 9F[0m
+[0;32mI (2148) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (2178) ups_usb_hid: HID IN changed (8): 21 06 00 00 00 F3 CA 3F[0m
+[0;32mI (2598) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (2628) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (2628) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (2628) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (2658) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (2758) esp_netif_handlers: sta ip: 192.168.100.144, mask: 255.255.255.0, gw: 192.168.100.1[0m
+[0;32mI (2758) wifi_mgr: STA got IP: 192.168.100.144[0m
+[0;32mI (2758) wifi_mgr: STA connected — disabling SoftAP.[0m
+I (2768) wifi:mode : sta (14:c1:9f:2d:d8:a0)
+[0;32mI (4038) ups_get_report: [GR] rid=0x17 mode=2 intf=0 wlen=16[0m
+[0;32mI (4038) ups_get_report: [SETUP] rid=0x17 setup: A1 01 17 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (4038) ups_get_report: [SETUP] submit_control rid=0x17 OK - polling for callback[0m
+[0;32mI (4048) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (4048) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (4058) ups_get_report: [CTRL_CB] payload (3 bytes): 17 78 00[0m
+[0;32mI (4068) ups_get_report: [SETUP] rid=0x17 callback fired OK[0m
+[0;32mI (4068) ups_get_report: [APC Feature] rid=0x17 len=3 bytes: 17 78 00[0m
+[0;32mI (4078) ups_get_report: [APC Feature] rid=0x17 line_voltage=120V (raw=120)[0m
+[0;32mI (4088) ups_get_report: [APC Feature] input.voltage = output.voltage = 120V[0m
+[0;32mI (4108) ups_get_report: [GR] rid=0x50 mode=2 intf=0 wlen=16[0m
+[0;32mI (4108) ups_get_report: [SETUP] rid=0x50 setup: A1 01 50 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (4108) ups_get_report: [SETUP] submit_control rid=0x50 OK - polling for callback[0m
+[0;32mI (4118) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (4128) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (4128) ups_get_report: [CTRL_CB] payload (2 bytes): 50 00[0m
+[0;32mI (4138) ups_get_report: [SETUP] rid=0x50 callback fired OK[0m
+[0;32mI (4138) ups_get_report: [APC Feature] rid=0x50 len=2 bytes: 50 00[0m
+[0;32mI (4148) ups_get_report: [APC Feature] rid=0x50 ups.load=0%[0m
+[0;32mI (6878) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (6918) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (6918) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (6918) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (6948) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (11138) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (11168) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (11168) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (11168) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (11198) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (15428) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (15458) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (15458) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (15458) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (15488) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (19678) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (19718) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (19718) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (19718) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (19748) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+I (23158) wifi:idx:0 (ifx:0, 3c:78:95:42:3c:9c), tid:0, ssn:0, winSize:64
+I (23168) wifi:idx:1 (ifx:0, 3c:78:95:42:3c:9c), tid:6, ssn:2, winSize:64
+[0;32mI (23168) nut_server: [#1] connect from 192.168.100.160:45446[0m
+[0;32mI (23938) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (23968) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (23968) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (23968) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (23998) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (28228) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (28258) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (28258) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (28258) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (28288) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (31958) ups_hid_parser: [XCHK] ---- Dynamic RID cross-check (30s settle) ----[0m
+[0;32mI (31958) ups_hid_parser: [XCHK] rid=0x06 seen in traffic, declared in descriptor - OK[0m
+[0;33mW (31968) ups_hid_parser: [XCHK] rid=0x0C seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (31978) ups_hid_parser: [XCHK] rid=0x13 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (31988) ups_hid_parser: [XCHK] rid=0x14 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (31998) ups_hid_parser: [XCHK] rid=0x16 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (32018) ups_hid_parser: [XCHK] rid=0x21 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;32mI (32028) ups_hid_parser: [XCHK] rid=0x07 declared as Input (50 bytes) but never arrived - queuing GET_REPORT probe (wlen=50)[0m
+[0;32mI (32038) ups_get_report: [XCHK Probe] queued rid=0x07 size=50[0m
+[0;32mI (32048) ups_hid_parser: [XCHK] rid=0x52 declared as Input (2 bytes) but never arrived - queuing GET_REPORT probe (wlen=2)[0m
+[0;32mI (32058) ups_get_report: [XCHK Probe] queued rid=0x52 size=2[0m
+[0;32mI (32068) ups_hid_parser: [XCHK] Summary: 6 RIDs seen, 5 undeclared (vendor ext), 2 declared-but-silent[0m
+[0;32mI (32078) ups_hid_parser: [XCHK] -----------------------------------------------[0m
+[0;32mI (32078) ups_get_report: [XCHK Probe] rid=0x07 wlen=50 - issuing GET_REPORT (Feature type=3)[0m
+[0;32mI (32088) ups_get_report: [SETUP] rid=0x07 setup: A1 01 07 03 00 00 32 00 intf=0 wlen=50[0m
+[0;32mI (32098) ups_get_report: [SETUP] submit_control rid=0x07 OK - polling for callback[0m
+[0;32mI (32108) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (32118) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (32118) ups_get_report: [CTRL_CB] payload (3 bytes): 07 26 49[0m
+[0;32mI (32128) ups_get_report: [SETUP] rid=0x07 callback fired OK[0m
+[0;32mI (32138) ups_get_report: [XCHK Probe] rid=0x07 response (3 bytes): 07 26 49[0m
+[0;32mI (32138) ups_get_report:   [MAP] rid=07 type=0 bit_off=  0 size=16 page=85 uid=0085 ctx=0024 val=18726    -> battery.runtime[0m
+[0;32mI (32158) ups_get_report:   [MAP] rid=07 type=2 bit_off=  0 size=16 page=85 uid=0073 ctx=0024 val=18726    -> battery.runtime[0m
+[0;32mI (32178) ups_get_report: [XCHK Probe] rid=0x52 wlen=2 - issuing GET_REPORT (Feature type=3)[0m
+[0;32mI (32178) ups_get_report: [SETUP] rid=0x52 setup: A1 01 52 03 00 00 02 00 intf=0 wlen=2[0m
+[0;32mI (32188) ups_get_report: [SETUP] submit_control rid=0x52 OK - polling for callback[0m
+[0;32mI (32188) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (32198) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (32208) ups_get_report: [CTRL_CB] payload (2 bytes): 52 0C[0m
+[0;32mI (32208) ups_get_report: [SETUP] rid=0x52 callback fired OK[0m
+[0;32mI (32218) ups_get_report: [XCHK Probe] rid=0x52 response (2 bytes): 52 0C[0m
+[0;32mI (32478) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (32518) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (32518) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (32518) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (32548) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (34178) ups_get_report: [GR] rid=0x17 mode=2 intf=0 wlen=16[0m
+[0;32mI (34178) ups_get_report: [SETUP] rid=0x17 setup: A1 01 17 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (34178) ups_get_report: [SETUP] submit_control rid=0x17 OK - polling for callback[0m
+[0;32mI (34188) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (34188) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (34198) ups_get_report: [CTRL_CB] payload (3 bytes): 17 78 00[0m
+[0;32mI (34208) ups_get_report: [SETUP] rid=0x17 callback fired OK[0m
+[0;32mI (34208) ups_get_report: [APC Feature] rid=0x17 len=3 bytes: 17 78 00[0m
+[0;32mI (34218) ups_get_report: [APC Feature] rid=0x17 line_voltage=120V (raw=120)[0m
+[0;32mI (34228) ups_get_report: [APC Feature] input.voltage = output.voltage = 120V[0m
+[0;32mI (34248) ups_get_report: [GR] rid=0x50 mode=2 intf=0 wlen=16[0m
+[0;32mI (34248) ups_get_report: [SETUP] rid=0x50 setup: A1 01 50 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (34248) ups_get_report: [SETUP] submit_control rid=0x50 OK - polling for callback[0m
+[0;32mI (34258) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (34268) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (34268) ups_get_report: [CTRL_CB] payload (2 bytes): 50 00[0m
+[0;32mI (34278) ups_get_report: [SETUP] rid=0x50 callback fired OK[0m
+[0;32mI (34288) ups_get_report: [APC Feature] rid=0x50 len=2 bytes: 50 00[0m
+[0;32mI (34288) ups_get_report: [APC Feature] rid=0x50 ups.load=0%[0m
+[0;32mI (36768) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (36798) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (36798) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (36808) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (36838) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;32mI (41028) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 9F 2D[0m
+[0;32mI (41058) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 9F 2D[0m
+[0;32mI (41058) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (41058) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (41088) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 9F 2D D8[0m
+[0;33mW (42938) ups_usb_hid: INT-IN transfer status=7 actual=0[0m
+[0;31mE (42938) USB HOST: Enqueue URB error: ESP_ERR_INVALID_STATE[0m
+[0;33mW (42938) ups_usb_hid: usb_host_transfer_submit(resubmit): ESP_ERR_INVALID_STATE[0m
+[0;33mW (42948) ups_usb_hid: DEV_GONE — cleaning up[0m
+[0;32mI (42968) ups_get_report: Stopping...[0m
+[0;32mI (42968) voltronic_qs: QS serial polling stopped[0m
+[0;32mI (42968) ups_state: ups_state invalidated on USB disconnect[0m
+[0;32mI (42968) ups_usb_hid: USB device cleanup complete. Waiting for NEW_DEV...[0m
+[0;32mI (42998) ups_get_report: Timer task exiting[0m
+[0;33mW (53368) nut_server: [#1] recv error errno=11 (timeout or reset)[0m
+[0;32mI (53368) nut_server: [#1] disconnected[0m
+[0;32mI (59228) ups_usb_hid: Device opened (addr=2)[0m
+[0;32mI (59228) ups_usb_hid: USB Device: VID:PID=051D:0002 bcdUSB=0200 class=00 sub=00 proto=00[0m
+[0;32mI (59228) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='UNKNOWN' serial='UNKNOWN' fw='unknown'[0m
+[0;32mI (59238) ups_usb_hid: USB strings: mfr='American Power Conversion' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  '[0m
+[0;32mI (59258) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  ' fw='864.L8'[0m
+[0;32mI (59268) ups_usb_hid: Active config wTotalLength=34 bNumInterfaces=1[0m
+[0;32mI (59278) ups_usb_hid: HID interface: intf=0 alt=0 sub=00 proto=00[0m
+[0;32mI (59278) ups_usb_hid: HID Report Descriptor length = 1134 bytes[0m
+[0;32mI (59288) ups_state: USB identity: VID=051D PID=0002 mfr='APC' product='Back-UPS XS 1300G FW:864.L8 .D USB FW:L8 ' serial='3B1636X08301  ' fw='864.L8'[0m
+[0;32mI (59308) ups_usb_hid: Interrupt IN EP=0x81 MPS=8 interval=100[0m
+[0;32mI (59308) ups_usb_hid: Interface claimed (intf=0 alt=0)[0m
+[0;32mI (59338) ups_usb_hid: SET_IDLE not accepted (done=1 status=ESP_FAIL) - event-driven mode only[0m
+[0;32mI (59358) ups_usb_hid: HID Report Descriptor received: 1134 bytes (iter=2)[0m
+[0;32mI (59358) ups_hid_desc: Parsed HID descriptor: 29 fields, 20 report IDs, report_ids=yes (items=166 skipped=46)[0m
+[0;32mI (59358) ups_hid_desc: [DUMP] 29 fields, 20 reports[0m
+[0;32mI (59368) ups_device_db: VID:PID=051D:0002 - APC Back-UPS (PID 0002) [known-good, direct-decode (APC Back-UPS) path, quirks=0x0050][0m
+[0;32mI (59378) ups_hid_parser: QUIRK_VENDOR_PAGE_REMAP active (APC vendor pages already normalised by descriptor parser)[0m
+[0;32mI (59388) ups_hid_parser: Decode mode: APC Back-UPS (direct + standard combined)[0m
+[0;32mI (59398) ups_hid_parser: Field cache:[0m
+[0;32mI (59398) ups_hid_parser:   battery.charge  : MISSING (rid=FF)[0m
+[0;32mI (59408) ups_hid_parser:   battery.runtime : found (rid=07)[0m
+[0;32mI (59418) ups_hid_parser:   battery.voltage : MISSING (rid=FF)[0m
+[0;32mI (59418) ups_hid_parser:   ups.load        : found[0m
+[0;32mI (59428) ups_hid_parser:   ac_present      : MISSING[0m
+[0;32mI (59428) ups_hid_parser:   charging_flag   : found[0m
+[0;32mI (59438) ups_hid_parser:   discharging_flag: found[0m
+[0;32mI (59448) ups_hid_parser:   low_battery_flag: MISSING[0m
+[0;32mI (59448) ups_hid_parser: [XCHK] dynamic RID cross-check scheduled in 30s[0m
+[0;32mI (59458) ups_usb_hid: HID report descriptor parsed and loaded OK[0m
+[0;32mI (59468) ups_usb_hid: Starting interrupt IN reader: EP=0x81 MPS=8 buf=56[0m
+[0;32mI (59468) ups_usb_hid: Device has QUIRK_NEEDS_GET_REPORT - starting Feature report polling[0m
+[0;32mI (59478) ups_get_report: Starting for APC (quirks=0x0050, mode=2)[0m
+[0;32mI (59488) ups_get_report: [XCHK Probe] probe queue ready - will fire after XCHK settle[0m
+[0;32mI (59498) ups_usb_hid: XCHK probe queue initialised - will fire after settle timer[0m
+[0;32mI (59508) ups_usb_hid: HID IN changed (10): 06 00 00 08 74 F3 CA 3F 3C 78[0m
+[0;32mI (59508) ups_get_report: Timer task started (2 RIDs, interval=30000ms)[0m
+[0;32mI (59538) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 74 F3 CA 3F 3C 78[0m
+[0;32mI (59538) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (59538) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (59548) ups_state: status immediate: 'WAIT' -> 'OL' (rid=0x0C, warmup)[0m
+[0;32mI (59568) ups_usb_hid: HID IN changed (8): 13 01 B6 3A 74 F3 CA 3F[0m
+[0;32mI (59598) ups_usb_hid: HID IN changed (9): 14 00 00 3A 74 F3 CA 3F 3C[0m
+[0;32mI (59628) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (59668) ups_usb_hid: HID IN changed (8): 21 06 00 00 00 F3 CA 3F[0m
+[0;32mI (61528) ups_get_report: [GR] rid=0x17 mode=2 intf=0 wlen=16[0m
+[0;32mI (61528) ups_get_report: [SETUP] rid=0x17 setup: A1 01 17 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (61528) ups_get_report: [SETUP] submit_control rid=0x17 OK - polling for callback[0m
+[0;32mI (61538) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (61538) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (61548) ups_get_report: [CTRL_CB] payload (3 bytes): 17 78 00[0m
+[0;32mI (61558) ups_get_report: [SETUP] rid=0x17 callback fired OK[0m
+[0;32mI (61558) ups_get_report: [APC Feature] rid=0x17 len=3 bytes: 17 78 00[0m
+[0;32mI (61568) ups_get_report: [APC Feature] rid=0x17 line_voltage=120V (raw=120)[0m
+[0;32mI (61578) ups_get_report: [APC Feature] input.voltage = output.voltage = 120V[0m
+[0;32mI (61598) ups_get_report: [GR] rid=0x50 mode=2 intf=0 wlen=16[0m
+[0;32mI (61598) ups_get_report: [SETUP] rid=0x50 setup: A1 01 50 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (61598) ups_get_report: [SETUP] submit_control rid=0x50 OK - polling for callback[0m
+[0;32mI (61608) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (61618) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (61618) ups_get_report: [CTRL_CB] payload (2 bytes): 50 00[0m
+[0;32mI (61628) ups_get_report: [SETUP] rid=0x50 callback fired OK[0m
+[0;32mI (61638) ups_get_report: [APC Feature] rid=0x50 len=2 bytes: 50 00[0m
+[0;32mI (61638) ups_get_report: [APC Feature] rid=0x50 ups.load=0%[0m
+[0;32mI (62388) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (62418) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (62418) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (62418) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (62448) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (66638) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (66668) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (66668) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (66678) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (66708) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (70928) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (70958) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (70958) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (70958) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (70988) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (75188) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (75218) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (75218) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (75218) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (75248) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (79438) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (79468) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (79468) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (79478) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (79508) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (83068) nut_server: [#2] connect from 192.168.100.160:37964[0m
+[0;32mI (83728) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (83758) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (83758) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (83758) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (83788) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (87988) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (88018) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (88018) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (88018) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (88048) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (89448) ups_hid_parser: [XCHK] ---- Dynamic RID cross-check (30s settle) ----[0m
+[0;32mI (89448) ups_hid_parser: [XCHK] rid=0x06 seen in traffic, declared in descriptor - OK[0m
+[0;33mW (89458) ups_hid_parser: [XCHK] rid=0x0C seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (89468) ups_hid_parser: [XCHK] rid=0x13 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (89478) ups_hid_parser: [XCHK] rid=0x14 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (89498) ups_hid_parser: [XCHK] rid=0x16 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;33mW (89508) ups_hid_parser: [XCHK] rid=0x21 seen in traffic but NOT declared as Input in descriptor (vendor extension or undocumented)[0m
+[0;32mI (89518) ups_hid_parser: [XCHK] rid=0x07 declared as Input (50 bytes) but never arrived - queuing GET_REPORT probe (wlen=50)[0m
+[0;32mI (89528) ups_get_report: [XCHK Probe] queued rid=0x07 size=50[0m
+[0;32mI (89538) ups_hid_parser: [XCHK] rid=0x52 declared as Input (2 bytes) but never arrived - queuing GET_REPORT probe (wlen=2)[0m
+[0;32mI (89548) ups_get_report: [XCHK Probe] queued rid=0x52 size=2[0m
+[0;32mI (89558) ups_hid_parser: [XCHK] Summary: 6 RIDs seen, 5 undeclared (vendor ext), 2 declared-but-silent[0m
+[0;32mI (89568) ups_hid_parser: [XCHK] -----------------------------------------------[0m
+[0;32mI (89578) ups_get_report: [XCHK Probe] rid=0x07 wlen=50 - issuing GET_REPORT (Feature type=3)[0m
+[0;32mI (89578) ups_get_report: [SETUP] rid=0x07 setup: A1 01 07 03 00 00 32 00 intf=0 wlen=50[0m
+[0;32mI (89588) ups_get_report: [SETUP] submit_control rid=0x07 OK - polling for callback[0m
+[0;32mI (89598) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (89608) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (89618) ups_get_report: [CTRL_CB] payload (3 bytes): 07 26 49[0m
+[0;32mI (89618) ups_get_report: [SETUP] rid=0x07 callback fired OK[0m
+[0;32mI (89628) ups_get_report: [XCHK Probe] rid=0x07 response (3 bytes): 07 26 49[0m
+[0;32mI (89638) ups_get_report:   [MAP] rid=07 type=0 bit_off=  0 size=16 page=85 uid=0085 ctx=0024 val=18726    -> battery.runtime[0m
+[0;32mI (89648) ups_get_report:   [MAP] rid=07 type=2 bit_off=  0 size=16 page=85 uid=0073 ctx=0024 val=18726    -> battery.runtime[0m
+[0;32mI (89668) ups_get_report: [XCHK Probe] rid=0x52 wlen=2 - issuing GET_REPORT (Feature type=3)[0m
+[0;32mI (89668) ups_get_report: [SETUP] rid=0x52 setup: A1 01 52 03 00 00 02 00 intf=0 wlen=2[0m
+[0;32mI (89678) ups_get_report: [SETUP] submit_control rid=0x52 OK - polling for callback[0m
+[0;32mI (89688) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (89688) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (89698) ups_get_report: [CTRL_CB] payload (2 bytes): 52 0C[0m
+[0;32mI (89708) ups_get_report: [SETUP] rid=0x52 callback fired OK[0m
+[0;32mI (89708) ups_get_report: [XCHK Probe] rid=0x52 response (2 bytes): 52 0C[0m
+[0;32mI (91668) ups_get_report: [GR] rid=0x17 mode=2 intf=0 wlen=16[0m
+[0;32mI (91668) ups_get_report: [SETUP] rid=0x17 setup: A1 01 17 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (91668) ups_get_report: [SETUP] submit_control rid=0x17 OK - polling for callback[0m
+[0;32mI (91678) ups_get_report: [CTRL_CB] status=0 actual_bytes=11[0m
+[0;32mI (91678) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (91688) ups_get_report: [CTRL_CB] payload (3 bytes): 17 78 00[0m
+[0;32mI (91698) ups_get_report: [SETUP] rid=0x17 callback fired OK[0m
+[0;32mI (91698) ups_get_report: [APC Feature] rid=0x17 len=3 bytes: 17 78 00[0m
+[0;32mI (91708) ups_get_report: [APC Feature] rid=0x17 line_voltage=120V (raw=120)[0m
+[0;32mI (91718) ups_get_report: [APC Feature] input.voltage = output.voltage = 120V[0m
+[0;32mI (91738) ups_get_report: [GR] rid=0x50 mode=2 intf=0 wlen=16[0m
+[0;32mI (91738) ups_get_report: [SETUP] rid=0x50 setup: A1 01 50 03 00 00 10 00 intf=0 wlen=16[0m
+[0;32mI (91738) ups_get_report: [SETUP] submit_control rid=0x50 OK - polling for callback[0m
+[0;32mI (91748) ups_get_report: [CTRL_CB] status=0 actual_bytes=10[0m
+[0;32mI (91758) ups_get_report: [CTRL_CB] transfer status: COMPLETED (0)[0m
+[0;32mI (91758) ups_get_report: [CTRL_CB] payload (2 bytes): 50 00[0m
+[0;32mI (91768) ups_get_report: [SETUP] rid=0x50 callback fired OK[0m
+[0;32mI (91778) ups_get_report: [APC Feature] rid=0x50 len=2 bytes: 50 00[0m
+[0;32mI (91778) ups_get_report: [APC Feature] rid=0x50 ups.load=0%[0m
+[0;32mI (92268) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (92308) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (92308) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (92308) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (92338) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (96528) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (96558) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (96558) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (96558) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (96588) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (100788) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3C 78[0m
+[0;32mI (100818) ups_usb_hid: HID IN changed (10): 0C 64 B6 3A 00 F3 CA 3F 3C 78[0m
+[0;32mI (100818) ups_hid_parser: [APC] battery.charge=100%[0m
+[0;32mI (100818) ups_hid_parser: [APC] battery.runtime=15030s[0m
+[0;32mI (100848) ups_usb_hid: HID IN changed (11): 16 0C 00 00 00 F3 CA 3F 3C 78 95[0m
+[0;32mI (105068) ups_usb_hid: HID IN changed (10): 06 00 00 08 00 F3 CA 3F 3
