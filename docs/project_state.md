@@ -1,26 +1,33 @@
 # Project State - esp32-s3-nut-node-flex
-<!-- Updated: 2026-04-09 -->
+<!-- Updated: 2026-05-30 -->
+
+## Last CLI Run
+<!-- Updated: 2026-05-30 -->
+Command: idf.py build (v0.44-alpha architecture foundation)
+Result: Success
+Output summary:
+- Version: v0.44-alpha (table-driven Feature report architecture)
+- Binary size: 0xf3d40 bytes (1003840 bytes), 76% of 4MB partition free
+- Bootloader: 0x5220 bytes, 36% free
+- Device: ESP32-S3 (QFN56) rev v0.2, 8MB PSRAM, MAC 10:20:ba:4a:e4:9c
+Status: Architecture refactoring in progress. Device database extended with Feature report polling tables.
 
 ## Last GitHub Push
-Version: v0.30
-Tag: v0.30
-Commit: 3dc222e
-Message: v0.30 - Fix INT-IN buffer truncation; add PowerWalker; Eaton rid=0x06 polling
+Version: v0.43
+Tag: v0.43
+Commit: cdb6d98
+Message: v0.43 - Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS
 Result: Success
 
 ## Previous Push
-Version: v0.29
-Tag: v0.29
-Commit: 5ca71cd
-Message: v0.29 - Fix Eaton 3S stale data: add rid=0x06 to periodic GET_REPORT polling
+Version: v0.42
+Tag: v0.42
+Commit: 1fccf39
+Message: v0.42 - Silence annotate_report payload-too-short spam for truncated GET_REPORT responses
 Result: Success
 
 ## Status
-v0.32 - Feature-fallback field cache + PowerWalker GET_REPORT quirk. Built clean.
-- Fix: ups_hid_parser.c (R18): two-pass field cache - Input first, Feature as fallback.
-  PowerWalker battery.runtime on rid=0x35 declared only as Feature, now decoded from INT-IN.
-- Fix: ups_db_standard.c: add QUIRK_NEEDS_GET_REPORT to PowerWalker 0665:5161.
-  Enables periodic GET_REPORT for rid=0x30 (ac_present/charging/discharging flags).
+v0.43 - rid=0x50 (PowerConverter.PercentLoad) added to APC Back-UPS periodic GET_REPORT polling. ups.load now sourced from Feature report for PID 0x0002 (XS 1400U). Decode confirmed from NUT apc-hid.c and live debug dump.
 
 ## Parent
 esp32-s3-nut-node v15.18
@@ -30,11 +37,15 @@ Forked from: v15.18
 Last synced: v15.18 (initial copy, 2026-04-02)
 
 ## CLI Build Capability
-idf-build.ps1 at project root - all targets CLI-driven:
-- Build:         powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target build
-- Flash:         powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target flash
-- Flash+Monitor: powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target flash-monitor -Duration 40
-- Monitor only:  powershell -ExecutionPolicy Bypass -File .\idf-build.ps1 -Target monitor -Duration 60
+build.sh at project root - all targets CLI-driven:
+- Build:         ./build.sh build
+- Flash:         ./build.sh flash
+- Flash+Monitor: ./build.sh flash monitor
+
+idf.py direct (after source /home/claude/scripts/idf-activate.sh):
+- Build:         idf.py build
+- Flash:         idf.py -p /dev/esp32_flash flash
+- Monitor:       idf.py -p /dev/esp32_flash monitor
 
 ## Implementation Progress
 - [x] Scaffold, v15.18 baseline, README, DOC-REGISTRY, sync rules - v0.1
@@ -44,6 +55,11 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - [x] Phase 4 - Dynamic RID scanning (seen_rids bitmask + settle XCHK) - v0.6
 - [x] Phase 4 - Targeted GET_REPORT probe for declared-but-silent Input RIDs - v0.7
 - [x] Phase 4 - NUT mge-hid.c mapping table evaluation + annotation layer - v0.8
+- [x] IDF 5.4.1 INT-IN buffer MPS alignment fix; 4MB partition table; Linux native build - v0.40
+- [x] Version string fix in CMakeLists.txt; parser/get_report sync confirmed - v0.41
+- [x] Silence annotate_report payload-too-short WARN spam for truncated GET_REPORT responses - v0.42
+- [x] Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS PID 0x0002 - v0.43
+- [x] v0.44-alpha: Table-driven Feature report architecture (database + APC decode funcs) - In progress
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working
@@ -55,32 +71,15 @@ idf-build.ps1 at project root - all targets CLI-driven:
 - bridge_receiver.py on port 5493 - Mode 3 target
 - SSH: nut-test-lxc key
 
-## Last CLI Run
-Command: idf-build.ps1 -Target build (via SSH to Stryder@10.0.0.2) - 2026-04-11
-Result: SUCCESS
-Output summary: Build clean. Zero errors, zero warnings. Binary: 0xeead0 bytes (7% free in app partition). Bootloader: 0x5260 bytes (36% free).
-Next step: Push v0.32 to GitHub.
+## v0.43 Baseline Test (2026-05-29)
+ESP32 NUT server queried via `upsc ups-test@10.0.0.190:3493`:
+- Device: APC Back-UPS XS 1500M (FW:947.d10) at IP 10.0.0.190
+- **ups.load: PRESENT, reporting 0%** (rid=0x50 polling working)
+- All expected vars: battery.charge, battery.runtime, input.voltage, output.voltage, ups.status, device info
+- Driver version: 15.19 (esp32-nut-hid)
+- Status: OL (on line), no active load
 
-## Last Action
-2026-04-11 - v0.32: Feature-fallback field cache + PowerWalker QUIRK_NEEDS_GET_REPORT.
-Root cause (submission b4c432): PowerWalker VI 3000 SCL battery.runtime on rid=0x35
-declared only as Feature (type=2). Field cache skipped type!=0, so runtime was NULL.
-Device sends rid=0x35 on interrupt-IN. Fix: two-pass cache scan (Input first, Feature
-fallback). Also: QUIRK_NEEDS_GET_REPORT enables periodic polling for rid=0x30 status flags.
-
-## Next Step
-- Push v0.32 to GitHub
-- MyDisplayName (PowerWalker VI 3000 SCL): flash v0.32, confirm battery.runtime
-- MyDisplayName: discharge test (unplug mains 10s) to confirm OB transition
-- If GET_REPORT rid=0x30 returns only 2 bytes: decode rid=0x32 INT-IN for status
-
-Candidate next tasks:
-- CyberPower 3000R ups.status: decode rid=0x0B bits to extract ac_present
-- CyberPower 3000R battery.runtime/voltage: add Feature report polling
-- D002: Mode 1 fallback when upstream unreachable (Mode 2/3 boot fail)
-- Bridge GET_REPORT forwarding (type=0x02) for Feature reports
-- APC direct-decode: add input.transfer.low/high from rid=0x52 (D006)
-- Eaton: decode OB event from discharge log once captured
+Ready for: Physical USB capture comparison with NUT library direct USB access.
 
 ## Key Constraint
 Never backport experimental changes to esp32-s3-nut-node.

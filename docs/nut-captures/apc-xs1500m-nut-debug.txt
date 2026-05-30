@@ -1,0 +1,15 @@
+   0.000000	[D1] upsdrvctl commanding all drivers (1 found): (null)
+   0.000016	[D1] Starting UPS: apc-test
+Network UPS Tools - Generic HID driver 0.52 (2.8.1)
+USB communication driver (libusb 1.0) 0.46
+libusb1: Could not open any HID devices: insufficient permissions on everything
+No matching HID UPS found
+upsnotify: failed to notify about state 4: no notification tech defined, will not spam more about it
+   0.014982	Driver failed to start (exit status=1)
+   0.015004	[D1] upsdrvctl: got some errors with preceding operations, exiting with failure now
+   0.015009	[D1] Completed the job of upsdrvctl tool, cleaning up and exiting now
+   0.015020	[D1] Completed the job of upsdrvctl tool, clean-up finished, exiting now
+Network UPS Tools - UPS driver controller 2.8.1
+=== NUT upsc output ===
+Error: Connection failure: Connection refused
+=== Capture complete ===

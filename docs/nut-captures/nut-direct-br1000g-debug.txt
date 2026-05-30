@@ -1,0 +1,1316 @@
+   0.000001	[D3] main_arg: var='driver' val='usbhid-ups'
+   0.000020	[D3] main_arg: var='port' val='auto'
+   0.000066	[D3] main_arg: var='desc' val='APC UPS test slot'
+   0.000078	[D3] main_arg: var='port' val='auto'
+   0.000086	[D1] Network UPS Tools version 2.8.1 (release/snapshot of 2.8.1) built with gcc (Ubuntu 13.2.0-23ubuntu2) 13.2.0 and configured with flags: --build=x86_64-linux-gnu --prefix=/usr --includedir=${prefix}/include --mandir=${prefix}/share/man --infodir=${prefix}/share/info --sysconfdir=/etc --localstatedir=/var --disable-option-checking --disable-silent-rules --libdir=${prefix}/lib/x86_64-linux-gnu --runstatedir=/run --disable-maintainer-mode --disable-dependency-tracking --prefix= --sysconfdir=/etc/nut --includedir=/usr/include --mandir=/usr/share/man --libdir=${prefix}/lib/x86_64-linux-gnu --libexecdir=/usr/libexec --with-ssl --with-nss --with-cgi --with-dev --enable-static --with-statepath=/run/nut --with-altpidpath=/run/nut --with-drvpath=/lib/nut --with-cgipath=/usr/lib/cgi-bin/nut --with-htmlpath=/usr/share/nut/www --with-pidpath=/run/nut --datadir=/usr/share/nut --with-pkgconfig-dir=/usr/lib/x86_64-linux-gnu/pkgconfig --with-user=nut --with-group=nut --with-udev-dir=/lib/udev --with-systemdsystemunitdir=/lib/systemd/system --with-systemdshutdowndir=/lib/systemd/system-shutdown --with-systemdtmpfilesdir=/usr/lib/tmpfiles.d --with-python=python3 --with-python3=/usr/bin/python3 --with-doc=man,html-single,html-chunked,pdf
+   0.000112	[D1] debug level is '4'
+   0.001215	[D1] Succeeded to become_user(nut): now UID=110 GID=111
+   0.001250	[D1] upsdrv_initups (non-SHUT)...
+   0.001255	[D2] Initializing an USB-connected UPS with library libusb-1.0.27 (API: 0x100010a) (NUT subdriver name='USB communication driver (libusb 1.0)' ver='0.46')
+   0.013210	[D2] Checking device 1 of 13 (051D/0002)
+   0.015613	[D2] - VendorID: 051d
+   0.015626	[D2] - ProductID: 0002
+   0.015629	[D2] - Manufacturer: American Power Conversion
+   0.015631	[D2] - Product: Back-UPS BR1000G FW:868.L2 .D USB FW:L2  
+   0.015634	[D2] - Serial Number: 3B1145X11360  
+   0.015636	[D2] - Bus: 009
+   0.015639	[D2] - Bus Port: 003
+   0.015641	[D2] - Device: 006
+   0.015643	[D2] - Device release number: 0090
+   0.015646	[D2] Trying to match device
+   0.015649	[D2] match_function_subdriver (non-SHUT mode): matching a device...
+   0.015654	[D3] match_function_regex: matching a device...
+   0.015657	[D2] Device matches
+   0.015660	[D2] Reading first configuration descriptor
+   0.015670	[D3] libusb_kernel_driver_active() returned 0: Success
+   0.015699	[D2] Claimed interface 0 successfully
+   0.015709	[D3] nut_usb_set_altinterface: skipped libusb_set_interface_alt_setting(udev, 0, 0)
+   0.034305	[D2] Retrieved HID descriptor (expected 9, got 9)
+   0.034320	[D3] HID descriptor, method 1: (9 bytes) => 09 21 00 01 21 01 22 6d 04
+   0.034323	[D3] HID descriptor length (method 1) 1133
+   0.034326	[D4] i=0, extra[i]=09, extra[i+1]=21
+   0.034330	[D3] HID descriptor, method 2: (9 bytes) => 09 21 00 01 21 01 22 6d 04
+   0.034334	[D3] HID descriptor length (method 2) 1133
+   0.034337	[D2] HID descriptor length 1133
+   0.036328	[D2] Report Descriptor size = 1133
+   0.036343	[D3] Report Descriptor: (1133 bytes) => 05 84 09 04 a1 01 09 24 a1 00 85 01 09
+   0.036348	[D3]  fe 79 02 75 08 95 01 15 00 26 ff 00 b1 22 85 02 09 ff 79 03 b1 22 85 03 05
+   0.036353	[D3]  85 09 89 79 04 b1 22 85 04 09 8f 79 01 b1 22 85 05 09 8b b1 22 85 06 09 44
+   0.036364	[D3]  81 a2 09 44 b1 a2 09 45 81 a2 09 45 b1 a2 06 86 ff 09 60 81 a2 09 60 b1 a2
+   0.036368	[D3]  85 07 05 85 09 85 75 10 27 ff ff 00 00 b1 a2 85 08 05 84 09 40 67 21 d1 f0
+   0.036373	[D3]  00 55 05 b1 22 85 09 09 30 b1 a2 85 0a 09 fd 75 08 26 ff 00 65 00 55 00 79
+   0.036377	[D3]  01 b1 22 85 0b 05 85 09 2c b1 22 85 0c 09 66 25 64 81 a2 09 66 b1 a2 09 68
+   0.036381	[D3]  75 10 27 ff ff 00 00 66 01 10 81 a2 09 68 b1 a2 85 0d 09 83 75 08 25 64 65
+   0.036386	[D3]  00 b1 22 85 0e 09 67 b1 22 85 0f 09 8c b1 22 85 10 09 8e b1 22 85 11 09 29
+   0.036390	[D3]  15 01 b1 a2 85 12 09 8d 15 00 b1 22 85 13 09 d0 25 01 81 a2 09 d0 b1 a2 85
+   0.036394	[D3]  14 09 42 81 a2 09 42 b1 a2 05 84 09 69 81 a2 09 69 b1 a2 85 15 09 57 75 10
+   0.036410	[D3]  16 ff ff 26 ff 7f 66 01 10 b1 a2 09 02 a1 02 85 16 05 85 65 00 75 01 15 00
+   0.036415	[D3]  25 01 09 44 81 a2 09 44 b1 a2 09 45 81 a2 09 45 b1 a2 09 d0 81 a2 09 d0 b1
+   0.036420	[D3]  a2 09 d1 81 a2 09 d1 b1 a2 09 42 81 a2 09 42 b1 a2 05 84 09 69 81 a2 09 69
+   0.036424	[D3]  b1 a2 05 85 09 43 81 a2 09 43 b1 a2 05 84 09 73 81 a2 09 73 b1 a2 05 85 09
+   0.036428	[D3]  4b 81 a2 09 4b b1 a2 05 84 09 65 81 a2 09 65 b1 a2 05 85 09 db 81 a2 09 db
+   0.036433	[D3]  b1 a2 95 15 81 01 b1 01 c0 85 17 09 2a 95 01 75 10 27 ff ff 00 00 66 01 10
+   0.036437	[D3]  b1 a2 85 18 05 84 09 5a 75 08 15 01 25 03 65 00 b1 a2 c0 09 12 a1 00 85 1c
+   0.036441	[D3]  06 86 ff 09 16 75 18 15 00 27 ff ff ff 00 b2 a2 01 85 20 05 85 09 85 75 10
+   0.036446	[D3]  27 ff ff 00 00 b1 a2 85 21 05 84 09 58 75 08 25 06 81 a2 09 58 b1 a2 85 22
+   0.036451	[D3]  05 85 09 66 25 64 b1 a2 85 23 09 68 75 10 27 ff ff 00 00 66 01 10 b1 a2 85
+   0.036455	[D3]  24 09 2a b1 a2 85 25 05 84 09 40 67 21 d1 f0 00 55 05 b1 22 85 26 09 30 b1
+   0.036459	[D3]  a2 85 27 06 86 ff 09 24 75 10 16 e9 00 26 fe 00 65 00 55 00 b1 a2 85 28 09
+   0.036464	[D3]  18 75 20 17 01 00 00 80 27 ff ff ff 7f b2 a2 01 c0 05 84 09 1a a1 00 85 30
+   0.036468	[D3]  05 84 09 40 75 08 15 00 26 ff 00 67 21 d1 f0 00 55 07 b1 22 85 31 09 30 75
+   0.036473	[D3]  10 b1 a2 85 32 09 53 16 4e 00 26 58 00 b1 a2 85 33 09 54 16 90 00 26 96 00
+   0.036477	[D3]  b1 a2 85 34 06 86 ff 09 24 16 75 00 26 8b 00 65 00 55 00 b1 a2 85 35 75 08
+   0.036482	[D3]  09 61 15 00 25 02 b1 a2 85 36 09 52 25 0d b1 a2 c0 09 05 a1 00 85 40 09 7c
+   0.036487	[D3]  25 01 b1 a2 85 41 09 7d 75 10 16 ff ff 26 ff 7f 66 01 10 b1 a2 85 42 05 84
+   0.036501	[D3]  09 57 b1 a2 c0 09 16 a1 00 85 50 09 35 75 08 15 00 25 64 65 00 b1 a2 85 51
+   0.036505	[D3]  06 86 ff 09 24 16 be 00 26 fe 00 b1 a2 85 52 05 84 09 44 75 10 15 00 27 ff
+   0.036510	[D3]  ff 00 00 66 21 d1 55 07 b1 a2 c0 06 86 ff 09 01 a1 00 85 60 09 23 65 00 55
+   0.036514	[D3]  00 b1 a2 85 61 09 26 75 08 16 10 00 26 8d 00 b1 a2 85 62 09 25 75 20 17 01
+   0.036518	[D3]  00 00 80 27 ff ff ff 7f b2 a2 01 c0 85 7f 05 84 09 fe 79 05 75 08 95 01 15
+   0.036523	[D3]  00 26 ff 00 b1 22 85 7e 06 86 ff 09 42 79 07 b1 22 85 7d 05 84 09 ff 79 03
+   0.036527	[D3]  b1 22 85 7c 09 fd 79 01 b1 22 85 7b 05 85 09 85 75 10 27 ff ff 00 00 b1 a2
+   0.036532	[D3]  05 84 09 02 a1 02 85 7a 05 85 09 44 75 01 25 01 b1 a2 09 45 b1 a2 09 d0 b1
+   0.036536	[D3]  a2 09 d1 b1 a2 09 42 b1 a2 05 84 09 69 b1 a2 05 85 09 43 b1 a2 05 84 09 73
+   0.036541	[D3]  b1 a2 05 85 09 4b b1 a2 05 84 09 65 b1 a2 05 85 09 db b1 a2 95 15 b1 01 c0
+   0.036545	[D3]  85 79 06 86 ff 09 72 75 08 95 01 b1 a2 85 78 05 84 09 5a 15 01 25 03 b1 a2
+   0.036550	[D3]  85 75 06 86 ff 09 29 75 10 15 00 27 ff ff 00 00 b1 a2 85 74 06 86 ff 09 2a
+   0.036554	[D3]  75 20 17 01 00 00 80 27 ff ff ff 7f b1 a2 06 86 ff 09 90 a1 00 85 8c 09 91
+   0.036559	[D3]  75 08 95 01 15 00 26 ff 00 b1 a2 85 8d 09 92 15 0a 25 50 b1 a2 85 8e 09 93
+   0.036563	[D3]  15 00 25 64 b1 a2 85 8f 09 94 15 00 25 03 b1 a2 85 90 09 95 15 00 25 02 b1
+   0.036568	[D3]  a2 85 91 09 96 75 10 15 00 27 10 0e 00 00 b1 a2 85 92 09 97 b1 a2 c0 a1 00
+   0.036572	[D3]  06 00 ff 85 80 09 55 15 00 26 ff 00 75 08 95 01 b1 82 c0 c0
+   0.036673	Using subdriver: APC HID 0.100
+   0.036691	[D3] Attempting Report Descriptor fix for UPS: Vendor: 051d, Product: 0002
+   0.036694	[D4] Report Descriptor: highVoltageTransfer LogMin: 144 LogMax: 150
+   0.036697	[D4] Report Descriptor: voltage LogMin: 0 LogMax: 255
+   0.036700	[D4] Report Descriptor: configVoltage LogMin: 0 LogMax: 255
+   0.036702	[D1] 112 HID objects found
+   0.036717	[D4] Entering libusb_get_report
+   0.037194	[D3] Report[get]: (2 bytes) => 01 02
+   0.037209	[D1] Path: UPS.PowerSummary.iProduct, Type: Feature, ReportID: 0x01, Offset: 0, Size: 8, Value: 2
+   0.037212	[D4] Entering libusb_get_report
+   0.037535	[D3] Report[get]: (2 bytes) => 02 03
+   0.037558	[D1] Path: UPS.PowerSummary.iSerialNumber, Type: Feature, ReportID: 0x02, Offset: 0, Size: 8, Value: 3
+   0.037561	[D4] Entering libusb_get_report
+   0.037829	[D3] Report[get]: (2 bytes) => 03 04
+   0.037841	[D1] Path: UPS.PowerSummary.iDeviceChemistry, Type: Feature, ReportID: 0x03, Offset: 0, Size: 8, Value: 4
+   0.037844	[D4] Entering libusb_get_report
+   0.038107	[D3] Report[get]: (2 bytes) => 04 01
+   0.038119	[D1] Path: UPS.PowerSummary.iOEMInformation, Type: Feature, ReportID: 0x04, Offset: 0, Size: 8, Value: 1
+   0.038122	[D4] Entering libusb_get_report
+   0.038379	[D3] Report[get]: (2 bytes) => 05 01
+   0.038391	[D1] Path: UPS.PowerSummary.Rechargeable, Type: Feature, ReportID: 0x05, Offset: 0, Size: 8, Value: 1
+   0.038394	[D4] Entering libusb_get_report
+   0.038666	[D3] Report[get]: (4 bytes) => 06 00 00 08
+   0.038678	[D1] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.038682	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.038686	[D1] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.038689	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.038692	[D1] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.038695	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.038699	[D1] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.038702	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.038706	[D1] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   0.038709	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.038712	[D1] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   0.038715	[D4] Entering libusb_get_report
+   0.039007	[D3] Report[get]: (3 bytes) => 07 63 3f
+   0.039069	[D1] Path: UPS.PowerSummary.ManufacturerDate, Type: Feature, ReportID: 0x07, Offset: 0, Size: 16, Value: 16227
+   0.039073	[D4] Entering libusb_get_report
+   0.039331	[D3] Report[get]: (3 bytes) => 08 60 09
+   0.039344	[D1] Path: UPS.PowerSummary.ConfigVoltage, Type: Feature, ReportID: 0x08, Offset: 0, Size: 16, Value: 24
+   0.039347	[D4] Entering libusb_get_report
+   0.039624	[D3] Report[get]: (3 bytes) => 09 8e 0a
+   0.039637	[D1] Path: UPS.PowerSummary.Voltage, Type: Feature, ReportID: 0x09, Offset: 0, Size: 16, Value: 27.02
+   0.039640	[D4] Entering libusb_get_report
+   0.039904	[D3] Report[get]: (2 bytes) => 0a 01
+   0.039927	[D1] Path: UPS.PowerSummary.iManufacturer, Type: Feature, ReportID: 0x0a, Offset: 0, Size: 8, Value: 1
+   0.039930	[D4] Entering libusb_get_report
+   0.040176	[D3] Report[get]: (2 bytes) => 0b 02
+   0.040188	[D1] Path: UPS.PowerSummary.CapacityMode, Type: Feature, ReportID: 0x0b, Offset: 0, Size: 8, Value: 2
+   0.040191	[D4] Entering libusb_get_report
+   0.040483	[D3] Report[get]: (4 bytes) => 0c 64 78 05
+   0.040496	[D1] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   0.040500	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.040504	[D1] Path: UPS.PowerSummary.RemainingCapacity, Type: Feature, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   0.040507	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.040511	[D1] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1400
+   0.040514	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.040518	[D1] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Feature, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1400
+   0.040521	[D4] Entering libusb_get_report
+   0.040776	[D3] Report[get]: (2 bytes) => 0d 64
+   0.040789	[D1] Path: UPS.PowerSummary.DesignCapacity, Type: Feature, ReportID: 0x0d, Offset: 0, Size: 8, Value: 100
+   0.040792	[D4] Entering libusb_get_report
+   0.041102	[D3] Report[get]: (2 bytes) => 0e 64
+   0.041115	[D1] Path: UPS.PowerSummary.FullChargeCapacity, Type: Feature, ReportID: 0x0e, Offset: 0, Size: 8, Value: 100
+   0.041118	[D4] Entering libusb_get_report
+   0.041368	[D3] Report[get]: (2 bytes) => 0f 32
+   0.041381	[D1] Path: UPS.PowerSummary.WarningCapacityLimit, Type: Feature, ReportID: 0x0f, Offset: 0, Size: 8, Value: 50
+   0.041384	[D4] Entering libusb_get_report
+   0.041635	[D3] Report[get]: (2 bytes) => 10 01
+   0.041647	[D1] Path: UPS.PowerSummary.CapacityGranularity2, Type: Feature, ReportID: 0x10, Offset: 0, Size: 8, Value: 1
+   0.041650	[D4] Entering libusb_get_report
+   0.041901	[D3] Report[get]: (2 bytes) => 11 0a
+   0.041914	[D1] Path: UPS.PowerSummary.RemainingCapacityLimit, Type: Feature, ReportID: 0x11, Offset: 0, Size: 8, Value: 10
+   0.041917	[D4] Entering libusb_get_report
+   0.042196	[D3] Report[get]: (2 bytes) => 12 01
+   0.042209	[D1] Path: UPS.PowerSummary.CapacityGranularity1, Type: Feature, ReportID: 0x12, Offset: 0, Size: 8, Value: 1
+   0.042212	[D4] Entering libusb_get_report
+   0.042472	[D3] Report[get]: (2 bytes) => 13 01
+   0.042484	[D1] Path: UPS.PowerSummary.ACPresent, Type: Input, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   0.042488	[D3] Report[buf]: (2 bytes) => 13 01
+   0.042491	[D1] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   0.042494	[D4] Entering libusb_get_report
+   0.042783	[D3] Report[get]: (3 bytes) => 14 00 00
+   0.042794	[D1] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Input, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   0.042798	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.042801	[D1] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   0.042805	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.042808	[D1] Path: UPS.PowerSummary.ShutdownImminent, Type: Input, ReportID: 0x14, Offset: 8, Size: 8, Value: 0
+   0.042811	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.042814	[D1] Path: UPS.PowerSummary.ShutdownImminent, Type: Feature, ReportID: 0x14, Offset: 8, Size: 8, Value: 0
+   0.042816	[D4] Entering libusb_get_report
+   0.043124	[D3] Report[get]: (3 bytes) => 15 ff ff
+   0.043139	[D1] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.043142	[D4] Entering libusb_get_report
+   0.043417	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+   0.043440	[D1] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Input, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   0.043444	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043447	[D1] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   0.043450	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043454	[D1] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Input, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   0.043457	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043460	[D1] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   0.043464	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043467	[D1] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Input, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   0.043470	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043483	[D1] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   0.043486	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043490	[D1] Path: UPS.PowerSummary.PresentStatus.BatteryPresent, Type: Input, ReportID: 0x16, Offset: 3, Size: 1, Value: 1
+   0.043493	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043496	[D1] Path: UPS.PowerSummary.PresentStatus.BatteryPresent, Type: Feature, ReportID: 0x16, Offset: 3, Size: 1, Value: 1
+   0.043501	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043504	[D1] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Input, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   0.043509	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043513	[D1] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   0.043517	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043521	[D1] Path: UPS.PowerSummary.PresentStatus.ShutdownImminent, Type: Input, ReportID: 0x16, Offset: 5, Size: 1, Value: 0
+   0.043525	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043529	[D1] Path: UPS.PowerSummary.PresentStatus.ShutdownImminent, Type: Feature, ReportID: 0x16, Offset: 5, Size: 1, Value: 0
+   0.043533	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043536	[D1] Path: UPS.PowerSummary.PresentStatus.RemainingTimeLimitExpired, Type: Input, ReportID: 0x16, Offset: 6, Size: 1, Value: 0
+   0.043541	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043544	[D1] Path: UPS.PowerSummary.PresentStatus.RemainingTimeLimitExpired, Type: Feature, ReportID: 0x16, Offset: 6, Size: 1, Value: 0
+   0.043549	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043552	[D1] Path: UPS.PowerSummary.PresentStatus.CommunicationLost, Type: Input, ReportID: 0x16, Offset: 7, Size: 1, Value: 0
+   0.043557	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043560	[D1] Path: UPS.PowerSummary.PresentStatus.CommunicationLost, Type: Feature, ReportID: 0x16, Offset: 7, Size: 1, Value: 0
+   0.043565	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043568	[D1] Path: UPS.PowerSummary.PresentStatus.NeedReplacement, Type: Input, ReportID: 0x16, Offset: 8, Size: 1, Value: 0
+   0.043573	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043577	[D1] Path: UPS.PowerSummary.PresentStatus.NeedReplacement, Type: Feature, ReportID: 0x16, Offset: 8, Size: 1, Value: 0
+   0.043581	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043585	[D1] Path: UPS.PowerSummary.PresentStatus.Overload, Type: Input, ReportID: 0x16, Offset: 9, Size: 1, Value: 0
+   0.043588	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043591	[D1] Path: UPS.PowerSummary.PresentStatus.Overload, Type: Feature, ReportID: 0x16, Offset: 9, Size: 1, Value: 0
+   0.043594	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043598	[D1] Path: UPS.PowerSummary.PresentStatus.VoltageNotRegulated, Type: Input, ReportID: 0x16, Offset: 10, Size: 1, Value: 0
+   0.043602	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.043606	[D1] Path: UPS.PowerSummary.PresentStatus.VoltageNotRegulated, Type: Feature, ReportID: 0x16, Offset: 10, Size: 1, Value: 0
+   0.043610	[D4] Entering libusb_get_report
+   0.043903	[D3] Report[get]: (3 bytes) => 17 78 00
+   0.043915	[D1] Path: UPS.PowerSummary.RemainingTimeLimit, Type: Feature, ReportID: 0x17, Offset: 0, Size: 16, Value: 120
+   0.043918	[D4] Entering libusb_get_report
+   0.044224	[D3] Report[get]: (2 bytes) => 18 02
+   0.044237	[D1] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.044240	[D4] Entering libusb_get_report
+   0.044512	[D3] Report[get]: (4 bytes) => 1c 01 25 09
+   0.044525	[D1] Path: UPS.Battery.APCBattReplaceDate, Type: Feature, ReportID: 0x1c, Offset: 0, Size: 24, Value: 599297
+   0.044528	[D4] Entering libusb_get_report
+   0.044794	[D3] Report[get]: (3 bytes) => 20 63 3f
+   0.044807	[D1] Path: UPS.Battery.ManufacturerDate, Type: Feature, ReportID: 0x20, Offset: 0, Size: 16, Value: 16227
+   0.044825	[D4] Entering libusb_get_report
+   0.045129	[D3] Report[get]: (2 bytes) => 21 06
+   0.045142	[D1] Path: UPS.Battery.Test, Type: Input, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.045145	[D3] Report[buf]: (2 bytes) => 21 06
+   0.045149	[D1] Path: UPS.Battery.Test, Type: Feature, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.045152	[D4] Entering libusb_get_report
+   0.045419	[D3] Report[get]: (2 bytes) => 22 64
+   0.045431	[D1] Path: UPS.Battery.RemainingCapacity, Type: Feature, ReportID: 0x22, Offset: 0, Size: 8, Value: 100
+   0.045435	[D4] Entering libusb_get_report
+   0.045680	[D3] Report[get]: (3 bytes) => 23 78 05
+   0.045693	[D1] Path: UPS.Battery.RunTimeToEmpty, Type: Feature, ReportID: 0x23, Offset: 0, Size: 16, Value: 1400
+   0.045711	[D4] Entering libusb_get_report
+   0.045951	[D3] Report[get]: (3 bytes) => 24 78 00
+   0.045963	[D1] Path: UPS.Battery.RemainingTimeLimit, Type: Feature, ReportID: 0x24, Offset: 0, Size: 16, Value: 120
+   0.045966	[D4] Entering libusb_get_report
+   0.046212	[D3] Report[get]: (3 bytes) => 25 60 09
+   0.046224	[D1] Path: UPS.Battery.ConfigVoltage, Type: Feature, ReportID: 0x25, Offset: 0, Size: 16, Value: 24
+   0.046227	[D4] Entering libusb_get_report
+   0.046488	[D3] Report[get]: (3 bytes) => 26 81 0a
+   0.046501	[D1] Path: UPS.Battery.Voltage, Type: Feature, ReportID: 0x26, Offset: 0, Size: 16, Value: 26.89
+   0.046504	[D4] Entering libusb_get_report
+   0.046768	[D3] Report[get]: (3 bytes) => 27 f5 00
+   0.046780	[D1] Path: UPS.Battery.ff860024, Type: Feature, ReportID: 0x27, Offset: 0, Size: 16, Value: 245
+   0.046783	[D4] Entering libusb_get_report
+   0.047131	[D3] Report[get]: (5 bytes) => 28 01 b9 16 cc
+   0.047145	[D1] Path: UPS.Battery.ff860018, Type: Feature, ReportID: 0x28, Offset: 0, Size: 32, Value: -8.70926e+08
+   0.047148	[D4] Entering libusb_get_report
+   0.047392	[D3] Report[get]: (2 bytes) => 30 78
+   0.047413	[D1] Path: UPS.Input.ConfigVoltage, Type: Feature, ReportID: 0x30, Offset: 0, Size: 8, Value: 120
+   0.047416	[D4] Entering libusb_get_report
+   0.047669	[D3] Report[get]: (3 bytes) => 31 72 00
+   0.047697	[D1] Path: UPS.Input.Voltage, Type: Feature, ReportID: 0x31, Offset: 0, Size: 16, Value: 114
+   0.047700	[D4] Entering libusb_get_report
+   0.047938	[D3] Report[get]: (3 bytes) => 32 58 00
+   0.047951	[D1] Path: UPS.Input.LowVoltageTransfer, Type: Feature, ReportID: 0x32, Offset: 0, Size: 16, Value: 88
+   0.047954	[D4] Entering libusb_get_report
+   0.048209	[D3] Report[get]: (3 bytes) => 33 93 00
+   0.048222	[D1] Path: UPS.Input.HighVoltageTransfer, Type: Feature, ReportID: 0x33, Offset: 0, Size: 16, Value: 147
+   0.048234	[D4] Entering libusb_get_report
+   0.048498	[D3] Report[get]: (3 bytes) => 34 7f 00
+   0.048511	[D1] Path: UPS.Input.ff860024, Type: Feature, ReportID: 0x34, Offset: 0, Size: 16, Value: 127
+   0.048514	[D4] Entering libusb_get_report
+   0.048791	[D3] Report[get]: (2 bytes) => 35 01
+   0.048802	[D1] Path: UPS.Input.APCSensitivity, Type: Feature, ReportID: 0x35, Offset: 0, Size: 8, Value: 1
+   0.048805	[D4] Entering libusb_get_report
+   0.049117	[D3] Report[get]: (2 bytes) => 36 03
+   0.049129	[D1] Path: UPS.Input.APCLineFailCause, Type: Feature, ReportID: 0x36, Offset: 0, Size: 8, Value: 3
+   0.049132	[D4] Entering libusb_get_report
+   0.049376	[D3] Report[get]: (2 bytes) => 40 00
+   0.049388	[D1] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   0.049392	[D4] Entering libusb_get_report
+   0.049657	[D3] Report[get]: (3 bytes) => 41 ff ff
+   0.049669	[D1] Path: UPS.APCGeneralCollection.APCDelayBeforeShutdown, Type: Feature, ReportID: 0x41, Offset: 0, Size: 16, Value: -1
+   0.049673	[D4] Entering libusb_get_report
+   0.049933	[D3] Report[get]: (3 bytes) => 42 ff ff
+   0.049945	[D1] Path: UPS.APCGeneralCollection.DelayBeforeShutdown, Type: Feature, ReportID: 0x42, Offset: 0, Size: 16, Value: -1
+   0.049949	[D4] Entering libusb_get_report
+   0.050225	[D3] Report[get]: (2 bytes) => 50 2a
+   0.050238	[D1] Path: UPS.PowerConverter.PercentLoad, Type: Feature, ReportID: 0x50, Offset: 0, Size: 8, Value: 42
+   0.050241	[D4] Entering libusb_get_report
+   0.050511	[D3] Report[get]: (2 bytes) => 51 f0
+   0.050524	[D1] Path: UPS.PowerConverter.ff860024, Type: Feature, ReportID: 0x51, Offset: 0, Size: 8, Value: 240
+   0.050527	[D4] Entering libusb_get_report
+   0.050794	[D3] Report[get]: (3 bytes) => 52 58 02
+   0.050806	[D1] Path: UPS.PowerConverter.ConfigActivePower, Type: Feature, ReportID: 0x52, Offset: 0, Size: 16, Value: 600
+   0.050809	[D4] Entering libusb_get_report
+   0.051108	[D3] Report[get]: (3 bytes) => 60 00 00
+   0.051121	[D1] Path: UPS.ff860001.ff860023, Type: Feature, ReportID: 0x60, Offset: 0, Size: 16, Value: 0
+   0.051124	[D4] Entering libusb_get_report
+   0.051370	[D3] Report[get]: (2 bytes) => 61 8c
+   0.051383	[D1] Path: UPS.ff860001.ff860026, Type: Feature, ReportID: 0x61, Offset: 0, Size: 8, Value: 140
+   0.051386	[D4] Entering libusb_get_report
+   0.051638	[D3] Report[get]: (5 bytes) => 62 00 01 02 03
+   0.051651	[D1] Path: UPS.ff860001.ff860025, Type: Feature, ReportID: 0x62, Offset: 0, Size: 32, Value: 5.0463e+07
+   0.051654	[D4] Entering libusb_get_report
+   0.051929	[D3] Report[get]: (2 bytes) => 7f 05
+   0.051941	[D1] Path: UPS.iProduct, Type: Feature, ReportID: 0x7f, Offset: 0, Size: 8, Value: 5
+   0.051944	[D4] Entering libusb_get_report
+   0.052208	[D3] Report[get]: (2 bytes) => 7e 07
+   0.052221	[D1] Path: UPS.APC_UPS_FirmwareRevision, Type: Feature, ReportID: 0x7e, Offset: 0, Size: 8, Value: 7
+   0.052224	[D4] Entering libusb_get_report
+   0.052485	[D3] Report[get]: (2 bytes) => 7d 03
+   0.052497	[D1] Path: UPS.iSerialNumber, Type: Feature, ReportID: 0x7d, Offset: 0, Size: 8, Value: 3
+   0.052500	[D4] Entering libusb_get_report
+   0.052809	[D3] Report[get]: (2 bytes) => 7c 01
+   0.052821	[D1] Path: UPS.iManufacturer, Type: Feature, ReportID: 0x7c, Offset: 0, Size: 8, Value: 1
+   0.052824	[D4] Entering libusb_get_report
+   0.053100	[D3] Report[get]: (3 bytes) => 7b 63 3f
+   0.053113	[D1] Path: UPS.ManufacturerDate, Type: Feature, ReportID: 0x7b, Offset: 0, Size: 16, Value: 16227
+   0.053116	[D4] Entering libusb_get_report
+   0.053384	[D3] Report[get]: (5 bytes) => 7a 0c 00 00 00
+   0.053396	[D1] Path: UPS.PresentStatus.Charging, Type: Feature, ReportID: 0x7a, Offset: 0, Size: 1, Value: 0
+   0.053408	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053412	[D1] Path: UPS.PresentStatus.Discharging, Type: Feature, ReportID: 0x7a, Offset: 1, Size: 1, Value: 0
+   0.053415	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053418	[D1] Path: UPS.PresentStatus.ACPresent, Type: Feature, ReportID: 0x7a, Offset: 2, Size: 1, Value: 1
+   0.053421	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053425	[D1] Path: UPS.PresentStatus.BatteryPresent, Type: Feature, ReportID: 0x7a, Offset: 3, Size: 1, Value: 1
+   0.053427	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053431	[D1] Path: UPS.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x7a, Offset: 4, Size: 1, Value: 0
+   0.053436	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053439	[D1] Path: UPS.PresentStatus.ShutdownImminent, Type: Feature, ReportID: 0x7a, Offset: 5, Size: 1, Value: 0
+   0.053443	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053446	[D1] Path: UPS.PresentStatus.RemainingTimeLimitExpired, Type: Feature, ReportID: 0x7a, Offset: 6, Size: 1, Value: 0
+   0.053449	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053452	[D1] Path: UPS.PresentStatus.CommunicationLost, Type: Feature, ReportID: 0x7a, Offset: 7, Size: 1, Value: 0
+   0.053455	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053459	[D1] Path: UPS.PresentStatus.NeedReplacement, Type: Feature, ReportID: 0x7a, Offset: 8, Size: 1, Value: 0
+   0.053462	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053465	[D1] Path: UPS.PresentStatus.Overload, Type: Feature, ReportID: 0x7a, Offset: 9, Size: 1, Value: 0
+   0.053478	[D3] Report[buf]: (5 bytes) => 7a 0c 00 00 00
+   0.053481	[D1] Path: UPS.PresentStatus.VoltageNotRegulated, Type: Feature, ReportID: 0x7a, Offset: 10, Size: 1, Value: 0
+   0.053484	[D4] Entering libusb_get_report
+   0.053749	[D3] Report[get]: (2 bytes) => 79 00
+   0.053761	[D1] Path: UPS.APCPanelTest, Type: Feature, ReportID: 0x79, Offset: 0, Size: 8, Value: 0
+   0.053764	[D4] Entering libusb_get_report
+   0.054008	[D3] Report[get]: (2 bytes) => 78 02
+   0.054059	[D1] Path: UPS.AudibleAlarmControl, Type: Feature, ReportID: 0x78, Offset: 0, Size: 8, Value: 2
+   0.054092	[D4] Entering libusb_get_report
+   0.054338	[D3] Report[get]: (3 bytes) => 75 62 00
+   0.054350	[D1] Path: UPS.ff860029, Type: Feature, ReportID: 0x75, Offset: 0, Size: 16, Value: 98
+   0.054353	[D4] Entering libusb_get_report
+   0.054659	[D3] Report[get]: (5 bytes) => 74 cb 40 64 64
+   0.054673	[D1] Path: UPS.ff86002a, Type: Feature, ReportID: 0x74, Offset: 0, Size: 32, Value: 1.68429e+09
+   0.054676	[D4] Entering libusb_get_report
+   0.054919	[D3] Report[get]: (2 bytes) => 8c 02
+   0.054931	[D1] Path: UPS.ff860090.ff860091, Type: Feature, ReportID: 0x8c, Offset: 0, Size: 8, Value: 2
+   0.054934	[D4] Entering libusb_get_report
+   0.055202	[D3] Report[get]: (2 bytes) => 8d 19
+   0.055226	[D1] Path: UPS.ff860090.ff860092, Type: Feature, ReportID: 0x8d, Offset: 0, Size: 8, Value: 25
+   0.055229	[D4] Entering libusb_get_report
+   0.055500	[D3] Report[get]: (2 bytes) => 8e e8
+   0.055513	[D1] Path: UPS.ff860090.ff860093, Type: Feature, ReportID: 0x8e, Offset: 0, Size: 8, Value: 100
+   0.055516	[D4] Entering libusb_get_report
+   0.055781	[D3] Report[get]: (2 bytes) => 8f 01
+   0.055794	[D1] Path: UPS.ff860090.ff860094, Type: Feature, ReportID: 0x8f, Offset: 0, Size: 8, Value: 1
+   0.055797	[D4] Entering libusb_get_report
+   0.056103	[D3] Report[get]: (2 bytes) => 90 01
+   0.056126	[D1] Path: UPS.ff860090.ff860095, Type: Feature, ReportID: 0x90, Offset: 0, Size: 8, Value: 1
+   0.056129	[D4] Entering libusb_get_report
+   0.056374	[D3] Report[get]: (3 bytes) => 91 04 00
+   0.056388	[D1] Path: UPS.ff860090.ff860096, Type: Feature, ReportID: 0x91, Offset: 0, Size: 16, Value: 4
+   0.056391	[D4] Entering libusb_get_report
+   0.056658	[D3] Report[get]: (3 bytes) => 92 04 00
+   0.056670	[D1] Path: UPS.ff860090.ff860097, Type: Feature, ReportID: 0x92, Offset: 0, Size: 16, Value: 4
+   0.056673	[D4] Entering libusb_get_report
+   0.056917	[D3] Report[get]: (2 bytes) => 80 00
+   0.056929	[D1] Path: UPS.00000000.ff000055, Type: Feature, ReportID: 0x80, Offset: 0, Size: 8, Value: 0
+Network UPS Tools - Generic HID driver 0.52 (2.8.1)
+USB communication driver (libusb 1.0) 0.46
+   0.056945	[D2] Report descriptor retrieved (Reportlen = 1133)
+   0.056956	[D2] Found HID device
+   0.056962	[D1] Detected a UPS: American Power Conversion/Back-UPS BR1000G FW:868.L2 .D USB FW:L2  
+   0.056974	[D4] string_to_path: depth = 3
+   0.056984	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.056988	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Feature, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   0.056997	[D4] string_to_path: depth = 3
+   0.057001	[D3] Report[buf]: (2 bytes) => 11 0a
+   0.057005	[D2] Path: UPS.PowerSummary.RemainingCapacityLimit, Type: Feature, ReportID: 0x11, Offset: 0, Size: 8, Value: 10
+   0.057014	[D4] string_to_path: depth = 3
+   0.057039	[D3] Report[buf]: (2 bytes) => 0f 32
+   0.057044	[D2] Path: UPS.PowerSummary.WarningCapacityLimit, Type: Feature, ReportID: 0x0f, Offset: 0, Size: 8, Value: 50
+   0.057052	[D4] string_to_path: depth = 3
+   0.057068	[D3] Report[buf]: (3 bytes) => 23 78 05
+   0.057072	[D2] Path: UPS.Battery.RunTimeToEmpty, Type: Feature, ReportID: 0x23, Offset: 0, Size: 16, Value: 1400
+   0.057079	[D4] string_to_path: depth = 3
+   0.057085	[D4] string_to_path: depth = 3
+   0.057089	[D3] Report[buf]: (3 bytes) => 24 78 00
+   0.057092	[D2] Path: UPS.Battery.RemainingTimeLimit, Type: Feature, ReportID: 0x24, Offset: 0, Size: 16, Value: 120
+   0.057100	[D4] string_to_path: depth = 3
+   0.057107	[D4] string_to_path: depth = 3
+   0.057111	[D3] Report[buf]: (3 bytes) => 26 81 0a
+   0.057115	[D2] Path: UPS.Battery.Voltage, Type: Feature, ReportID: 0x26, Offset: 0, Size: 16, Value: 26.89
+   0.057121	[D4] string_to_path: depth = 3
+   0.057125	[D4] string_to_path: depth = 3
+   0.057129	[D3] Report[buf]: (3 bytes) => 25 60 09
+   0.057133	[D2] Path: UPS.Battery.ConfigVoltage, Type: Feature, ReportID: 0x25, Offset: 0, Size: 16, Value: 24
+   0.057138	[D4] string_to_path: depth = 3
+   0.057143	[D4] string_to_path: depth = 3
+   0.057149	[D4] string_to_path: depth = 3
+   0.057153	[D3] Report[buf]: (2 bytes) => 03 04
+   0.057156	[D2] Path: UPS.PowerSummary.iDeviceChemistry, Type: Feature, ReportID: 0x03, Offset: 0, Size: 8, Value: 4
+   0.057710	[D4] string_to_path: depth = 3
+   0.057722	[D3] Report[buf]: (3 bytes) => 20 63 3f
+   0.057743	[D2] Path: UPS.Battery.ManufacturerDate, Type: Feature, ReportID: 0x20, Offset: 0, Size: 16, Value: 16227
+   0.057750	[D4] string_to_path: depth = 3
+   0.057754	[D4] string_to_path: depth = 3
+   0.057758	[D3] Report[buf]: (4 bytes) => 1c 01 25 09
+   0.057762	[D2] Path: UPS.Battery.APCBattReplaceDate, Type: Feature, ReportID: 0x1c, Offset: 0, Size: 24, Value: 599297
+   0.057768	[D4] string_to_path: depth = 3
+   0.057773	[D4] string_to_path: depth = 3
+   0.057780	[D3] Report[buf]: (2 bytes) => 50 2a
+   0.057783	[D2] Path: UPS.PowerConverter.PercentLoad, Type: Feature, ReportID: 0x50, Offset: 0, Size: 8, Value: 42
+   0.057789	[D4] string_to_path: depth = 3
+   0.057795	[D4] string_to_path: depth = 3
+   0.057801	[D4] string_to_path: depth = 3
+   0.057805	[D4] string_to_path: depth = 3
+   0.057809	[D3] Report[buf]: (3 bytes) => 15 ff ff
+   0.057812	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.057818	[D4] string_to_path: depth = 3
+   0.057825	[D4] string_to_path: depth = 3
+   0.057829	[D4] string_to_path: depth = 3
+   0.057834	[D4] string_to_path: depth = 3
+   0.057838	[D4] string_to_path: depth = 3
+   0.057842	[D4] string_to_path: depth = 3
+   0.057847	[D4] string_to_path: depth = 3
+   0.057850	[D4] string_to_path: depth = 3
+   0.057854	[D4] string_to_path: depth = 3
+   0.057858	[D4] string_to_path: depth = 3
+   0.057862	[D4] string_to_path: depth = 3
+   0.057865	[D3] Report[buf]: (2 bytes) => 40 00
+   0.057869	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   0.057875	[D4] string_to_path: depth = 3
+   0.057879	[D3] Report[buf]: (2 bytes) => 21 06
+   0.057882	[D2] Path: UPS.Battery.Test, Type: Feature, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.057889	[D4] string_to_path: depth = 3
+   0.057892	[D3] Report[buf]: (2 bytes) => 18 02
+   0.057896	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.057902	[D4] string_to_path: depth = 2
+   0.057906	[D3] Report[buf]: (3 bytes) => 7b 63 3f
+   0.057909	[D2] Path: UPS.ManufacturerDate, Type: Feature, ReportID: 0x7b, Offset: 0, Size: 16, Value: 16227
+   0.057917	[D4] string_to_path: depth = 3
+   0.057922	[D4] string_to_path: depth = 3
+   0.057926	[D3] Report[buf]: (3 bytes) => 52 58 02
+   0.057930	[D2] Path: UPS.PowerConverter.ConfigActivePower, Type: Feature, ReportID: 0x52, Offset: 0, Size: 16, Value: 600
+   0.057935	[D4] string_to_path: depth = 3
+   0.057943	[D4] string_to_path: depth = 4
+   0.057948	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.057951	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   0.057957	[D4] string_to_path: depth = 4
+   0.057961	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.057964	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   0.057970	[D4] string_to_path: depth = 4
+   0.057973	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.057976	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   0.057981	[D4] string_to_path: depth = 4
+   0.057985	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.057988	[D2] Path: UPS.PowerSummary.PresentStatus.ShutdownImminent, Type: Feature, ReportID: 0x16, Offset: 5, Size: 1, Value: 0
+   0.057996	[D4] string_to_path: depth = 4
+   0.057999	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.058002	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   0.058008	[D4] string_to_path: depth = 4
+   0.058030	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.058033	[D2] Path: UPS.PowerSummary.PresentStatus.Overload, Type: Feature, ReportID: 0x16, Offset: 9, Size: 1, Value: 0
+   0.058038	[D4] string_to_path: depth = 4
+   0.058042	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.058045	[D2] Path: UPS.PowerSummary.PresentStatus.NeedReplacement, Type: Feature, ReportID: 0x16, Offset: 8, Size: 1, Value: 0
+   0.058068	[D4] string_to_path: depth = 4
+   0.058080	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.058083	[D2] Path: UPS.PowerSummary.PresentStatus.RemainingTimeLimitExpired, Type: Feature, ReportID: 0x16, Offset: 6, Size: 1, Value: 0
+   0.058092	[D4] string_to_path: depth = 4
+   0.058097	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.058100	[D2] Path: UPS.PowerSummary.PresentStatus.BatteryPresent, Type: Feature, ReportID: 0x16, Offset: 3, Size: 1, Value: 1
+   0.058108	[D4] string_to_path: depth = 3
+   0.058111	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.058114	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.058119	[D4] string_to_path: depth = 3
+   0.058123	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.058126	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.058132	[D4] string_to_path: depth = 3
+   0.058136	[D3] Report[buf]: (2 bytes) => 13 01
+   0.058139	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   0.058144	[D4] string_to_path: depth = 3
+   0.058148	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.058151	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   0.058157	[D4] string_to_path: depth = 3
+   0.058160	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.058164	[D2] Path: UPS.PowerSummary.ShutdownImminent, Type: Feature, ReportID: 0x14, Offset: 8, Size: 8, Value: 0
+   0.058167	[D4] string_to_path: depth = 3
+   0.058171	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.058174	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   0.058178	[D4] string_to_path: depth = 3
+   0.058181	[D3] Report[buf]: (2 bytes) => 36 03
+   0.058184	[D2] Path: UPS.Input.APCLineFailCause, Type: Feature, ReportID: 0x36, Offset: 0, Size: 8, Value: 3
+   0.058187	[D3] hu_find_infoval: no matching INFO_* value for this HID value (3)
+   0.058191	[D4] string_to_path: depth = 3
+   0.058194	[D3] Report[buf]: (2 bytes) => 36 03
+   0.058197	[D2] Path: UPS.Input.APCLineFailCause, Type: Feature, ReportID: 0x36, Offset: 0, Size: 8, Value: 3
+   0.058200	[D3] hu_find_infoval: no matching INFO_* value for this HID value (3)
+   0.058204	[D4] string_to_path: depth = 3
+   0.058208	[D3] Report[buf]: (3 bytes) => 31 72 00
+   0.058211	[D2] Path: UPS.Input.Voltage, Type: Feature, ReportID: 0x31, Offset: 0, Size: 16, Value: 114
+   0.058218	[D4] string_to_path: depth = 3
+   0.058222	[D3] Report[buf]: (2 bytes) => 30 78
+   0.058225	[D2] Path: UPS.Input.ConfigVoltage, Type: Feature, ReportID: 0x30, Offset: 0, Size: 8, Value: 120
+   0.058231	[D4] string_to_path: depth = 3
+   0.058235	[D4] string_to_path: depth = 3
+   0.058240	[D4] string_to_path: depth = 3
+   0.058244	[D3] Report[buf]: (3 bytes) => 32 58 00
+   0.058247	[D2] Path: UPS.Input.LowVoltageTransfer, Type: Feature, ReportID: 0x32, Offset: 0, Size: 16, Value: 88
+   0.058253	[D4] string_to_path: depth = 3
+   0.058257	[D3] Report[buf]: (3 bytes) => 33 93 00
+   0.058260	[D2] Path: UPS.Input.HighVoltageTransfer, Type: Feature, ReportID: 0x33, Offset: 0, Size: 16, Value: 147
+   0.058265	[D4] string_to_path: depth = 3
+   0.058269	[D3] Report[buf]: (2 bytes) => 35 01
+   0.058272	[D2] Path: UPS.Input.APCSensitivity, Type: Feature, ReportID: 0x35, Offset: 0, Size: 8, Value: 1
+   0.058288	[D4] string_to_path: depth = 3
+   0.058293	[D4] string_to_path: depth = 3
+   0.058298	[D4] string_to_path: depth = 3
+   0.058302	[D4] string_to_path: depth = 3
+   0.058307	[D4] string_to_path: depth = 4
+   0.058312	[D4] string_to_path: depth = 4
+   0.058318	[D4] string_to_path: depth = 4
+   0.058322	[D4] string_to_path: depth = 3
+   0.058326	[D3] Report[buf]: (2 bytes) => 21 06
+   0.058329	[D2] Path: UPS.Battery.Test, Type: Feature, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.058332	[D3] Adding command 'test.battery.start.quick' using Path 'UPS.Battery.Test'
+   0.058337	[D4] string_to_path: depth = 4
+   0.058345	[D4] string_to_path: depth = 3
+   0.058348	[D3] Report[buf]: (2 bytes) => 21 06
+   0.058352	[D2] Path: UPS.Battery.Test, Type: Feature, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.058354	[D3] Adding command 'test.battery.start.deep' using Path 'UPS.Battery.Test'
+   0.058359	[D4] string_to_path: depth = 4
+   0.058364	[D4] string_to_path: depth = 3
+   0.058367	[D3] Report[buf]: (2 bytes) => 21 06
+   0.058370	[D2] Path: UPS.Battery.Test, Type: Feature, ReportID: 0x21, Offset: 0, Size: 8, Value: 6
+   0.058373	[D3] Adding command 'test.battery.stop' using Path 'UPS.Battery.Test'
+   0.058376	[D4] string_to_path: depth = 2
+   0.058380	[D3] Report[buf]: (2 bytes) => 79 00
+   0.058383	[D2] Path: UPS.APCPanelTest, Type: Feature, ReportID: 0x79, Offset: 0, Size: 8, Value: 0
+   0.058385	[D3] Adding command 'test.panel.start' using Path 'UPS.APCPanelTest'
+   0.058389	[D4] string_to_path: depth = 2
+   0.058393	[D3] Report[buf]: (2 bytes) => 79 00
+   0.058396	[D2] Path: UPS.APCPanelTest, Type: Feature, ReportID: 0x79, Offset: 0, Size: 8, Value: 0
+   0.058408	[D3] Adding command 'test.panel.stop' using Path 'UPS.APCPanelTest'
+   0.058413	[D4] string_to_path: depth = 3
+   0.058418	[D4] string_to_path: depth = 3
+   0.058423	[D4] string_to_path: depth = 3
+   0.058430	[D3] Report[buf]: (3 bytes) => 15 ff ff
+   0.058433	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.058436	[D3] Adding command 'load.off.delay' using Path 'UPS.PowerSummary.DelayBeforeShutdown'
+   0.058441	[D4] string_to_path: depth = 3
+   0.058446	[D4] string_to_path: depth = 3
+   0.058449	[D3] Report[buf]: (3 bytes) => 15 ff ff
+   0.058452	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.058455	[D3] Adding command 'shutdown.stop' using Path 'UPS.PowerSummary.DelayBeforeShutdown'
+   0.058459	[D4] string_to_path: depth = 3
+   0.058464	[D4] string_to_path: depth = 3
+   0.058469	[D4] string_to_path: depth = 3
+   0.058473	[D4] string_to_path: depth = 3
+   0.058478	[D4] string_to_path: depth = 3
+   0.058482	[D4] string_to_path: depth = 3
+   0.058485	[D3] Report[buf]: (3 bytes) => 41 ff ff
+   0.058489	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeShutdown, Type: Feature, ReportID: 0x41, Offset: 0, Size: 16, Value: -1
+   0.058492	[D3] Adding command 'load.off.delay' using Path 'UPS.APCGeneralCollection.APCDelayBeforeShutdown'
+   0.058496	[D4] string_to_path: depth = 3
+   0.058500	[D4] string_to_path: depth = 3
+   0.058503	[D3] Report[buf]: (3 bytes) => 41 ff ff
+   0.058506	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeShutdown, Type: Feature, ReportID: 0x41, Offset: 0, Size: 16, Value: -1
+   0.058510	[D3] Adding command 'shutdown.stop' using Path 'UPS.APCGeneralCollection.APCDelayBeforeShutdown'
+   0.058514	[D4] string_to_path: depth = 3
+   0.058517	[D3] Report[buf]: (2 bytes) => 40 00
+   0.058520	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   0.058524	[D3] Adding command 'shutdown.reboot' using Path 'UPS.APCGeneralCollection.APCDelayBeforeReboot'
+   0.058528	[D4] string_to_path: depth = 3
+   0.058533	[D4] string_to_path: depth = 3
+   0.058539	[D3] Report[buf]: (2 bytes) => 18 02
+   0.058542	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.058544	[D3] Adding command 'beeper.on' using Path 'UPS.PowerSummary.AudibleAlarmControl'
+   0.058549	[D4] string_to_path: depth = 3
+   0.058552	[D3] Report[buf]: (2 bytes) => 18 02
+   0.058556	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.058568	[D3] Adding command 'beeper.off' using Path 'UPS.PowerSummary.AudibleAlarmControl'
+   0.058572	[D4] string_to_path: depth = 3
+   0.058583	[D3] Report[buf]: (2 bytes) => 18 02
+   0.058586	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.058589	[D3] Adding command 'beeper.enable' using Path 'UPS.PowerSummary.AudibleAlarmControl'
+   0.058594	[D4] string_to_path: depth = 3
+   0.058597	[D3] Report[buf]: (2 bytes) => 18 02
+   0.058600	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.058603	[D3] Adding command 'beeper.disable' using Path 'UPS.PowerSummary.AudibleAlarmControl'
+   0.058607	[D4] string_to_path: depth = 3
+   0.058611	[D3] Report[buf]: (2 bytes) => 18 02
+   0.058614	[D2] Path: UPS.PowerSummary.AudibleAlarmControl, Type: Feature, ReportID: 0x18, Offset: 0, Size: 8, Value: 2
+   0.058616	[D3] Adding command 'beeper.mute' using Path 'UPS.PowerSummary.AudibleAlarmControl'
+   0.058623	[D2] find_nut_info: unknown info type: load.on.delay
+   0.058628	[D2] find_nut_info: unknown info type: load.on.delay
+   0.058636	[D1] upsdrv_initinfo...
+   0.058641	[D1] upsdrv_updateinfo...
+   0.120343	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   0.120376	[D3] Report[err]: (512 bytes) => 0c 64 78 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   0.120381	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   0.120386	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   0.120407	[D3]  ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 69 6e 69 74 2e 75 70 64 61 74 65
+   0.120412	[D3]  69 6e 66 6f 00 0c 00 00 00 00 00 00 00 62 65 65 70 65 72 2e 6d 20 3b c0 93
+   0.120417	[D3]  da 72 00 00 20 00 00 00 00 00 00 00 90 67 ab ca fc 7f 00 00 d5 c1 aa 93 da
+   0.120430	[D3]  72 00 00 02 00 00 00 00 00 00 00 4e c4 aa 93 da 72 00 00 60 67 ab ca fc 7f
+   0.120434	[D3]  00 00 00 b3 f3 99 76 28 fc 8e 03 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28 fc
+   0.120439	[D3]  8e ff b4 9a bc 72 5b 00 00 6c 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.120443	[D3]  00 00 00 00 00 00 00 00 20 3b c0 93 da 72 00 00 20 00 00 00 00 00 00 00 c0
+   0.120448	[D3]  3a c0 93 da 72 00 00 b8 ff ff ff ff ff ff ff 90 d4 ee ec 72 5b 00 00 00 00
+   0.120452	[D3]  00 00 00 00 00 00 d0 67 ab ca fc 7f 00 00 14 d7 aa 93 da 72 00 00 f0 67 ab
+   0.120456	[D3]  ca fc 7f 00 00 9e e8 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 09 00 00 00
+   0.120461	[D3]  00 00 00 00 6c f3 9a bc 72 5b 00 00 d8 15 f2 ec 72 5b 00 00 f0 67 ab ca fc
+   0.120465	[D3]  7f 00 00 00 b3 f3 99 76 28 fc 8e 10 17 f2 ec 72 5b 00 00 00 b3 f3 99 76 28
+   0.120469	[D3]  fc 8e 00 00 00 00 00 00 00 00 70 b9 99 bc 72 5b 00 00 80 d0 00 00 00 00 00
+   0.120474	[D3]  00 00 00 00 00 00 00 00 00 82 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.120478	[D3]  c0 68 ab ca fc 7f 00 00 19 27 9a bc 72 5b 00 00 40 68 ab ca fc 7f 00 00 00
+   0.120483	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.120487	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.120492	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.120496	[D1] Got 2 HID objects...
+   0.120500	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.120509	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   0.120531	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   0.120536	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1400
+   0.120540	[D3] NUT doesn't use this HID object
+   0.120543	[D1] Quick update...
+   0.120547	[D3] Report[buf]: (3 bytes) => 15 ff ff
+   0.120551	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.120556	[D3] Report[buf]: (2 bytes) => 40 00
+   0.120560	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   0.120566	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.120569	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   0.120572	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.120576	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   0.120579	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.120582	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   0.120586	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.120589	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   0.120594	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.120597	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.120600	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.120603	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.120606	[D3] Report[buf]: (2 bytes) => 13 01
+   0.120609	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   0.120612	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.120623	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   0.120628	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.120631	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   0.120728	[D2] dstate_init: sock /run/nut/usbhid-ups-apc-test open on fd 9
+   0.120746	Running as foreground process, not saving a PID file
+   0.120754	[D1] Driver initialization completed, beginning regular infinite loop
+   0.120758	upsnotify: failed to notify about state 2: no notification tech defined, will not spam more about it
+   0.120762	[D1] upsdrv_updateinfo...
+   0.184256	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   0.184280	[D3] Report[err]: (512 bytes) => 06 00 00 08 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   0.184285	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   0.184290	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   0.184295	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+   0.184299	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+   0.184304	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+   0.184311	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+   0.184320	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+   0.184328	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+   0.184336	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+   0.184348	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+   0.184353	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+   0.184357	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+   0.184362	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+   0.184366	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+   0.184371	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   0.184376	[D3]  00 07 00 00 00 00 00 00 00 10 80 ee ec 72 5b 00 00 07 00 00 00 00 00 00 00
+   0.184380	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+   0.184385	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 9e e8 aa 93 da 72 00 00 02 00
+   0.184390	[D3]  00 00 00 00 00 00 17 00 00 00 00 00 00 00 5f 02 9b bc 72 5b 00 00 68 37 ef
+   0.184394	[D3]  ec 72 5b 00 00 90 68 ab ca fc 7f 00 00 7f 43 ab 93 da 72 00 00
+   0.184409	[D1] Got 3 HID objects...
+   0.184414	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184423	[D2] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.184429	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184437	[D2] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.184441	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184445	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   0.184451	[D1] Quick update...
+   0.184455	[D3] Report[buf]: (3 bytes) => 15 ff ff
+   0.184459	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   0.184465	[D3] Report[buf]: (2 bytes) => 40 00
+   0.184469	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   0.184475	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.184478	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   0.184482	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.184485	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   0.184488	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.184491	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   0.184494	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   0.184497	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   0.184502	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184506	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   0.184511	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184517	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   0.184521	[D3] Report[buf]: (2 bytes) => 13 01
+   0.184527	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   0.184532	[D3] Report[buf]: (3 bytes) => 14 00 00
+   0.184537	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   0.184544	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   0.184548	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   2.122846	[D1] upsdrv_updateinfo...
+   2.168245	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   2.168262	[D3] Report[err]: (512 bytes) => 0c 64 78 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   2.168268	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   2.168273	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   2.168277	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+   2.168282	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+   2.168286	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+   2.168290	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+   2.168295	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+   2.168299	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+   2.168303	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+   2.168308	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+   2.168312	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+   2.168316	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+   2.168320	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+   2.168325	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+   2.168329	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   2.168333	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+   2.168338	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+   2.168342	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+   2.168346	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+   2.168350	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   2.168355	[D1] Got 2 HID objects...
+   2.168358	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   2.168373	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   2.168383	[D3] Report[buf]: (4 bytes) => 0c 64 78 05
+   2.168388	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1400
+   2.168392	[D3] NUT doesn't use this HID object
+   2.168395	[D1] Quick update...
+   2.168406	[D4] Entering libusb_get_report
+   2.170086	[D3] Report[get]: (3 bytes) => 15 ff ff
+   2.170110	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   2.170116	[D4] Entering libusb_get_report
+   2.170474	[D3] Report[get]: (2 bytes) => 40 00
+   2.170492	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   2.170498	[D4] Entering libusb_get_report
+   2.170862	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+   2.170872	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   2.170877	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   2.170880	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   2.170883	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   2.170886	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   2.170889	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   2.170892	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   2.170897	[D4] Entering libusb_get_report
+   2.171670	[D3] Report[get]: (4 bytes) => 06 00 00 08
+   2.171697	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   2.171701	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   2.171704	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   2.171706	[D4] Entering libusb_get_report
+   2.172027	[D3] Report[get]: (2 bytes) => 13 01
+   2.172037	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   2.172043	[D4] Entering libusb_get_report
+   2.174127	[D3] Report[get]: (3 bytes) => 14 00 00
+   2.174138	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   2.174144	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   2.174148	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   4.124861	[D1] upsdrv_updateinfo...
+   4.216212	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   4.216250	[D3] Report[err]: (512 bytes) => 06 00 00 08 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   4.216255	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   4.216260	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   4.216264	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+   4.216268	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+   4.216272	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+   4.216276	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+   4.216280	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+   4.216285	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+   4.216289	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+   4.216293	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+   4.216297	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+   4.216302	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+   4.216306	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+   4.216310	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+   4.216314	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   4.216319	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+   4.216323	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+   4.216327	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+   4.216331	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+   4.216335	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   4.216340	[D1] Got 3 HID objects...
+   4.216343	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.216350	[D2] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   4.216356	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.216370	[D2] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   4.216374	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.216378	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   4.216383	[D1] Quick update...
+   4.216386	[D4] Entering libusb_get_report
+   4.219088	[D3] Report[get]: (3 bytes) => 15 ff ff
+   4.219101	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   4.219108	[D4] Entering libusb_get_report
+   4.219432	[D3] Report[get]: (2 bytes) => 40 00
+   4.219445	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   4.219452	[D4] Entering libusb_get_report
+   4.219728	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+   4.219740	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   4.219744	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   4.219748	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   4.219751	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   4.219754	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   4.219757	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   4.219761	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   4.219765	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.219768	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   4.219772	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.219775	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   4.219778	[D4] Entering libusb_get_report
+   4.220187	[D3] Report[get]: (2 bytes) => 13 01
+   4.220199	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   4.220203	[D4] Entering libusb_get_report
+   4.220607	[D3] Report[get]: (3 bytes) => 14 00 00
+   4.220618	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   4.220624	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   4.220627	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   6.126887	[D1] upsdrv_updateinfo...
+   6.200321	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   6.200347	[D3] Report[err]: (512 bytes) => 0c 64 48 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   6.200358	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   6.200366	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   6.200375	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+   6.200383	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+   6.200391	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+   6.200425	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+   6.200434	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+   6.200443	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+   6.200455	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+   6.200463	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+   6.200474	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+   6.200482	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+   6.200493	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+   6.200502	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+   6.200510	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   6.200518	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+   6.200527	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+   6.200535	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+   6.200544	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+   6.200558	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   6.200564	[D1] Got 2 HID objects...
+   6.200574	[D3] Report[buf]: (4 bytes) => 0c 64 48 05
+   6.200595	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+   6.200616	[D3] Report[buf]: (4 bytes) => 0c 64 48 05
+   6.200629	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1352
+   6.200634	[D3] NUT doesn't use this HID object
+   6.200639	[D1] Quick update...
+   6.200644	[D4] Entering libusb_get_report
+   6.200987	[D3] Report[get]: (3 bytes) => 15 ff ff
+   6.201004	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   6.201011	[D4] Entering libusb_get_report
+   6.201361	[D3] Report[get]: (2 bytes) => 40 00
+   6.201379	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   6.201387	[D4] Entering libusb_get_report
+   6.201672	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+   6.201689	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   6.201702	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   6.201714	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   6.201719	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   6.201724	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   6.201729	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   6.201734	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   6.201740	[D4] Entering libusb_get_report
+   6.202149	[D3] Report[get]: (4 bytes) => 06 00 00 08
+   6.202167	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   6.202173	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   6.202178	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   6.202184	[D4] Entering libusb_get_report
+   6.202474	[D3] Report[get]: (2 bytes) => 13 01
+   6.202492	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   6.202499	[D4] Entering libusb_get_report
+   6.202772	[D3] Report[get]: (3 bytes) => 14 00 00
+   6.202799	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   6.202816	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   6.202822	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   8.128436	[D1] upsdrv_updateinfo...
+   8.184548	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+   8.184563	[D3] Report[err]: (512 bytes) => 06 00 00 08 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+   8.184585	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+   8.184589	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+   8.184593	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+   8.184597	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+   8.184600	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+   8.184620	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+   8.184624	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+   8.184628	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+   8.184631	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+   8.184636	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+   8.184640	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+   8.184644	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+   8.184648	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+   8.184651	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+   8.184663	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   8.184667	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+   8.184670	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+   8.184674	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+   8.184678	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+   8.184681	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+   8.184686	[D1] Got 3 HID objects...
+   8.184690	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.184697	[D2] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   8.184705	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.184708	[D2] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   8.184711	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.184715	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+   8.184725	[D1] Quick update...
+   8.184732	[D4] Entering libusb_get_report
+   8.185053	[D3] Report[get]: (3 bytes) => 15 ff ff
+   8.185066	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+   8.185088	[D4] Entering libusb_get_report
+   8.185439	[D3] Report[get]: (2 bytes) => 40 00
+   8.185451	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+   8.185458	[D4] Entering libusb_get_report
+   8.185764	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+   8.185775	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+   8.185779	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   8.185799	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+   8.185802	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   8.185804	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+   8.185807	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+   8.185810	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+   8.185814	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.185817	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+   8.185820	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.185822	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+   8.185824	[D4] Entering libusb_get_report
+   8.186308	[D3] Report[get]: (2 bytes) => 13 01
+   8.186325	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+   8.186330	[D4] Entering libusb_get_report
+   8.186660	[D3] Report[get]: (3 bytes) => 14 00 00
+   8.186704	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+   8.186712	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+   8.186717	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  10.129123	[D1] upsdrv_updateinfo...
+  10.168334	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+  10.168356	[D3] Report[err]: (512 bytes) => 0c 64 60 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+  10.168362	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  10.168367	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  10.168372	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  10.168376	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  10.168380	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  10.168385	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  10.168389	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  10.168394	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  10.168419	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  10.168425	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  10.168429	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  10.168434	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  10.168438	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  10.168443	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  10.168448	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  10.168456	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  10.168461	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  10.168465	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  10.168469	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  10.168474	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  10.168478	[D1] Got 2 HID objects...
+  10.168482	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  10.168491	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+  10.168502	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  10.168507	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1376
+  10.168511	[D3] NUT doesn't use this HID object
+  10.168515	[D1] Quick update...
+  10.168518	[D4] Entering libusb_get_report
+  10.168844	[D3] Report[get]: (3 bytes) => 15 ff ff
+  10.168856	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  10.168861	[D4] Entering libusb_get_report
+  10.169153	[D3] Report[get]: (2 bytes) => 40 00
+  10.169166	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  10.169173	[D4] Entering libusb_get_report
+  10.169536	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+  10.169553	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  10.169559	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  10.169562	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  10.169565	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  10.169568	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  10.169572	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  10.169576	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  10.169583	[D4] Entering libusb_get_report
+  10.169912	[D3] Report[get]: (4 bytes) => 06 00 00 08
+  10.169924	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  10.169928	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  10.169931	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  10.169933	[D4] Entering libusb_get_report
+  10.170280	[D3] Report[get]: (2 bytes) => 13 01
+  10.170305	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  10.170319	[D4] Entering libusb_get_report
+  10.170621	[D3] Report[get]: (3 bytes) => 14 00 00
+  10.170639	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  10.170647	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  10.170652	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  12.129181	[D1] upsdrv_updateinfo...
+  12.216262	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+  12.216289	[D3] Report[err]: (512 bytes) => 06 00 00 08 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+  12.216300	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  12.216309	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  12.216317	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  12.216325	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  12.216344	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  12.216353	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  12.216366	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  12.216377	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  12.216384	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  12.216394	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  12.216414	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  12.216427	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  12.216436	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  12.216451	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  12.216459	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  12.216470	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  12.216479	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  12.216492	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  12.216501	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  12.216513	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  12.216524	[D1] Got 3 HID objects...
+  12.216535	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.216549	[D2] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  12.216558	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.216565	[D2] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  12.216581	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.216588	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  12.216596	[D1] Quick update...
+  12.216601	[D4] Entering libusb_get_report
+  12.216952	[D3] Report[get]: (3 bytes) => 15 ff ff
+  12.216971	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  12.216980	[D4] Entering libusb_get_report
+  12.217257	[D3] Report[get]: (2 bytes) => 40 00
+  12.217276	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  12.217286	[D4] Entering libusb_get_report
+  12.218665	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+  12.218695	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  12.218700	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  12.218703	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  12.218706	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  12.218709	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  12.218712	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  12.218715	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  12.219085	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.219091	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  12.219094	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.219097	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  12.219100	[D4] Entering libusb_get_report
+  12.219515	[D3] Report[get]: (2 bytes) => 13 01
+  12.219530	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  12.219534	[D4] Entering libusb_get_report
+  12.219794	[D3] Report[get]: (3 bytes) => 14 00 00
+  12.219815	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  12.219851	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  12.220588	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  14.130674	[D1] upsdrv_updateinfo...
+  14.200340	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+  14.200360	[D3] Report[err]: (512 bytes) => 0c 64 60 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+  14.200365	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  14.200370	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  14.200374	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  14.200379	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  14.200383	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  14.200387	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  14.200391	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  14.200396	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  14.200441	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  14.200453	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  14.200458	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  14.200463	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  14.200479	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  14.200491	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  14.200496	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  14.200501	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  14.200506	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  14.200510	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  14.200515	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  14.200519	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  14.200524	[D1] Got 2 HID objects...
+  14.200529	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  14.200544	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+  14.200554	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  14.200559	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1376
+  14.200569	[D3] NUT doesn't use this HID object
+  14.200572	[D1] Quick update...
+  14.200575	[D4] Entering libusb_get_report
+  14.200932	[D3] Report[get]: (3 bytes) => 15 ff ff
+  14.200945	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  14.200951	[D4] Entering libusb_get_report
+  14.201230	[D3] Report[get]: (2 bytes) => 40 00
+  14.201241	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  14.201248	[D4] Entering libusb_get_report
+  14.201566	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+  14.201579	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  14.201583	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  14.201587	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  14.201590	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  14.201593	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  14.201597	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  14.201600	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  14.201605	[D4] Entering libusb_get_report
+  14.201900	[D3] Report[get]: (4 bytes) => 06 00 00 08
+  14.201912	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  14.201916	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  14.201920	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  14.201922	[D4] Entering libusb_get_report
+  14.202254	[D3] Report[get]: (2 bytes) => 13 01
+  14.202267	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  14.202270	[D4] Entering libusb_get_report
+  14.202611	[D3] Report[get]: (3 bytes) => 14 00 00
+  14.202628	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  14.202634	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  14.202637	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  16.131218	[D1] upsdrv_updateinfo...
+  16.184323	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+  16.184344	[D3] Report[err]: (512 bytes) => 06 00 00 08 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+  16.184366	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  16.184371	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  16.184375	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  16.184379	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  16.184384	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  16.184388	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  16.184392	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  16.184397	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  16.184413	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  16.184435	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  16.184440	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  16.184445	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  16.184449	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  16.184459	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  16.184464	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  16.184468	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  16.184473	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  16.184477	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  16.184482	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  16.184486	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  16.184490	[D1] Got 3 HID objects...
+  16.184494	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.184502	[D2] Path: UPS.PowerSummary.Charging, Type: Input, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  16.184507	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.184512	[D2] Path: UPS.PowerSummary.Discharging, Type: Input, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  16.184515	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.184519	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Input, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  16.184524	[D1] Quick update...
+  16.184528	[D4] Entering libusb_get_report
+  16.184839	[D3] Report[get]: (3 bytes) => 15 ff ff
+  16.184866	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  16.184872	[D4] Entering libusb_get_report
+  16.185196	[D3] Report[get]: (2 bytes) => 40 00
+  16.185208	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  16.185214	[D4] Entering libusb_get_report
+  16.185487	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+  16.185499	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  16.185514	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  16.185518	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  16.185521	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  16.185524	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  16.185528	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  16.185531	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  16.185536	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.185539	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  16.185543	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.185546	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  16.185549	[D4] Entering libusb_get_report
+  16.185808	[D3] Report[get]: (2 bytes) => 13 01
+  16.185835	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  16.185839	[D4] Entering libusb_get_report
+  16.186168	[D3] Report[get]: (3 bytes) => 14 00 00
+  16.186180	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  16.186196	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  16.186199	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  18.133304	[D1] upsdrv_updateinfo...
+  18.168360	[D2] file_report_buffer: expected 4 bytes, but got 512 instead
+  18.168378	[D3] Report[err]: (512 bytes) => 0c 64 60 05 72 5b 00 00 d0 66 ab ca fc 7f 00 00
+  18.168384	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  18.168388	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  18.168393	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  18.168397	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  18.168418	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  18.168453	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  18.168458	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  18.168462	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  18.168467	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  18.168472	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  18.168476	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  18.168490	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  18.168495	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  18.168499	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  18.168513	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  18.168517	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  18.168522	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  18.168526	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  18.168531	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  18.168535	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  18.168552	[D1] Got 2 HID objects...
+  18.168556	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  18.168564	[D2] Path: UPS.PowerSummary.RemainingCapacity, Type: Input, ReportID: 0x0c, Offset: 0, Size: 8, Value: 100
+  18.168570	[D3] Report[buf]: (4 bytes) => 0c 64 60 05
+  18.168582	[D2] Path: UPS.PowerSummary.RunTimeToEmpty, Type: Input, ReportID: 0x0c, Offset: 8, Size: 16, Value: 1376
+  18.168586	[D3] NUT doesn't use this HID object
+  18.168589	[D1] Quick update...
+  18.168593	[D4] Entering libusb_get_report
+  18.168888	[D3] Report[get]: (3 bytes) => 15 ff ff
+  18.168902	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  18.168908	[D4] Entering libusb_get_report
+  18.169179	[D3] Report[get]: (2 bytes) => 40 00
+  18.169192	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  18.169199	[D4] Entering libusb_get_report
+  18.169482	[D3] Report[get]: (5 bytes) => 16 0c 00 00 00
+  18.169505	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  18.169510	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  18.169513	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  18.169517	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  18.169520	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  18.169524	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  18.169527	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  18.169531	[D4] Entering libusb_get_report
+  18.169788	[D3] Report[get]: (4 bytes) => 06 00 00 08
+  18.169801	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  18.169805	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  18.169809	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  18.169811	[D4] Entering libusb_get_report
+  18.170058	[D3] Report[get]: (2 bytes) => 13 01
+  18.170071	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  18.170075	[D4] Entering libusb_get_report
+  18.170336	[D3] Report[get]: (3 bytes) => 14 00 00
+  18.170349	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  18.170355	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  18.170358	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8
+  20.135359	[D1] upsdrv_updateinfo...
+  20.216299	[D2] file_report_buffer: expected 5 bytes, but got 512 instead
+  20.216323	[D3] Report[err]: (512 bytes) => 16 0c 00 00 00 5b 00 00 d0 66 ab ca fc 7f 00 00
+  20.216329	[D3]  40 83 ee ec 72 5b 00 00 10 00 00 00 00 00 00 00 c0 68 ab ca fc 7f 00 00 f7
+  20.216333	[D3]  6a 9a bc 72 5b 00 00 10 00 00 00 30 00 00 00 d0 68 ab ca fc 7f 00 00 e0 67
+  20.216338	[D3]  ab ca fc 7f 00 00 aa d7 01 00 00 00 00 00 75 70 64 61 74 65 69 6e 66 6f 00
+  20.216342	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 72 6f 75 6e
+  20.216347	[D3]  64 20 70 72 6f 63 65 73 73 2c 20 6e 64 20 70 72 6f 63 65 73 73 2c 20 6e 6f
+  20.216351	[D3]  74 20 73 50 67 ab ca fc 7f 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 00 00
+  20.216356	[D3]  00 00 c0 3a c0 93 da 72 00 00 00 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00
+  20.216360	[D3]  00 50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 a0 67 ab ca fc 7f 00 00
+  20.216365	[D3]  3a b4 aa 93 da 72 00 00 e0 67 ab ca fc 7f 00 00 91 5d 9a bc 72 5b 00 00 c0
+  20.216369	[D3]  68 ab ca fc 7f 00 00 13 52 a4 93 04 00 00 00 0b 00 00 00 00 00 00 00 80 ff
+  20.216374	[D3]  ff ff ff ff ff ff 0b 00 00 00 00 00 00 00 60 36 ef ec 72 5b 00 00 e0 67 ab
+  20.216380	[D3]  ca fc 7f 00 00 4e c4 aa 93 da 72 00 00 20 68 ab ca fc 7f 00 00 4e c4 aa 93
+  20.216384	[D3]  da 72 00 00 9a 03 9b bc 72 5b 00 00 10 6c ab ca fc 7f 00 00 9a 03 9b bc 72
+  20.216389	[D3]  5b 00 00 00 b3 f3 99 76 28 fc 8e 00 00 00 00 fc 7f 00 00 00 b3 f3 99 76 28
+  20.216393	[D3]  fc 8e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  20.216398	[D3]  00 00 00 00 00 00 00 00 00 70 68 ab ca fc 7f 00 00 00 00 00 00 00 00 00 00
+  20.216415	[D3]  50 8c f2 ec 72 5b 00 00 20 89 f2 ec 72 5b 00 00 70 68 ab ca fc 7f 00 00 14
+  20.216424	[D3]  d7 aa 93 da 72 00 00 90 68 ab ca fc 7f 00 00 19 6d b2 93 da 72 00 00 02 00
+  20.216431	[D3]  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 70 68 ab
+  20.216435	[D3]  ca fc 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  20.216440	[D1] Got 11 HID objects...
+  20.216444	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216452	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Input, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  20.216458	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216463	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Input, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  20.216467	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216471	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Input, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  20.216475	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216479	[D2] Path: UPS.PowerSummary.PresentStatus.BatteryPresent, Type: Input, ReportID: 0x16, Offset: 3, Size: 1, Value: 1
+  20.216484	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216488	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Input, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  20.216493	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216497	[D2] Path: UPS.PowerSummary.PresentStatus.ShutdownImminent, Type: Input, ReportID: 0x16, Offset: 5, Size: 1, Value: 0
+  20.216503	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216507	[D2] Path: UPS.PowerSummary.PresentStatus.RemainingTimeLimitExpired, Type: Input, ReportID: 0x16, Offset: 6, Size: 1, Value: 0
+  20.216513	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216517	[D2] Path: UPS.PowerSummary.PresentStatus.CommunicationLost, Type: Input, ReportID: 0x16, Offset: 7, Size: 1, Value: 0
+  20.216522	[D3] NUT doesn't use this HID object
+  20.216525	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216529	[D2] Path: UPS.PowerSummary.PresentStatus.NeedReplacement, Type: Input, ReportID: 0x16, Offset: 8, Size: 1, Value: 0
+  20.216535	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216539	[D2] Path: UPS.PowerSummary.PresentStatus.Overload, Type: Input, ReportID: 0x16, Offset: 9, Size: 1, Value: 0
+  20.216542	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.216547	[D2] Path: UPS.PowerSummary.PresentStatus.VoltageNotRegulated, Type: Input, ReportID: 0x16, Offset: 10, Size: 1, Value: 0
+  20.216551	[D3] NUT doesn't use this HID object
+  20.216555	[D1] Quick update...
+  20.216558	[D4] Entering libusb_get_report
+  20.216891	[D3] Report[get]: (3 bytes) => 15 ff ff
+  20.216915	[D2] Path: UPS.PowerSummary.DelayBeforeShutdown, Type: Feature, ReportID: 0x15, Offset: 0, Size: 16, Value: -1
+  20.216931	[D4] Entering libusb_get_report
+  20.217213	[D3] Report[get]: (2 bytes) => 40 00
+  20.217226	[D2] Path: UPS.APCGeneralCollection.APCDelayBeforeReboot, Type: Feature, ReportID: 0x40, Offset: 0, Size: 8, Value: 0
+  20.217238	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.217242	[D2] Path: UPS.PowerSummary.PresentStatus.ACPresent, Type: Feature, ReportID: 0x16, Offset: 2, Size: 1, Value: 1
+  20.217245	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.217249	[D2] Path: UPS.PowerSummary.PresentStatus.Discharging, Type: Feature, ReportID: 0x16, Offset: 1, Size: 1, Value: 0
+  20.217252	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.217255	[D2] Path: UPS.PowerSummary.PresentStatus.Charging, Type: Feature, ReportID: 0x16, Offset: 0, Size: 1, Value: 0
+  20.217258	[D3] Report[buf]: (5 bytes) => 16 0c 00 00 00
+  20.217261	[D2] Path: UPS.PowerSummary.PresentStatus.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x16, Offset: 4, Size: 1, Value: 0
+  20.217266	[D4] Entering libusb_get_report
+  20.217571	[D3] Report[get]: (4 bytes) => 06 00 00 08
+  20.217592	[D2] Path: UPS.PowerSummary.Charging, Type: Feature, ReportID: 0x06, Offset: 0, Size: 8, Value: 0
+  20.217596	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  20.217599	[D2] Path: UPS.PowerSummary.Discharging, Type: Feature, ReportID: 0x06, Offset: 8, Size: 8, Value: 0
+  20.217602	[D4] Entering libusb_get_report
+  20.217884	[D3] Report[get]: (2 bytes) => 13 01
+  20.217896	[D2] Path: UPS.PowerSummary.ACPresent, Type: Feature, ReportID: 0x13, Offset: 0, Size: 8, Value: 1
+  20.217899	[D4] Entering libusb_get_report
+  20.218180	[D3] Report[get]: (3 bytes) => 14 00 00
+  20.218192	[D2] Path: UPS.PowerSummary.BelowRemainingCapacityLimit, Type: Feature, ReportID: 0x14, Offset: 0, Size: 8, Value: 0
+  20.218198	[D3] Report[buf]: (4 bytes) => 06 00 00 08
+  20.218201	[D2] Path: UPS.PowerSummary.APCStatusFlag, Type: Feature, ReportID: 0x06, Offset: 16, Size: 8, Value: 8

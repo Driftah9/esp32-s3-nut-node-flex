@@ -74,7 +74,6 @@ static const ups_device_entry_t s_eaton_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 230,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* VID-only wildcard: other Eaton/MGE/Powerware PIDs
@@ -96,7 +95,6 @@ static const ups_device_entry_t s_eaton_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 230,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 };
 

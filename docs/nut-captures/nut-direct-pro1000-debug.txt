@@ -1,0 +1,54 @@
+   0.000000	[D3] main_arg: var='driver' val='usbhid-ups'
+   0.000019	[D3] main_arg: var='port' val='auto'
+   0.000030	[D3] main_arg: var='desc' val='APC UPS test slot'
+   0.000040	[D3] main_arg: var='port' val='auto'
+   0.000043	[D3] main_arg: var='bus' val='009'
+   0.000048	[D3] main_arg: var='device' val='008'
+   0.000052	[D1] Network UPS Tools version 2.8.1 (release/snapshot of 2.8.1) built with gcc (Ubuntu 13.2.0-23ubuntu2) 13.2.0 and configured with flags: --build=x86_64-linux-gnu --prefix=/usr --includedir=${prefix}/include --mandir=${prefix}/share/man --infodir=${prefix}/share/info --sysconfdir=/etc --localstatedir=/var --disable-option-checking --disable-silent-rules --libdir=${prefix}/lib/x86_64-linux-gnu --runstatedir=/run --disable-maintainer-mode --disable-dependency-tracking --prefix= --sysconfdir=/etc/nut --includedir=/usr/include --mandir=/usr/share/man --libdir=${prefix}/lib/x86_64-linux-gnu --libexecdir=/usr/libexec --with-ssl --with-nss --with-cgi --with-dev --enable-static --with-statepath=/run/nut --with-altpidpath=/run/nut --with-drvpath=/lib/nut --with-cgipath=/usr/lib/cgi-bin/nut --with-htmlpath=/usr/share/nut/www --with-pidpath=/run/nut --datadir=/usr/share/nut --with-pkgconfig-dir=/usr/lib/x86_64-linux-gnu/pkgconfig --with-user=nut --with-group=nut --with-udev-dir=/lib/udev --with-systemdsystemunitdir=/lib/systemd/system --with-systemdshutdowndir=/lib/systemd/system-shutdown --with-systemdtmpfilesdir=/usr/lib/tmpfiles.d --with-python=python3 --with-python3=/usr/bin/python3 --with-doc=man,html-single,html-chunked,pdf
+   0.000067	[D1] debug level is '4'
+   0.001121	[D1] Succeeded to become_user(nut): now UID=110 GID=111
+   0.001148	[D1] upsdrv_initups (non-SHUT)...
+   0.001153	[D2] Initializing an USB-connected UPS with library libusb-1.0.27 (API: 0x100010a) (NUT subdriver name='USB communication driver (libusb 1.0)' ver='0.46')
+   0.014604	[D2] Checking device 1 of 13 (051D/0002)
+   0.016762	[D2] - VendorID: 051d
+   0.016775	[D2] - ProductID: 0002
+   0.016778	[D2] - Manufacturer: American Power Conversion
+   0.016781	[D2] - Product: Back-UPS BR1000G FW:868.L2 .D USB FW:L2  
+   0.016783	[D2] - Serial Number: 3B1145X11360  
+   0.016785	[D2] - Bus: 009
+   0.016788	[D2] - Bus Port: 003
+   0.016790	[D2] - Device: 006
+   0.016793	[D2] - Device release number: 0090
+   0.016795	[D2] Trying to match device
+   0.016799	[D2] match_function_subdriver (non-SHUT mode): matching a device...
+   0.016804	[D3] match_function_regex: matching a device...
+   0.016834	[D2] match_function_regex: failed match of Device: 006
+   0.016842	[D2] Device does not match - skipping
+   0.016870	[D2] Checking device 2 of 13 (051D/0002)
+   0.019164	[D2] - VendorID: 051d
+   0.019176	[D2] - ProductID: 0002
+   0.019195	[D2] - Manufacturer: American Power Conversion
+   0.019198	[D2] - Product: Back-UPS BR1000G FW:868.L2 .D USB FW:L2  
+   0.019203	[D2] - Serial Number: 3B1145X11360  
+   0.019206	[D2] - Bus: 009
+   0.019210	[D2] - Bus Port: 002
+   0.019213	[D2] - Device: 008
+   0.019233	[D2] - Device release number: 0090
+   0.019236	[D2] Trying to match device
+   0.019240	[D2] match_function_subdriver (non-SHUT mode): matching a device...
+   0.019244	[D3] match_function_regex: matching a device...
+   0.019250	[D2] Device matches
+   0.019252	[D2] Reading first configuration descriptor
+   0.019262	[D3] libusb_kernel_driver_active() returned 0: Success
+   0.019267	[D2] failed to claim USB device: Entity not found
+   0.019272	[D1] failed to detach kernel driver from USB device: Other error
+   0.019276	[D2] failed to claim USB device: Entity not found
+   0.019281	[D1] failed to detach kernel driver from USB device: Other error
+   0.019284	[D2] failed to claim USB device: Entity not found
+   0.019289	[D1] failed to detach kernel driver from USB device: Other error
+   0.019292	[D2] failed to claim USB device: Entity not found
+   0.019297	[D1] failed to detach kernel driver from USB device: Other error
+   0.019302	Can't claim USB device [051d:0002]@0/0: Other error
+   0.019308	upsnotify: failed to notify about state 4: no notification tech defined, will not spam more about it
+Network UPS Tools - Generic HID driver 0.52 (2.8.1)
+USB communication driver (libusb 1.0) 0.46

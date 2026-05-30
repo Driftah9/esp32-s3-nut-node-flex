@@ -1,0 +1,13 @@
+# NUT usbhid-ups debug capture
+# Model: apc-xs1500m
+# Date: 20260529-230830
+# Driver: /usr/lib/nut/usbhid-ups
+# Host: claude
+# Command: /usr/lib/nut/usbhid-ups -DDDD -a test -x port=auto
+# Duration: 90 seconds
+# -------------------------------------------------------
+
+   0.000001	Error: Section test not found in ups.conf
+   0.000016	upsnotify: failed to notify about state 4: no notification tech defined, will not spam more about it
+Network UPS Tools - Generic HID driver 0.52 (2.8.1)
+USB communication driver (libusb 1.0) 0.46

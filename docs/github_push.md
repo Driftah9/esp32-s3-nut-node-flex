@@ -17,23 +17,24 @@ public
 ## Branch
 main
 
+## Discord Channel
+1489730620337684570
+
 ## Version
-v0.40
+v0.43
 
 ## Status
 pushed
 
 ## Last Push
-Commit: f9404a0
-Tag: v0.40
-Message: v0.40 - Fix INT-IN buffer MPS alignment for IDF 5.4.1; 4MB partition table; Linux native build
-Date: 2026-05-24
+Commit: cdb6d98
+Tag: v0.43
+Message: v0.43 - Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS
+Date: 2026-05-29
 
 ## Commit Message
 
-
 ## Changes Summary
-
 
 ## Files to Stage
 

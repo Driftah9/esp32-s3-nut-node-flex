@@ -1,0 +1,37 @@
+   0.000000	[D3] main_arg: var='driver' val='usbhid-ups'
+   0.000021	[D3] main_arg: var='port' val='auto'
+   0.000031	[D3] main_arg: var='desc' val='APC UPS test slot'
+   0.000041	[D3] main_arg: var='port' val='auto'
+   0.000044	[D1] Network UPS Tools version 2.8.1 (release/snapshot of 2.8.1) built with gcc (Ubuntu 13.2.0-23ubuntu2) 13.2.0 and configured with flags: --build=x86_64-linux-gnu --prefix=/usr --includedir=${prefix}/include --mandir=${prefix}/share/man --infodir=${prefix}/share/info --sysconfdir=/etc --localstatedir=/var --disable-option-checking --disable-silent-rules --libdir=${prefix}/lib/x86_64-linux-gnu --runstatedir=/run --disable-maintainer-mode --disable-dependency-tracking --prefix= --sysconfdir=/etc/nut --includedir=/usr/include --mandir=/usr/share/man --libdir=${prefix}/lib/x86_64-linux-gnu --libexecdir=/usr/libexec --with-ssl --with-nss --with-cgi --with-dev --enable-static --with-statepath=/run/nut --with-altpidpath=/run/nut --with-drvpath=/lib/nut --with-cgipath=/usr/lib/cgi-bin/nut --with-htmlpath=/usr/share/nut/www --with-pidpath=/run/nut --datadir=/usr/share/nut --with-pkgconfig-dir=/usr/lib/x86_64-linux-gnu/pkgconfig --with-user=nut --with-group=nut --with-udev-dir=/lib/udev --with-systemdsystemunitdir=/lib/systemd/system --with-systemdshutdowndir=/lib/systemd/system-shutdown --with-systemdtmpfilesdir=/usr/lib/tmpfiles.d --with-python=python3 --with-python3=/usr/bin/python3 --with-doc=man,html-single,html-chunked,pdf
+   0.000065	[D1] debug level is '4'
+   0.001705	[D1] Succeeded to become_user(nut): now UID=110 GID=111
+   0.001739	[D1] upsdrv_initups (non-SHUT)...
+   0.001744	[D2] Initializing an USB-connected UPS with library libusb-1.0.27 (API: 0x100010a) (NUT subdriver name='USB communication driver (libusb 1.0)' ver='0.46')
+   0.013956	[D2] Checking device 1 of 13 (051D/0002)
+   0.016246	[D2] - VendorID: 051d
+   0.016257	[D2] - ProductID: 0002
+   0.016259	[D2] - Manufacturer: American Power Conversion
+   0.016262	[D2] - Product: Back-UPS BR1000G FW:868.L2 .D USB FW:L2  
+   0.016264	[D2] - Serial Number: 3B1145X11360  
+   0.016266	[D2] - Bus: 009
+   0.016268	[D2] - Bus Port: 003
+   0.016270	[D2] - Device: 006
+   0.016272	[D2] - Device release number: 0090
+   0.016274	[D2] Trying to match device
+   0.016277	[D2] match_function_subdriver (non-SHUT mode): matching a device...
+   0.016281	[D3] match_function_regex: matching a device...
+   0.016284	[D2] Device matches
+   0.016286	[D2] Reading first configuration descriptor
+   0.016311	[D3] libusb_kernel_driver_active() returned 0: Success
+   0.016316	[D2] failed to claim USB device: Resource busy
+   0.016335	[D2] Kernel driver already detached
+   0.016339	[D2] failed to claim USB device: Resource busy
+   0.016342	[D2] Kernel driver already detached
+   0.016345	[D2] failed to claim USB device: Resource busy
+   0.016349	[D2] Kernel driver already detached
+   0.016352	[D2] failed to claim USB device: Resource busy
+   0.016355	[D2] Kernel driver already detached
+   0.016359	Can't claim USB device [051d:0002]@0/0: Entity not found
+   0.016364	upsnotify: failed to notify about state 4: no notification tech defined, will not spam more about it
+Network UPS Tools - Generic HID driver 0.52 (2.8.1)
+USB communication driver (libusb 1.0) 0.46

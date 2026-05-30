@@ -16,7 +16,6 @@ For submission instructions, open a [UPS Compatibility Report](https://github.co
 | APC Back-UPS XS 1500M (FW:947.d10) | 051D:0002 | v0.8 | Confirmed | @Driftah9 | - | 2026-04-02 |
 | APC Back-UPS RS 1000MS (FW:950.e3) | 051D:0002 | v0.8 | Confirmed | @Driftah9 | - | 2026-04-02 |
 | APC Back-UPS BR1000G (FW:868.L2) | 051D:0002 | v0.8 | Confirmed | @Driftah9 | - | 2026-04-02 |
-| APC Back-UPS 1500 / XS 1500M (FW:947.d10) | 051D:0002 | v0.29 | Confirmed | @Driftah9 | - | 2026-05-24 |
 
 ## Expected
 

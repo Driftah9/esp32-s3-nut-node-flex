@@ -26,7 +26,6 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
 
 /* ---- Quirk flag bits -------------------------------------------------- */
 
@@ -59,23 +58,7 @@ typedef enum {
     DECODE_APC_BACKUPS  = 2,  /* APC Back-UPS (PID 0002) direct-decode bypass  */
     DECODE_APC_SMARTUPS = 3,  /* APC Smart-UPS (PID 0003) direct-decode bypass */
     DECODE_EATON_MGE    = 4,  /* Eaton/MGE (PID FFFF) - GET_REPORT + undocumented INT-IN rids */
-    DECODE_VOLTRONIC    = 5,  /* Voltronic/PowerWalker (VID 0665) - HID + QS dual-protocol  */
 } ups_decode_mode_t;
-
-/* ---- Feature report polling table entry --------------------------------
- * Maps one Report ID to a NUT variable name, poll mode, and decode function.
- * This replaces the hardcoded RID arrays and per-brand decode functions.
- * Mirrors NUT's hid2nut pattern but for GET_REPORT polling instead of
- * interrupt-IN interrupt processing.
- */
-typedef struct hid_get_report_info {
-    uint8_t                rid;         /* Report ID to poll via GET_REPORT */
-    const char            *nut_var;     /* NUT variable name (e.g. "ups.load") */
-    unsigned              flags;        /* HU_FLAG_* from ups_hid_parser.h */
-    /* Decode function: translates GET_REPORT payload to ups_state update.
-     * Called from usb_client_task context. May call ups_state_apply_update(). */
-    void (*decode_fn)(uint8_t rid, const uint8_t *data, size_t len);
-} hid_get_report_info_t;
 
 /* ---- Database entry -------------------------------------------------- */
 typedef struct {
@@ -99,13 +82,6 @@ typedef struct {
     uint8_t   battery_charge_warning;      /* battery.charge.warning (%)    */
     uint16_t  input_voltage_nominal_v;     /* input.voltage.nominal (V)     */
     const char *ups_type;                  /* ups.type string, NULL=default */
-
-    /* ---- Feature report polling table (v0.44+) ------------------------
-     * If non-NULL, points to array of Feature report RIDs to poll periodically.
-     * Replaces hardcoded RID arrays in ups_get_report.c.
-     * Array is terminated by an entry with rid=0.
-     */
-    const hid_get_report_info_t *get_report_table;
 } ups_device_entry_t;
 
 /* ---- Public API ------------------------------------------------------ */

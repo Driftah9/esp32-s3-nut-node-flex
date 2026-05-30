@@ -30,7 +30,6 @@ static const ups_device_entry_t s_standard_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* ---- Belkin (VID 0x050D) ---------------------------------------- */
@@ -48,7 +47,6 @@ static const ups_device_entry_t s_standard_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "standby",
-        .get_report_table           = NULL,
     },
 
     /* ---- Liebert / Vertiv (VID 0x10AF) ------------------------------ */
@@ -71,7 +69,6 @@ static const ups_device_entry_t s_standard_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "online",
-        .get_report_table           = NULL,
     },
 
     /* ---- HP (VID 0x03F0) -------------------------------------------- */
@@ -92,65 +89,6 @@ static const ups_device_entry_t s_standard_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
-    },
-
-    /* ---- PowerWalker / BlueWalker (VID 0x0665) ----------------------- */
-    /* VID 0665 = Cypress Semiconductor USB-to-serial bridge chip.
-     * Used inside Voltronic Power OEM UPSes (PowerWalker, Belkin F6C, etc).
-     * NOT Powercom (Powercom = VID 0x0d9f). NUT uses nutdrv_qx/cypress for
-     * serial-protocol models; HID-capable models work with usbhid-ups.
-     * PowerWalker VI 3000 SCL (PID 0x5161). Standard HID fields on pages
-     * 0x84/0x85. Charging (0x44) and Discharging (0x45) on page 0x85.
-     * ACPresent (0x00D0) declared on page 0x85 (non-standard - normally 0x84).
-     * Large rid=0x30 Input report (~24 bytes) - fixed by INT-IN buffer fix v0.30.
-     * 230V European model. 2x12V 9Ah battery cells in series = 24V nominal.
-     *
-     * QUIRK_NEEDS_GET_REPORT: rid=0x30 never arrives on interrupt-IN (0 seen
-     * in XCHK). ACPresent/Charging/Discharging flags are at byte offsets
-     * 16-21 of rid=0x30 (24B report). Only accessible via GET_REPORT Feature.
-     * Without this quirk, ups.status is stuck on OL and never transitions
-     * to OB on mains loss. (Submission b4c432, 2026-04-11.) */
-    {
-        .vid         = 0x0665,
-        .pid         = 0x5161,
-        .vendor_name = "PowerWalker",
-        .model_hint  = "VI 3000 SCL",
-        .decode_mode = DECODE_VOLTRONIC,
-        .quirks      = QUIRK_NEEDS_GET_REPORT,
-        .known_good  = false,
-        .battery_voltage_nominal_mv = 24000,
-        .battery_runtime_low_s      = 120,
-        .battery_charge_low         = 10,
-        .battery_charge_warning     = 50,
-        .input_voltage_nominal_v    = 230,
-        .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
-    },
-
-    /* ---- Phoenixtec (VID 0x06DA) --------------------------------------- */
-    /* Taiwanese OEM, closely related to Voltronic Power. Same Cypress USB
-     * bridge chip, same Megatec Q* serial protocol on Interface 0.
-     * Sold under: Masterguard, Mustek Powermust, Online Yunto/Zinto,
-     * AEG PROTECT NAS, Phoenixtec Innova.
-     * NUT uses nutdrv_qx with cypress/phoenixtec/ippon subdrivers.
-     * HID interface likely same dual-protocol layout as Voltronic (0665).
-     * NOT YET CONFIRMED - no user submissions. Will validate when one arrives. */
-    {
-        .vid         = 0x06DA,
-        .pid         = 0,
-        .vendor_name = "Phoenixtec",
-        .model_hint  = "Innova/Masterguard/Mustek",
-        .decode_mode = DECODE_VOLTRONIC,
-        .quirks      = QUIRK_NEEDS_GET_REPORT,
-        .known_good  = false,
-        .battery_voltage_nominal_mv = 24000,
-        .battery_runtime_low_s      = 120,
-        .battery_charge_low         = 10,
-        .battery_charge_warning     = 50,
-        .input_voltage_nominal_v    = 230,
-        .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* ---- Dell (VID 0x047C) ------------------------------------------ */
@@ -168,7 +106,6 @@ static const ups_device_entry_t s_standard_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 };
 

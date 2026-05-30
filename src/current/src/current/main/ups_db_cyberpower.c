@@ -46,7 +46,6 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* CyberPower OR/PR/RT/UT rackmount (PID 0601).
@@ -76,7 +75,6 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* Older CyberPower model - standard HID path */
@@ -94,7 +92,6 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* Cyber Energy / ST Micro OEM */
@@ -112,7 +109,6 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 
     /* VID-only wildcard: any other CyberPower PID */
@@ -130,7 +126,6 @@ static const ups_device_entry_t s_cyberpower_entries[] = {
         .battery_charge_warning     = 50,
         .input_voltage_nominal_v    = 120,
         .ups_type                   = "line-interactive",
-        .get_report_table           = NULL,
     },
 };
 
