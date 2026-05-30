@@ -13,17 +13,17 @@ Output summary:
 Next step: Push v0.45 to GitHub
 
 ## Last GitHub Push
+Version: v0.45
+Tag: v0.45
+Commit: 249ee2e
+Message: v0.45 - Table-driven Feature report polling (generic walker replaces hardcoded dispatch)
+Result: Success
+
+## Previous Push
 Version: v0.44
 Tag: v0.44
 Commit: 63b8ebe
 Message: v0.44 - Table-driven Feature report architecture (validated on hardware)
-Result: Success
-
-## Previous Push
-Version: v0.43
-Tag: v0.43
-Commit: cdb6d98
-Message: v0.43 - Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS
 Result: Success
 
 ## Status
@@ -60,6 +60,7 @@ idf.py direct (after source /home/claude/scripts/idf-activate.sh):
 - [x] Silence annotate_report payload-too-short WARN spam for truncated GET_REPORT responses - v0.42
 - [x] Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS PID 0x0002 - v0.43
 - [x] Table-driven Feature report architecture (database + APC decode funcs, hardware validated) - v0.44
+- [x] Table-driven Feature report polling (generic walker replaces hardcoded dispatch) - v0.45
 
 ## Mode Status
 - Mode 1 STANDALONE: inherited from v15.18 baseline - confirmed working
