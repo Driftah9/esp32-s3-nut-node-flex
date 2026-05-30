@@ -39,6 +39,11 @@
             wLength=16 on a 63-byte Feature report triggers IDF v5.5.4 DWC
             assert (hcd_dwc.c:2388 rem_len check). Now requests declared size
             up to 64 bytes, preventing crash-loop on PowerWalker VI 3000 RLE.
+ R10 v0.45  Table-driven dispatch. If device_entry->get_report_table is set,
+            timer task calls post_get_report_rids_from_table() and service queue
+            calls find_get_report_entry() + entry->decode_fn. Legacy hardcoded
+            RID arrays and if/elseif dispatch retained as fallback for devices
+            not yet converted to tables (Eaton, Voltronic, Tripp Lite).
  R9  v0.43  Add rid=0x50 to APC Back-UPS polling list (ups.load).
             ups.load for APC Back-UPS PID 0x0002 is exposed only as a Feature
             report on rid=0x50 (PowerConverter.PercentLoad, page=0x84 uid=0x35,
@@ -490,6 +495,33 @@ static const size_t  s_tripplite_rids_n    = sizeof(s_tripplite_rids) / sizeof(s
 static const uint8_t s_voltronic_rids[]    = { 0x22, 0x21, 0x18, 0x1B, 0x36, 0x34 };
 static const size_t  s_voltronic_rids_n    = sizeof(s_voltronic_rids) / sizeof(s_voltronic_rids[0]);
 
+/* ---- Table-driven helpers (v0.45) ------------------------------------ */
+
+/* Post every RID in a hid_get_report_info_t table to the request queue.
+ * Table is terminated by an entry with rid == 0. */
+static void post_get_report_rids_from_table(const hid_get_report_info_t *table)
+{
+    if (!table) return;
+    for (size_t i = 0; table[i].rid != 0; i++) {
+        get_report_req_t req = { .rid = table[i].rid };
+        if (xQueueSend(s_request_queue, &req, pdMS_TO_TICKS(500)) != pdTRUE) {
+            ESP_LOGW(TAG, "request queue full, dropping rid=0x%02X", table[i].rid);
+        }
+    }
+}
+
+/* Find the table entry whose rid matches the requested rid.
+ * Returns pointer to the entry, or NULL if not found. */
+static const hid_get_report_info_t *find_get_report_entry(
+        const hid_get_report_info_t *table, uint8_t rid)
+{
+    if (!table) return NULL;
+    for (size_t i = 0; table[i].rid != 0; i++) {
+        if (table[i].rid == rid) return &table[i];
+    }
+    return NULL;
+}
+
 /* ---- Decode APC Smart-UPS Feature reports ----------------------------- */
 static void decode_apc_smartups_feature(uint8_t rid, const uint8_t *data, size_t len)
 {
@@ -782,39 +814,57 @@ static void get_report_timer_task(void *arg)
     uint8_t dyn_rids[16];
     uint8_t dyn_count = 0;
 
-    if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
-        rids   = s_apc_rids;
-        rids_n = s_apc_rids_n;
-    } else if (s_entry && s_entry->decode_mode == DECODE_APC_SMARTUPS) {
-        rids   = s_apc_smartups_rids;
-        rids_n = s_apc_smartups_rids_n;
-    } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
-        rids   = s_eaton_rids;
-        rids_n = s_eaton_rids_n;
-    } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
-        rids   = s_voltronic_rids;
-        rids_n = s_voltronic_rids_n;
-    } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
-        dyn_count = ups_hid_parser_get_input_rids(dyn_rids, sizeof(dyn_rids));
-        rids   = dyn_rids;
-        rids_n = dyn_count;
-    } else {
-        rids   = s_tripplite_rids;
-        rids_n = s_tripplite_rids_n;
+    /* Table-driven path (v0.45): if the device database entry has a
+     * get_report_table, use it. Otherwise fall back to the legacy hardcoded
+     * RID arrays below for devices not yet converted to tables. */
+    bool table_driven = s_entry && s_entry->get_report_table;
+
+    if (!table_driven) {
+        if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
+            rids   = s_apc_rids;
+            rids_n = s_apc_rids_n;
+        } else if (s_entry && s_entry->decode_mode == DECODE_APC_SMARTUPS) {
+            rids   = s_apc_smartups_rids;
+            rids_n = s_apc_smartups_rids_n;
+        } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
+            rids   = s_eaton_rids;
+            rids_n = s_eaton_rids_n;
+        } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
+            rids   = s_voltronic_rids;
+            rids_n = s_voltronic_rids_n;
+        } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
+            dyn_count = ups_hid_parser_get_input_rids(dyn_rids, sizeof(dyn_rids));
+            rids   = dyn_rids;
+            rids_n = dyn_count;
+        } else {
+            rids   = s_tripplite_rids;
+            rids_n = s_tripplite_rids_n;
+        }
     }
 
-    ESP_LOGI(TAG, "Timer task started (%u RIDs, interval=%dms)",
-             (unsigned)rids_n, UPS_GET_REPORT_INTERVAL_MS);
+    if (table_driven) {
+        size_t n = 0;
+        for (size_t i = 0; s_entry->get_report_table[i].rid != 0; i++) n++;
+        ESP_LOGI(TAG, "Timer task started (table-driven, %u RIDs, interval=%dms)",
+                 (unsigned)n, UPS_GET_REPORT_INTERVAL_MS);
+    } else {
+        ESP_LOGI(TAG, "Timer task started (%u RIDs, interval=%dms)",
+                 (unsigned)rids_n, UPS_GET_REPORT_INTERVAL_MS);
+    }
 
     /* Initial delay — let interrupt-IN reader stabilise */
     vTaskDelay(pdMS_TO_TICKS(2000));
 
     while (s_active) {
         /* Post each RID to the queue — usb_client_task will service them */
-        for (size_t i = 0; i < rids_n && s_active; i++) {
-            get_report_req_t req = { .rid = rids[i] };
-            if (xQueueSend(s_request_queue, &req, pdMS_TO_TICKS(500)) != pdTRUE) {
-                ESP_LOGW(TAG, "request queue full, dropping rid=0x%02X", rids[i]);
+        if (table_driven) {
+            post_get_report_rids_from_table(s_entry->get_report_table);
+        } else {
+            for (size_t i = 0; i < rids_n && s_active; i++) {
+                get_report_req_t req = { .rid = rids[i] };
+                if (xQueueSend(s_request_queue, &req, pdMS_TO_TICKS(500)) != pdTRUE) {
+                    ESP_LOGW(TAG, "request queue full, dropping rid=0x%02X", rids[i]);
+                }
             }
         }
         /* Sleep until next cycle */
@@ -978,10 +1028,14 @@ void ups_get_report_service_queue(void)
              * APC/others: 16 bytes is safe. */
             uint8_t buf[64];
             size_t  buf_sz;
-            if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
+            /* Table-driven devices use safe default (16 bytes).
+             * Non-table devices retain their existing decode_mode-based sizing. */
+            if (s_entry && s_entry->get_report_table) {
+                buf_sz = 16u;
+            } else if (s_entry && s_entry->decode_mode == DECODE_EATON_MGE) {
                 buf_sz = 2u;
             } else if (s_entry && s_entry->decode_mode == DECODE_VOLTRONIC) {
-                buf_sz = 16u;  /* Voltronic Feature reports are small (1-4 bytes) */
+                buf_sz = 16u;
             } else if (s_entry && s_entry->decode_mode == DECODE_STANDARD) {
                 uint16_t max_in = ups_hid_parser_max_input_bytes();
                 buf_sz = (max_in > 0 && max_in <= 64u) ? (size_t)max_in : 16u;
@@ -997,7 +1051,16 @@ void ups_get_report_service_queue(void)
             esp_err_t err = do_get_feature_report(s_client, s_dev, s_intf_num,
                                                    req.rid, buf, buf_sz, &got);
             if (err == ESP_OK && got > 0) {
-                if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
+                if (s_entry && s_entry->get_report_table) {
+                    /* Table-driven decode: look up rid in table, call its decoder */
+                    const hid_get_report_info_t *te = find_get_report_entry(
+                            s_entry->get_report_table, req.rid);
+                    if (te && te->decode_fn) {
+                        te->decode_fn(req.rid, buf, got);
+                    } else {
+                        ESP_LOGW(TAG, "[GR] rid=0x%02X: no decoder in table", req.rid);
+                    }
+                } else if (s_entry && s_entry->decode_mode == DECODE_APC_BACKUPS) {
                     decode_apc_feature(req.rid, buf, got);
                 } else if (s_entry && s_entry->decode_mode == DECODE_APC_SMARTUPS) {
                     decode_apc_smartups_feature(req.rid, buf, got);

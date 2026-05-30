@@ -3,20 +3,14 @@
 
 ## Last CLI Run
 <!-- Updated: 2026-05-30 -->
-Command: idf.py build + flash + monitor (v0.44-alpha)
+Command: idf.py build (v0.45 version string verification)
 Result: Success
 Output summary:
-- Build: CLEAN - binary 0xf3d40 bytes (1003840 bytes), 76% of 4MB partition free, bootloader 0x5220 bytes 36% free
-- Flash: All 3 segments verified (Hash of data verified x3), MAC 10:20:ba:4a:e4:9c
-- Monitor (30s, from t=18s post-boot):
-  - APC Back-UPS enumerated and decoding interrupt-IN correctly
-  - battery.charge=100%, battery.runtime active (ranging 969s-1104s)
-  - XCHK fired at t=31.5s: 6 RIDs seen, 5 undeclared vendor ext, 2 declared-but-silent
-  - XCHK probes: rid=0x07 (battery.runtime 3-byte truncated response), rid=0x52 (2-byte response)
-  - Feature polling at t=33.7s: rid=0x17 -> input.voltage=120V, rid=0x50 -> ups.load=30%
-  - NUT server connection from 10.0.0.10:44554 at t=32s (HA polling confirmed working)
-  - No panics, no assert fails, no WDT events
-Next step: v0.44 table-driven Feature report decode implementation (APC decode funcs)
+- Build: CLEAN - binary 0xf3f20 bytes, 76% of 4MB partition free
+- Recompile scope: main.c + app metadata only (version string bump CMakeLists.txt v0.43->v0.45, main.c banner updated)
+- App version string confirmed v0.45 in binary via strings inspection
+- No errors, no warnings from changed files
+Next step: Push v0.45 to GitHub
 
 ## Last GitHub Push
 Version: v0.44
@@ -33,7 +27,7 @@ Message: v0.43 - Add rid=0x50 GET_REPORT polling for ups.load on APC Back-UPS
 Result: Success
 
 ## Status
-v0.44 - Table-driven Feature report architecture. hid_get_report_info_t structure added to device DB. APC decode funcs moved to ups_db_apc.c. Feature polling tables built for APC Back-UPS and Smart-UPS matching NUT apc-hid.c hid2nut[] pattern. Hardware validated on APC Back-UPS XS 1500M.
+v0.45 - Table-driven Feature report polling hardware validated on APC Back-UPS RS 1000MS (FW:950.e3). Timer task confirmed active, rid=0x17 input.voltage=120V and rid=0x50 ups.load=26-31% both decoded via ups_db_apc.c [APC Back-UPS Feature] path. Second poll cycle confirmed at 30s interval. No panics, no WDT. Version strings updated to v0.45 in CMakeLists.txt and main.c - build verified clean.
 
 ## Parent
 esp32-s3-nut-node v15.18

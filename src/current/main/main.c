@@ -56,7 +56,7 @@ extern "C"
 #endif
 void app_main(void) {
     ESP_LOGI(TAG, "=======================================");
-    ESP_LOGI(TAG, "ESP32 UPS NUT Node - flex v0.3");
+    ESP_LOGI(TAG, "ESP32 UPS NUT Node - flex v0.45");
     ESP_LOGI(TAG, "ESP-IDF v5.5.4 target");
     ESP_LOGI(TAG, "=======================================");
 
